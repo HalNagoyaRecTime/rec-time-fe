@@ -1,39 +1,23 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { Button } from './components/ui/button'
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import StudentIdInputPage from "./routes/page";
+import TimetablePage from "./routes/timetable/page";
+import ProfilePage from "./routes/profile/page";
+import SettingsPage from "./routes/settings/page";
+import NotificationsPage from "./routes/notifications/page";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <Button>
-          aa
-        </Button>
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<StudentIdInputPage />} />
+        <Route path="/timetable" element={<TimetablePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="*" element={<div>404 - Page Not Found</div>} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;
