@@ -1,24 +1,58 @@
-import { useLocation, useNavigate, } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Button } from "../../components/ui/button"
 import { Card } from "../../components/ui/card"
 import { Switch } from "../../components/ui/switch"
 import { Edit } from "lucide-react"
+import { useEffect, useState } from "react"
+import { getStudentInfo, type StudentInfo } from "../../api"
 
 export default function SettingsPage() {
   const router = useNavigate()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const studentId = searchParams.get("studentId") || localStorage.getItem("studentId") 
+  const [studentData, setStudentData] = useState<StudentInfo | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const studentId = new URLSearchParams(location.search).get("studentId") || "40571" 
-
-  const getStudentData = (id: string) => {
-    const students: Record<string, { class: string, attendance: string, name: string }> = {
-      "40571": { class: "JH12A203", attendance: "20", name: "春花子" },
-      "99999": { class: "JH12A204", attendance: "15", name: "田中太郎" },
+  useEffect(() => {
+    if (!studentId) {
+      router("/")
+      return
     }
-    return students[id] || { class: "JH12A203", attendance: "01", name: "未登録" }
+
+    const fetchStudentInfo = async () => {
+      try {
+        const studentInfo = await getStudentInfo(studentId)
+        setStudentData(studentInfo)
+      } catch (error) {
+        console.error("学生情報の取得に失敗しました:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStudentInfo()
+  }, [studentId, router])
+
+  const clearStudentId = () => {
+    localStorage.removeItem("studentId")
+    router("/")
   }
 
-  const studentData = getStudentData(studentId)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center"
+        style={{
+          background: "linear-gradient(135deg, #e0f2fe 0%, #f3e5f5 25%, #fff3e0 50%, #e8f5e8 75%, #fce4ec 100%)",
+        }}
+      >
+        <div>読み込み中...</div>
+      </div>
+    )
+  }
+
+  if (!studentId || !studentData) {
+    return null
+  }
 
   return (
     <div
@@ -66,7 +100,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">出席番号</span>
-              <span className="font-semibold text-gray-700">{studentData.attendance}</span>
+              <span className="font-semibold text-gray-700">{studentData.attendanceNumber}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">氏名</span>
@@ -98,7 +132,7 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             className="flex-1 bg-white/80 backdrop-blur-sm border-2 border-gray-200"
-            onClick={() => router("/")}
+            onClick={clearStudentId}
           >
             学籍番号変更
           </Button>

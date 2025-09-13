@@ -5,22 +5,23 @@ import { Card } from "../components/ui/card"
 import { HamburgerMenu } from "../components/hamburger-menu"
 
 export default function StudentIdInputPage() {
-  const [studentId, setStudentId] = useState("")
+  const [inputStudentId, setInputStudentId] = useState("")
   const navigate = useNavigate()
 
   const handleNumberClick = (num: string) => {
-    if (studentId.length < 5) {
-      setStudentId((prev) => prev + num)
+    if (inputStudentId.length < 5) {
+      setInputStudentId((prev) => prev + num)
     }
   }
 
   const handleClear = () => {
-    setStudentId("")
+    setInputStudentId("")
   }
 
   const handleSubmit = () => {
-    if (studentId.length === 5) {
-      navigate(`/timetable?studentId=${studentId}`)
+    if (inputStudentId.length === 5) {
+      localStorage.setItem("studentId", inputStudentId)
+      navigate(`/timetable?studentId=${inputStudentId}`)
     }
   }
 
@@ -38,7 +39,7 @@ export default function StudentIdInputPage() {
 
         <Card className="w-80 h-32 mb-8 flex items-center justify-center bg-white border border-gray-200 shadow-sm">
           <div className="text-6xl font-bold text-gray-800 tracking-wider">
-            {studentId
+            {inputStudentId
               .padEnd(5, "_")
               .split("")
               .map((char, index) => (
@@ -85,7 +86,7 @@ export default function StudentIdInputPage() {
             variant="default"
             className="px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white"
             onClick={handleSubmit}
-            disabled={studentId.length !== 5}
+            disabled={inputStudentId.length !== 5}
           >
             決定
           </Button>

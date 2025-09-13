@@ -1,18 +1,56 @@
-import { useLocation } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Card } from "../../components/ui/card"
 import { Label } from "../../components/ui/label"
 import { HamburgerMenu } from "../../components/hamburger-menu"
 import { User } from "lucide-react"
+import { useEffect, useState } from "react"
+import { getStudentInfo, type StudentInfo } from "../../api"
 
 export default function ProfilePage() {
-  const location = useLocation()
-  const studentId = new URLSearchParams(location.search).get("studentId") || "99999"
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const studentId = searchParams.get("studentId") || localStorage.getItem("studentId")
+  const [profile, setProfile] = useState<StudentInfo | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const profile = {
-    studentId: studentId,
-    class: "JH12A203",
-    attendanceNumber: "20",
-    name: "春花子",
+  useEffect(() => {
+    if (!studentId) {
+      navigate("/")
+      return
+    }
+
+    const fetchStudentInfo = async () => {
+      try {
+        const studentInfo = await getStudentInfo(studentId)
+        setProfile(studentInfo)
+      } catch (error) {
+        console.error("学生情報の取得に失敗しました:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStudentInfo()
+  }, [studentId, navigate])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div>読み込み中...</div>
+      </div>
+    )
+  }
+
+  if (!studentId) {
+    return null
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div>学生情報が見つかりませんでした</div>
+      </div>
+    )
   }
 
   return (

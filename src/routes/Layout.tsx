@@ -1,14 +1,13 @@
-import '../index.css'
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+import { type ReactNode } from "react"
+
+interface LayoutProps {
+  children: ReactNode
+}
+
+export default function Layout({ children }: LayoutProps) {
   return (
-    <html lang="en">
-      <body className={`font-sans`}>
-        {children}
-      </body>
-    </html>
+    <>
+      {children}
+    </>
   )
 }

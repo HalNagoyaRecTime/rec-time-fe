@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom"
 export function HamburgerMenu() {
   const [open, setOpen] = useState(false)
   const router = useNavigate()
-
+  const studentId = localStorage.getItem("studentId")
   const menuItems = [
     { icon: Hash, label: "学籍番号入力", path: "/" },
     { icon: Calendar, label: "予定一覧", path: "/timetable" },
@@ -16,7 +16,11 @@ export function HamburgerMenu() {
   ]
 
   const handleNavigation = (path: string) => {
-    router(path)
+    if (path === "/" || !studentId) {
+      router(path)
+    } else {
+      router(`${path}?studentId=${studentId}`)
+    }
     setOpen(false)
   }
 

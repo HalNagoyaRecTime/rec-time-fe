@@ -6,6 +6,7 @@ import { HamburgerMenu } from "../../components/hamburger-menu"
 import { Bell, Clock, Calendar, Users } from "lucide-react"
 
 export default function NotificationsPage() {
+
   const [notifications, setNotifications] = useState({
     schedule: true,
     reminder: true,

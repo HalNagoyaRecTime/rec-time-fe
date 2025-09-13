@@ -1,7 +1,7 @@
 "use client"
 
 import { Calendar, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 
 interface BottomNavigationProps {
   currentView: "schedule" | "profile"

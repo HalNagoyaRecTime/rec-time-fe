@@ -1,11 +1,27 @@
 "use client"
 
 import { useState } from "react"
+import { formatTime } from "../lib/apiClient"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, Users, MapPin } from "lucide-react"
-import type { Student, Activity } from "@/app/page"
+// Activity と Student タイプを直接定義
+interface Student {
+  name: string;
+  classSymbol: string;
+  attendanceNumber: string;
+}
+
+interface Activity {
+  id: string;
+  title: string;
+  time: number; // 0900形式の数字
+  duration: number; // 分単位
+  description: string;
+  participationStatus: "participating" | "interested" | "not-attending" | null;
+  category: "sports" | "arts" | "social" | "academic";
+}
 
 interface ScheduleViewProps {
   student: Student
@@ -16,7 +32,7 @@ const sampleActivities: Activity[] = [
   {
     id: "1",
     title: "バスケットボール大会",
-    time: "09:00",
+    time: 900,
     duration: 120,
     description: "クラス対抗バスケットボール大会。体育館にて開催。",
     participationStatus: "participating",
@@ -25,7 +41,7 @@ const sampleActivities: Activity[] = [
   {
     id: "2",
     title: "文化祭準備",
-    time: "11:00",
+    time: 1100,
     duration: 90,
     description: "文化祭の展示物準備作業。各クラスの教室で実施。",
     participationStatus: "interested",
@@ -34,7 +50,7 @@ const sampleActivities: Activity[] = [
   {
     id: "3",
     title: "昼食交流会",
-    time: "12:30",
+    time: 1230,
     duration: 60,
     description: "他クラスとの交流を深める昼食会。食堂にて開催。",
     participationStatus: null,
@@ -43,7 +59,7 @@ const sampleActivities: Activity[] = [
   {
     id: "4",
     title: "英語スピーチコンテスト",
-    time: "14:00",
+    time: 1400,
     duration: 90,
     description: "学年対抗英語スピーチコンテスト。講堂にて開催。",
     participationStatus: "not-attending",
@@ -52,7 +68,7 @@ const sampleActivities: Activity[] = [
   {
     id: "5",
     title: "サッカー練習",
-    time: "16:00",
+    time: 1600,
     duration: 120,
     description: "サッカー部との合同練習。グラウンドにて実施。",
     participationStatus: "participating",
@@ -76,7 +92,6 @@ const categoryColors = {
 
 export function ScheduleView({ student }: ScheduleViewProps) {
   const [activities, setActivities] = useState<Activity[]>(sampleActivities)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
 
   const updateParticipation = (activityId: string, status: Activity["participationStatus"]) => {
     setActivities((prev) =>
@@ -155,7 +170,7 @@ export function ScheduleView({ student }: ScheduleViewProps) {
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       <span>
-                        {activity.time} ({activity.duration}分)
+                        {formatTime(activity.time)} ({activity.duration}分)
                       </span>
                     </div>
                   </div>
