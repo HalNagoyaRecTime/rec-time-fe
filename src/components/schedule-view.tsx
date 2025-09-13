@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { formatTime } from "../lib/apiClient"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
+import { Button } from "../components/ui/button"
 import { Calendar, Clock, Users, MapPin } from "lucide-react"
+import { formatTime } from "../api"
 // Activity と Student タイプを直接定義
 interface Student {
   name: string;

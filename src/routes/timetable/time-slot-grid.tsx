@@ -62,20 +62,54 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
     }
   }
 
-  const getEventPosition = (event: RecreationEvent) => {
-    const startHours = Math.floor(event.startTime / 100)
-    const startMinutes = event.startTime % 100
-    const startTotalMinutes = startHours * 60 + startMinutes
+  // 重なりを検出し、イベントのレイアウトを計算する関数
+  const calculateEventLayout = (events: RecreationEvent[]) => {
+    const eventPositions = new Map<number, { top: number; height: number; column: number; totalColumns: number }>()
 
-    // 11:00を基準とした15分単位での位置
-    const baseMinutes = 11 * 60
-    const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / 15)
+    // 時間順でソート
+    const sortedEvents = [...events].sort((a, b) => a.startTime - b.startTime)
 
-    return {
-      top: eventStartUnits * 16,
-      height: getEventDurationUnits(event) * 16 - 2
-    }
+    // 重なりを検出するための配列
+    const columns: Array<{ events: RecreationEvent[]; endTime: number }> = []
+
+    sortedEvents.forEach(event => {
+      const startHours = Math.floor(event.startTime / 100)
+      const startMinutes = event.startTime % 100
+      const startTotalMinutes = startHours * 60 + startMinutes
+      const baseMinutes = 11 * 60
+      const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / 15)
+
+      // 利用可能なカラムを探す
+      let columnIndex = columns.findIndex(col => col.endTime <= event.startTime)
+
+      if (columnIndex === -1) {
+        // 新しいカラムを作成
+        columnIndex = columns.length
+        columns.push({ events: [], endTime: 0 })
+      }
+
+      // カラムにイベントを追加
+      columns[columnIndex].events.push(event)
+      columns[columnIndex].endTime = event.endTime
+
+      // ポジション情報を保存
+      eventPositions.set(event.id, {
+        top: eventStartUnits * 16,
+        height: getEventDurationUnits(event) * 16 - 2,
+        column: columnIndex,
+        totalColumns: 0 // 後で更新
+      })
+    })
+
+    // totalColumnsを更新
+    eventPositions.forEach((position) => {
+      position.totalColumns = columns.length
+    })
+
+    return eventPositions
   }
+
+  const eventLayout = calculateEventLayout(displayEvents)
 
   return (
     <div className="relative">
@@ -119,19 +153,41 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
           const participant = isParticipant(event)
           const durationUnits = getEventDurationUnits(event)
           const durationInMinutes = durationUnits * 15
-          const position = getEventPosition(event)
+          const layout = eventLayout.get(event.id)
+
+          if (!layout) return null
+
+          // 予定数に応じて動的に幅を調整
+          const getOptimalWidth = (totalColumns: number) => {
+            if (totalColumns === 1) return 'calc(100% - 8px)'
+            if (totalColumns === 2) return '48%' // 2つの場合は48%ずつで余裕を持たせる
+            if (totalColumns === 3) return '32%' // 3つの場合は32%ずつ
+            return `${Math.max(20, 100 / totalColumns)}%` // 4つ以上は均等分割（最小20%）
+          }
+
+          const getOptimalLeft = (column: number, totalColumns: number) => {
+            if (totalColumns === 1) return '4px'
+            if (totalColumns === 2) return `${column * 50 + 1}%`
+            if (totalColumns === 3) return `${column * 33 + 0.5}%`
+            return `${(column * 100) / totalColumns}%`
+          }
+
+          const width = getOptimalWidth(layout.totalColumns)
+          const left = getOptimalLeft(layout.column, layout.totalColumns)
 
           return (
             <div
               key={event.id}
-              className={`absolute left-1 right-1 text-black rounded p-1 shadow-sm transition-all hover:shadow-md cursor-pointer text-xs ${
+              className={`absolute text-black rounded p-1 shadow-sm transition-all hover:shadow-md cursor-pointer text-xs ${
                 participant
                   ? 'bg-green-400 hover:bg-green-500'
                   : 'bg-amber-200 hover:bg-amber-300'
-              }`}
+              } ${layout.totalColumns > 1 ? 'mr-0.5' : ''}`}
               style={{
-                top: `${position.top}px`,
-                height: `${Math.max(position.height, 12)}px`,
+                top: `${layout.top}px`,
+                height: `${Math.max(layout.height, 12)}px`,
+                left: left,
+                width: width,
                 zIndex: 10,
               }}
               title={`${event.title} - ${formatTime(event.startTime)}〜${formatTime(event.endTime)} (${durationUnits}単位 = ${formatDuration(durationUnits)}) ${participant ? '(参加予定)' : ''}`}

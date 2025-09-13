@@ -1,12 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
 import { User, Hash, Users, Calendar } from "lucide-react"
-import type { Student } from "@/app/page"
+import type { StudentInfo } from "../api"
 
 interface ProfileViewProps {
-  student: Student
+  student: StudentInfo
 }
 
 export function ProfileView({ student }: ProfileViewProps) {
@@ -43,7 +43,7 @@ export function ProfileView({ student }: ProfileViewProps) {
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">クラス記号</span>
               </div>
-              <Badge variant="secondary">{student.classSymbol}</Badge>
+              <Badge variant="secondary">{student.class}</Badge>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
