@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
-import { HamburgerMenu } from "../components/hamburger-menu"
 import { NumberKeypad } from "./number-keypad"
 
 export default function StudentIdInputPage() {
@@ -29,9 +28,6 @@ export default function StudentIdInputPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex flex-col items-center justify-center min-h-screen p-6">
-        <div className="absolute top-6 left-6">
-          <HamburgerMenu />
-        </div>
 
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">学籍番号入力</h1>

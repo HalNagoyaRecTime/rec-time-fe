@@ -97,7 +97,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         top: eventStartUnits * 16,
         height: getEventDurationUnits(event) * 16 - 2,
         column: columnIndex,
-        totalColumns: 0 // 後で更新
+        totalColumns: 0 
       })
     })
 

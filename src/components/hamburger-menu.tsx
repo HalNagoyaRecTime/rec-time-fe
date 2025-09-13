@@ -25,6 +25,9 @@ export function HamburgerMenu() {
   }
 
   return (
+    // 位置固定 左上に配置
+    <div className="fixed top-4 left-4 z-50">
+      
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="text-gray-700">
@@ -48,5 +51,6 @@ export function HamburgerMenu() {
         </div>
       </SheetContent>
     </Sheet>
+    </div>
   )
 }

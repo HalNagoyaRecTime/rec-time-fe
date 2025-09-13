@@ -1,87 +1,16 @@
-"use client"
-
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { Calendar, Clock, Users, MapPin } from "lucide-react"
 import { formatTime } from "../api"
-// Activity と Student タイプを直接定義
-interface Student {
-  name: string;
-  classSymbol: string;
-  attendanceNumber: string;
-}
-
-interface Activity {
-  id: string;
-  title: string;
-  time: number; // 0900形式の数字
-  duration: number; // 分単位
-  description: string;
-  participationStatus: "participating" | "interested" | "not-attending" | null;
-  category: "sports" | "arts" | "social" | "academic";
-}
-
+import type { StudentInfo } from "../api"
 interface ScheduleViewProps {
-  student: Student
+  student: StudentInfo
 }
 
-// Sample data for demonstration
-const sampleActivities: Activity[] = [
-  {
-    id: "1",
-    title: "バスケットボール大会",
-    time: 900,
-    duration: 120,
-    description: "クラス対抗バスケットボール大会。体育館にて開催。",
-    participationStatus: "participating",
-    category: "sports",
-  },
-  {
-    id: "2",
-    title: "文化祭準備",
-    time: 1100,
-    duration: 90,
-    description: "文化祭の展示物準備作業。各クラスの教室で実施。",
-    participationStatus: "interested",
-    category: "arts",
-  },
-  {
-    id: "3",
-    title: "昼食交流会",
-    time: 1230,
-    duration: 60,
-    description: "他クラスとの交流を深める昼食会。食堂にて開催。",
-    participationStatus: null,
-    category: "social",
-  },
-  {
-    id: "4",
-    title: "英語スピーチコンテスト",
-    time: 1400,
-    duration: 90,
-    description: "学年対抗英語スピーチコンテスト。講堂にて開催。",
-    participationStatus: "not-attending",
-    category: "academic",
-  },
-  {
-    id: "5",
-    title: "サッカー練習",
-    time: 1600,
-    duration: 120,
-    description: "サッカー部との合同練習。グラウンドにて実施。",
-    participationStatus: "participating",
-    category: "sports",
-  },
-]
 
-const categoryIcons = {
-  sports: "⚽",
-  arts: "🎨",
-  social: "👥",
-  academic: "📚",
-}
+
 
 const categoryColors = {
   sports: "bg-blue-100 text-blue-800",
@@ -90,16 +19,26 @@ const categoryColors = {
   academic: "bg-orange-100 text-orange-800",
 }
 
+interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  time: number;
+  duration: number;
+  participationStatus: "participating" | "interested" | "not-attending" | null;
+  category: "sports" | "arts" | "social" | "academic";
+}
+  
 export function ScheduleView({ student }: ScheduleViewProps) {
-  const [activities, setActivities] = useState<Activity[]>(sampleActivities)
+  const [activities, setActivities] = useState<Activity[]>([])
 
-  const updateParticipation = (activityId: string, status: Activity["participationStatus"]) => {
+  const updateParticipation = (activityId: string, status: "participating" | "interested" | "not-attending" | null) => {
     setActivities((prev) =>
       prev.map((activity) => (activity.id === activityId ? { ...activity, participationStatus: status } : activity)),
     )
-  }
+  } 
 
-  const getParticipationColor = (status: Activity["participationStatus"]) => {
+  const getParticipationColor = (status: "participating" | "interested" | "not-attending" | null) => {
     switch (status) {
       case "participating":
         return "bg-participating text-participating-foreground"
@@ -112,7 +51,9 @@ export function ScheduleView({ student }: ScheduleViewProps) {
     }
   }
 
-  const getParticipationText = (status: Activity["participationStatus"]) => {
+  const getParticipationText = (status: 
+    "participating" | "interested" | "not-attending" | null
+  ) => {
     switch (status) {
       case "participating":
         return "参加"
@@ -132,7 +73,7 @@ export function ScheduleView({ student }: ScheduleViewProps) {
         <div>
           <h1 className="text-2xl font-bold text-foreground">今日のスケジュール</h1>
           <p className="text-muted-foreground">
-            {student.name}さん ({student.classSymbol}-{student.attendanceNumber})
+            {student.name}さん ({student.class}-{student.attendanceNumber})
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -162,8 +103,7 @@ export function ScheduleView({ student }: ScheduleViewProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{categoryIcons[activity.category]}</span>
-                    <Badge className={categoryColors[activity.category]}>{activity.category}</Badge>
+                    <Badge className={categoryColors[activity.category as keyof typeof categoryColors]}>{activity.category}</Badge>
                   </div>
                   <CardTitle className="text-lg">{activity.title}</CardTitle>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
