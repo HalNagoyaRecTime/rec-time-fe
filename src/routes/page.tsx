@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import { HamburgerMenu } from "../components/hamburger-menu"
+import { NumberKeypad } from "./number-keypad"
 
 export default function StudentIdInputPage() {
   const [inputStudentId, setInputStudentId] = useState("")
@@ -50,36 +51,7 @@ export default function StudentIdInputPage() {
           </div>
         </Card>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <Button
-              key={num}
-              variant="outline"
-              size="lg"
-              className="w-16 h-16 text-2xl font-bold bg-white border border-gray-300 hover:bg-gray-50"
-              onClick={() => handleNumberClick(num.toString())}
-            >
-              {num}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-16 h-16 text-lg font-bold bg-white border border-gray-300 hover:bg-gray-50"
-            onClick={handleClear}
-          >
-            C
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-16 h-16 text-2xl font-bold bg-white border border-gray-300 hover:bg-gray-50"
-            onClick={() => handleNumberClick("0")}
-          >
-            0
-          </Button>
-          <div></div>
-        </div>
+        <NumberKeypad onNumberClick={handleNumberClick} onClear={handleClear} />
 
         <div className="flex gap-4">
           <Button
