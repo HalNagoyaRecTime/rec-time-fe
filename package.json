@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "d1:create:stg": "wrangler d1 create rec_time_stg",
+    "d1:create:prod": "wrangler d1 create rec_time_prod",
+    "seed:gen": "node ./seed/gen-seed.js",
+    "d1:apply:stg": "wrangler d1 migrations apply rec_time_stg --remote",
+    "d1:reset:stg": "wrangler d1 execute rec_time_stg --remote --file=./migrations/0000_reset.sql && wrangler d1 migrations apply rec_time_stg --remote"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -45,6 +50,7 @@
     "tw-animate-css": "^1.3.8",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "wrangler": "^3.80.0"
   }
 }
