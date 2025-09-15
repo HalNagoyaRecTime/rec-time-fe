@@ -5,8 +5,18 @@ import TimetablePage from "./routes/timetable/page";
 import ProfilePage from "./routes/profile/page";
 import SettingsPage from "./routes/settings/page";
 import NotificationsPage from "./routes/notifications/page";
+import { useEffect } from "react";
 
 const App: React.FC = () => {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => console.log("[SW] registered:", reg.scope))
+        .catch((err) => console.error("[SW] register failed:", err));
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Layout>

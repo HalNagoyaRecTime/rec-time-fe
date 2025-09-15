@@ -1,0 +1,55 @@
+{
+  "m_students": {
+    "f_student_id": "11",
+    "f_class": "PI11A203",
+    "f_number": "8",
+    "f_name": "金スミン"
+  },
+  "t_events": [
+    {
+      "f_event_id": "1",
+      "f_event_name": "開場",
+      "f_start_time": "0900",
+      "f_duration": "10",
+      "f_place": null,
+      "f_gather_time": null,
+      "f_summary": "入場可能時間"
+    },
+    {
+      "f_event_id": "2",
+      "f_event_name": "開会式",
+      "f_start_time": "0930",
+      "f_duration": "30",
+      "f_place": "2F各クラスの座席",
+      "f_gather_time": "0920",
+      "f_summary": "開会式"
+    },
+    {
+      "f_event_id": "3",
+      "f_event_name": "競技1",
+      "f_start_time": "1000",
+      "f_duration": "45",
+      "f_place": "体育館",
+      "f_gather_time": "0955",
+      "f_summary": "バスケットボール"
+    },
+    {
+      "f_event_id": "4",
+      "f_event_name": "昼休み",
+      "f_start_time": "1200",
+      "f_duration": "60",
+      "f_place": "各クラス",
+      "f_gather_time": null,
+      "f_summary": "昼食時間"
+    },
+    {
+      "f_event_id": "5",
+      "f_event_name": "競技2",
+      "f_start_time": "1300",
+      "f_duration": "60",
+      "f_place": "グラウンド",
+      "f_gather_time": "1255",
+      "f_summary": "リレー競技"
+    }
+  ]
+}
