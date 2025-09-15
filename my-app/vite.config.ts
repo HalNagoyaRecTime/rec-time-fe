@@ -7,11 +7,11 @@ export default defineConfig({
   plugins: [
     reactRouter(),
     VitePWA({
-      injectRegister: null, // SW 등록 코드 주입 금지
+      injectRegister: null, // SW 登録 コード 注入 禁止
       includeAssets: ["favicon.ico", "icons/*"],
-      manifest: false, // public/manifest.webmanifest 사용
-      devOptions: { enabled: false }, // 개발 모드 SW 생성 비활성
-      filename: "pwa-sw.js", // 혹시 생성돼도 우리 sw.js와 이름 충돌 방지
+      manifest: false, // public/manifest.webmanifest 使用
+      devOptions: { enabled: false }, // 開発モードSW生成無効
+      filename: "pwa-sw.js", // もし生成されてもsw.jsと名前の衝突を防止
     }),
   ],
   server: { host: true, port: 5173, strictPort: true },
