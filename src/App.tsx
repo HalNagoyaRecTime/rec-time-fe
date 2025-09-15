@@ -6,6 +6,8 @@ import ProfilePage from "./routes/profile/page";
 import SettingsPage from "./routes/settings/page";
 import NotificationsPage from "./routes/notifications/page";
 import { useEffect } from "react";
+import OfflineBanner from "./components/OfflineBanner";
+import NetworkStatus from "./components/NetworkStatus";
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -19,6 +21,10 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
+      {/* Offline Status Indicators */}
+      <OfflineBanner />
+      <NetworkStatus />
+
       <Layout>
         <Routes>
           <Route path="/" element={<StudentIdInputPage />} />
