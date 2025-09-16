@@ -1,0 +1,124 @@
+/* === 全体・基本スタイル（SP基準） === */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f0f2f5; /* 背景を少しグレーに */
+    color: #333;
+}
+
+.container {
+    max-width: 800px; /* PCでの最大幅 */
+    margin: 0 auto;
+    background-color: #ffffff;
+    min-height: 100vh;
+}
+
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background-color: #46484a; /* ヘッダーの背景色 */
+    position: relative; /* タイトルを中央に配置するための基準 */
+    text-align: center;
+}
+
+.menu-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 28px;
+    /* ヘッダーの左端に配置 */
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #79a8b8;
+}
+
+.material-symbols-outlined {
+    /* アイコンがピッタリ中央に来るように調整 */
+    display: block;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0;
+    /* コンテンツ幅全体を使って中央揃え */
+    width: 100%;
+    color: #fff;
+}
+
+/* --- タイムテーブル --- */
+.timetable {
+    padding: 24px 16px;
+}
+
+.next-kyougi {
+    font-size: 40px;
+    font-weight: 600;
+    margin:100px 0;
+    text-align: center;
+    color: #222;
+}
+.time-slot {
+    display: flex;
+    align-items: center;
+    margin: 32px 0; /* ここを大きくすることで間隔が広がります */
+}
+
+.time {
+    font-size: 16px;
+    color: #555;
+    flex-shrink: 0; /* 時間部分が縮まないようにする */
+    margin-right: 16px;
+    width: 50px; /* 時間部分の幅を固定 */
+}
+
+.line {
+    width: 100%;
+    height: 1px;
+    background-color: #ccc;
+}
+
+
+/* === PC用のスタイル === */
+/* 画面幅が768px以上の場合に適用 */
+@media (min-width: 768px) {
+    body {
+        padding: 2rem 0; /* PC表示では上下に余白を持たせる */
+    }
+
+    .sotowaku {
+        /* PCでは角を丸くして影をつける */
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        min-height: auto;
+    }
+    
+    .header {
+        padding: 24px;
+    }
+
+    .title {
+        font-size: 28px;
+    }
+
+    .timetable {
+        padding: 32px 40px;
+    }
+
+    .time-slot {
+        margin-bottom: 40px;
+    }
+
+    .time {
+        font-size: 18px;
+    }
+}
