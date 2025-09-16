@@ -1,7 +1,10 @@
 // app/routes/home.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Welcome } from "../welcome/welcome";
-import { usePullToRefresh } from "../hooks/usePullToRefresh"; // ⬅ スワイプ
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
+
+// ⬇ 공통 모듈 추가 import
+import { getNextEvent, getLastUpdatedDisplay } from "../common/forFrontEnd";
 
 export function meta() {
   return [
@@ -89,12 +92,15 @@ export default function Home() {
   const [inputId, setInputId] = useState("");
   const studentId = useMemo(() => getStudentId(), [status]);
 
-  // 🔁 자동 새로고침 상태
+  // 자동 새로고침 상태
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastRun, setLastRun] = useState<number | null>(null); // 최근 성공 시각(메모리)
   const [backoff, setBackoff] = useState(0);
   const runningRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // “다음 경기” 표시용 상태
+  const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
 
   // 앱 로드시, 저장돼 있던 "마지막 다운로드 시각"을 불러와서 표시
   useEffect(() => {
@@ -108,6 +114,11 @@ export default function Home() {
   useEffect(() => {
     setStatus(studentId ? "idle" : "no-id");
   }, [studentId]);
+
+  // 학번/상태가 바뀌거나 다운로드 성공 후 → 다음 경기 재계산
+  useEffect(() => {
+    if (studentId) setNextEvent(getNextEvent(studentId));
+  }, [studentId, status, lastRun]);
 
   async function handleSaveId() {
     const id = inputId.trim();
@@ -132,22 +143,18 @@ export default function Home() {
     try {
       const payload = await fetchByGakuseki(id);
 
-      // 다운로드 시각
       const now = new Date();
       const iso = now.toISOString();
 
-      // ローカル保存（학생/이벤트)
+      // ローカル保存
       localStorage.setItem(
         LS_KEY_STUDENT(id),
         JSON.stringify(payload.m_students)
       );
       localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
 
-      // 전체 JSON에도 시각을 함께 저장 (_downloadedAt 필드 추가)
       const payloadWithMeta = { ...payload, _downloadedAt: iso };
       localStorage.setItem(LS_KEY_LAST, JSON.stringify(payloadWithMeta));
-
-      // 시각만 별도 키에도 저장 (ガントチャート 2番)
       localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
 
       // (任意) SW에 로그
@@ -161,8 +168,8 @@ export default function Home() {
       }
 
       setStatus("ok");
-      // 화면 표시용(메모리) 갱신
-      setLastRun(now.getTime());
+      setLastRun(now.getTime()); // 화면 표시 갱신
+      setNextEvent(getNextEvent(id)); // 최신 이벤트로 갱신
       return true;
     } catch (e) {
       console.error(e);
@@ -262,7 +269,7 @@ export default function Home() {
 
       {/* 2. サーバーからダウンロード + 自動更新 */}
       {studentId && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div>
             学籍番号: <b>{studentId}</b>
           </div>
@@ -288,9 +295,21 @@ export default function Home() {
             </label>
           </div>
 
-          {/* 저장된 시각 표시 (앱 재시작 후에도 유지) */}
+          {/* 다음 경기 카드 */}
+          {nextEvent && (
+            <div className="mt-2 p-3 border rounded bg-gray-50 dark:bg-gray-900 text-sm">
+              <div className="font-semibold mb-1">次の競技</div>
+              <div>競技名：{nextEvent.f_event_name ?? "—"}</div>
+              <div>開始時刻：{nextEvent.f_start_time ?? "—"}</div>
+              {nextEvent.f_place && <div>場所：{nextEvent.f_place}</div>}
+            </div>
+          )}
+
+          {/* 저장된 시각 표시 (공통 헬퍼로 표기) */}
           <div className="text-xs opacity-70">
-            最終更新: {lastRun ? new Date(lastRun).toLocaleString() : "—"}
+            最終更新:{" "}
+            {getLastUpdatedDisplay("ja-JP") ??
+              (lastRun ? new Date(lastRun).toLocaleString() : "—")}
             {backoff ? ` / リトライ待ち: ${Math.round(backoff / 60000)}分` : ""}
           </div>
         </div>

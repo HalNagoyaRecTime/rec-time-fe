@@ -23,6 +23,15 @@
       "f_place": "2F各クラスの座席",
       "f_gather_time": "0920",
       "f_summary": "開会式"
+    },
+    {
+      "f_event_id": "1758006893812",
+      "f_event_name": "テスト競技",
+      "f_start_time": "1619",
+      "f_duration": "10",
+      "f_place": "グラウンドB",
+      "f_gather_time": null,
+      "f_summary": "テスト用 自動追加イベント"
     }
   ]
 }
