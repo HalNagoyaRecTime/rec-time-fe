@@ -1,10 +1,10 @@
-// routes/home.tsx
-import type { Route } from "./+types/home";
+// app/routes/home.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Welcome } from "../welcome/welcome";
-import { usePullToRefresh } from "../hooks/usePullToRefresh"; // ⬅ 추가
+import { usePullToRefresh } from "../hooks/usePullToRefresh"; // ⬅ 스와이프 훅
 
-export function meta({}: Route.MetaArgs) {
+// 타입 참조 제거: Route.MetaArgs 없이도 동작함
+export function meta() {
   return [
     { title: "Rectime PWA" },
     { name: "description", content: "学籍番号でデータ取得" },
@@ -103,7 +103,7 @@ export default function Home() {
   }
 
   async function handleDownload() {
-    console.log("[ refresh 실행됨 ]"); // ← 확인용
+    console.log("[ refresh 실행됨 ]"); // 확인용 로그
 
     const id = getStudentId();
     if (!id) return setStatus("no-id");
@@ -136,7 +136,7 @@ export default function Home() {
     }
   }
 
-  // ⬇️ 추가: 스와이프(풀다운)으로 handleDownload 실행
+  // 스와이프(풀다운)으로 handleDownload 실행
   const { pullDistance, isRefreshing } = usePullToRefresh({
     threshold: 60,
     onRefresh: handleDownload,
@@ -158,7 +158,7 @@ export default function Home() {
 
       <Welcome />
 
-      {/* ① 学籍番号 保存 */}
+      {/* 1. 学籍番号 保存 */}
       {!studentId && (
         <div className="space-y-2">
           <div className="font-semibold">学籍番号を入力してください</div>
@@ -174,7 +174,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ② サーバーからダウンロード */}
+      {/* 2. サーバーからダウンロード */}
       {studentId && (
         <div className="space-y-2">
           <div>
