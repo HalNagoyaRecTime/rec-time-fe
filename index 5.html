@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>呼び出しアプリ設定</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>設定</h1>
+    </header>
+
+    <main>
+      <!-- プロフィール -->
+      <section class="profile">
+        <h2>プロフィール</h2>
+        <div class="input-group">
+          <label>クラス</label>
+          <input type="text" placeholder="例)IT11A203">
+        </div>
+        <div class="input-group">
+          <label>出席番号</label>
+          <input type="number" placeholder="10">
+        </div>
+        <div class="input-group">
+          <label>氏名</label>
+          <input type="text" placeholder="例)山田太郎">
+        </div>
+      </section>
+
+      <!-- 通知（スイッチ式） -->
+      <section class="notification">
+        <h2>通知</h2>
+        <div class="toggle-container">
+          <span>プッシュ通知</span>
+          <label class="switch">
+            <input type="checkbox" id="pushToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <p id="pushStatus">通知はオフです</p>
+      </section>
+
+      <!-- 学籍番号 -->
+      <section class="student-id">
+        <h2>学籍番号</h2>
+        <div class="id-display">
+          <span id="studentId">12345</span>
+          <button id="editIdBtn">編集</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- モーダル -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2>学籍番号を編集</h2>
+      <div class="id-inputs">
+        <input type="text" maxlength="1" class="digit-input">
+        <input type="text" maxlength="1" class="digit-input">
+        <input type="text" maxlength="1" class="digit-input">
+        <input type="text" maxlength="1" class="digit-input">
+        <input type="text" maxlength="1" class="digit-input">
+      </div>
+      <p id="errorMessage" class="error"></p>
+      <div class="modal-buttons">
+        <button id="saveBtn" disabled>登録</button>
+        <button id="cancelBtn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // プッシュ通知スイッチ
+    const pushToggle = document.getElementById('pushToggle');
+    const pushStatus = document.getElementById('pushStatus');
+
+    pushToggle.addEventListener('change', () => {
+      pushStatus.textContent = pushToggle.checked ? "通知はオンです" : "通知はオフです";
+    });
+
+    // モーダル操作
+    const modal = document.getElementById('modal');
+    const editBtn = document.getElementById('editIdBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const inputs = document.querySelectorAll('.digit-input');
+    const errorMessage = document.getElementById('errorMessage');
+    const studentIdDisplay = document.getElementById('studentId');
+
+    editBtn.addEventListener('click', () => {
+      modal.style.display = 'flex';
+      inputs[0].focus();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      inputs.forEach(input => input.value = '');
+      saveBtn.disabled = true;
+      errorMessage.textContent = '';
+    });
+
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+        checkInputs();
+      });
+    });
+
+    function checkInputs() {
+      const values = Array.from(inputs).map(input => input.value);
+      if (values.every(v => v.match(/[0-9]/)) && values.join('').length === 5) {
+        saveBtn.disabled = false;
+        errorMessage.textContent = '';
+      } else {
+        saveBtn.disabled = true;
+        if (values.some(v => v && !v.match(/[0-9]/))) {
+          errorMessage.textContent = '正しく入力してください';
+        } else {
+          errorMessage.textContent = '';
+        }
+      }
+    }
+
+    saveBtn.addEventListener('click', () => {
+      const newId = Array.from(inputs).map(input => input.value).join('');
+      studentIdDisplay.textContent = newId;
+      modal.style.display = 'none';
+      inputs.forEach(input => input.value = '');
+      saveBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
