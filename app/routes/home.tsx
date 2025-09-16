@@ -2,6 +2,7 @@
 import type { Route } from "./+types/home";
 import { useEffect, useMemo, useState } from "react";
 import { Welcome } from "../welcome/welcome";
+import { usePullToRefresh } from "../hooks/usePullToRefresh"; // ⬅ 추가
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,7 +14,7 @@ export function meta({}: Route.MetaArgs) {
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
-// 테이블定義 최소 스키마
+// テーブル定義 最小スキーマ
 type StudentRow = {
   f_student_id: string;
   f_class?: string | null;
@@ -51,7 +52,7 @@ function isValidPayload(x: any): x is Payload {
   );
 }
 
-// localStorage 키
+// localStorage キー
 const LS_KEY_ID = "student:id";
 const LS_KEY_STUDENT = (id: string) => `student:master:${id}`;
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
@@ -64,7 +65,7 @@ function setStudentId(id: string) {
   localStorage.setItem(LS_KEY_ID, id);
 }
 
-// API / mock 폴백
+// API / mock フォールバック
 async function fetchByGakuseki(id: string): Promise<Payload> {
   const url = `${API_BASE}/download?gakusekino=${encodeURIComponent(id)}`;
   try {
@@ -93,7 +94,6 @@ export default function Home() {
 
   async function handleSaveId() {
     const id = inputId.trim();
-    // 숫자만 요구 시
     if (!/^\d+$/.test(id)) {
       alert("学籍番号（数字）を入力してください");
       return;
@@ -103,13 +103,15 @@ export default function Home() {
   }
 
   async function handleDownload() {
+    console.log("[ refresh 실행됨 ]"); // ← 확인용
+
     const id = getStudentId();
     if (!id) return setStatus("no-id");
     setStatus("loading");
     try {
       const payload = await fetchByGakuseki(id);
 
-      // 로컬 저장
+      // ローカル保存
       localStorage.setItem(
         LS_KEY_STUDENT(id),
         JSON.stringify(payload.m_students)
@@ -117,7 +119,7 @@ export default function Home() {
       localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
       localStorage.setItem(LS_KEY_LAST, JSON.stringify(payload));
 
-      // (선택) SW에 로그 알림
+      // (任意) SWにログ通知
       const msg = { type: "LOG_JSON", payload: { id, ...payload } };
       if (navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage(msg);
@@ -134,11 +136,29 @@ export default function Home() {
     }
   }
 
+  // ⬇️ 추가: 스와이프(풀다운)으로 handleDownload 실행
+  const { pullDistance, isRefreshing } = usePullToRefresh({
+    threshold: 60,
+    onRefresh: handleDownload,
+  });
+
   return (
     <div className="p-4 space-y-4">
+      {/* 풀다운 인디케이터 */}
+      <div aria-hidden style={{ height: pullDistance }} />
+      {(pullDistance > 0 || isRefreshing) && (
+        <div className="text-center text-xs opacity-80 -mt-2">
+          {isRefreshing
+            ? "読み込み中..."
+            : pullDistance >= 60
+              ? "離すと更新"
+              : "下にスワイプで更新"}
+        </div>
+      )}
+
       <Welcome />
 
-      {/* ① 학번 저장 */}
+      {/* ① 学籍番号 保存 */}
       {!studentId && (
         <div className="space-y-2">
           <div className="font-semibold">学籍番号を入力してください</div>
@@ -154,7 +174,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ② 서버로 다운로드 */}
+      {/* ② サーバーからダウンロード */}
       {studentId && (
         <div className="space-y-2">
           <div>
@@ -172,7 +192,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 상태 메시지 */}
+      {/* 状態メッセージ */}
       <p className="mt-2">
         {status === "no-id" && "学籍番号が未設定です。入力してください。"}
         {status === "idle" && "準備OK"}
