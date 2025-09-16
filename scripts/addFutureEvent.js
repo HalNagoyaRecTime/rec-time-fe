@@ -1,4 +1,5 @@
 // scripts/addFutureEvent.js
+<<<<<<< HEAD
 // mock.json に「テスト競技」を常に最新1件だけ残す
 // ⚠️ 現在は使用されていません。テスト用に保存中です。
 /**
@@ -8,6 +9,10 @@
  */
 
 /*
+=======
+// 기존 mock.json 구조 유지하면서, "지금 +5분" 이벤트를 t_events에 추가
+
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 import fs from "fs";
 import path from "path";
 
@@ -33,6 +38,7 @@ const newEvent = {
   f_summary: "テスト用 自動追加イベント",
 };
 
+<<<<<<< HEAD
 // t_events 배열이 없으면 생성
 if (!Array.isArray(data.t_events)) data.t_events = [];
 
@@ -40,12 +46,21 @@ if (!Array.isArray(data.t_events)) data.t_events = [];
 data.t_events = data.t_events.filter((ev) => ev.f_event_name !== "テスト競技");
 
 // 새 이벤트 추가
+=======
+// 배열에 추가
+if (!Array.isArray(data.t_events)) data.t_events = [];
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 data.t_events.push(newEvent);
 
 // 저장
 fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf-8");
 
 console.log(
+<<<<<<< HEAD
   `mock.json にテストイベントを更新しました: ${newEvent.f_event_name} (${newEvent.f_start_time})`
 );
 */
+=======
+  `✅ mock.json に新しいイベントを追加しました: ${newEvent.f_event_name} (${newEvent.f_start_time})`
+);
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)

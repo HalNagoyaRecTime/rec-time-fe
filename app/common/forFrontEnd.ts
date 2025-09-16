@@ -1,7 +1,12 @@
 // app/common/forFrontEnd.ts
+<<<<<<< HEAD
 // Frontend 팀용: LocalStorage 데이터 접근/헬퍼 (1~6 전부 지원)
 
 //// 타입 정의 タイプ定義
+=======
+// Frontend 팀용: LocalStorage 데이터 접근/헬퍼
+
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 export type StudentRow = {
   f_student_id: string;
   f_class?: string | null;
@@ -17,6 +22,7 @@ export type EventRow = {
   f_place?: string | null;
   f_gather_time?: string | null; // "HHmm"
   f_summary?: string | null;
+<<<<<<< HEAD
 
   // 출전 정보 (팀 규칙에 따라 둘 중 하나 사용) 出典情報(チームルールに従って二つのうち一つを使用)
   f_is_my_entry?: boolean; // A) 내가 출전하는지 여부 私が出場するかどうか
@@ -45,14 +51,22 @@ export type UpdateRow = {
 };
 
 //// 저장 키 保存キー
+=======
+};
+
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 const LS_KEY_ID = "student:id";
 const LS_KEY_STUDENT = (id: string) => `student:master:${id}`;
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
 const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated";
+<<<<<<< HEAD
 const LS_KEY_NOTIFS = (id: string) => `notifs:list:${id}`;
 const LS_KEY_UPDATES = (id: string) => `updates:list:${id}`;
 
 //// 내부 유틸 内部ユーティリティ
+=======
+
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
@@ -81,11 +95,15 @@ function nowHHMM(): string {
   );
 }
 
+<<<<<<< HEAD
 //// ① 학생 정보 学生情報
+=======
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 export function getStudentId(): string | null {
   if (!isBrowser()) return null;
   return localStorage.getItem(LS_KEY_ID);
 }
+<<<<<<< HEAD
 export function fetchStudent(
   id: string | null = getStudentId()
 ): StudentRow | null {
@@ -136,12 +154,24 @@ export function getLastUpdatedDisplay(locale?: string): string | null {
 export function getNextMyEvent(
   id: string | null = getStudentId()
 ): EventRow | null {
+=======
+export function fetchStudent(id: string | null = getStudentId()) {
+  if (!id) return null;
+  return readJSON(LS_KEY_STUDENT(id), null as any);
+}
+export function fetchEvents(id: string | null = getStudentId()) {
+  if (!id) return [];
+  return readJSON(LS_KEY_EVENTS(id), [] as any[]);
+}
+export function getNextEvent(id: string | null = getStudentId()) {
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
   const events = fetchEvents(id);
   if (!events.length) return null;
 
   const nowMin = hhmmToMinutes(nowHHMM());
   if (nowMin == null) return null;
 
+<<<<<<< HEAD
   const futureMine = events
     .filter((ev) => isMyEntry(ev, id))
     .filter((ev) => ev.f_start_time)
@@ -166,4 +196,21 @@ export function fetchUpdateHistory(
 ): UpdateRow[] {
   if (!id) return [];
   return readJSON<UpdateRow[]>(LS_KEY_UPDATES(id), []);
+=======
+  const future = events
+    .filter((e) => e?.f_start_time)
+    .map((e) => ({ e, mins: hhmmToMinutes(e.f_start_time as string) }))
+    .filter((x) => x.mins != null && x.mins >= nowMin)
+    .sort((a, b) => a.mins! - b.mins!);
+
+  return future[0]?.e ?? null;
+}
+export function getLastUpdatedDisplay(locale?: string): string | null {
+  if (!isBrowser()) return null;
+  const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  return new Date(t).toLocaleString(locale);
+>>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 }
