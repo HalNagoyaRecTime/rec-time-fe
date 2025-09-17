@@ -1,19 +1,25 @@
+// formatTime: 時刻フォーマット関数
 import { formatTime } from "../../api"
+// RecreationEvent: レクリエーションイベント型
 import type { RecreationEvent } from "../../api/recreation"
 
+// TimeSlotGridのprops型
 interface TimeSlotGridProps {
-  displayEvents: RecreationEvent[]
-  studentId: string | null
-  loading: boolean
-  showOnlyParticipating: boolean
+  displayEvents: RecreationEvent[] // 表示対象イベント
+  studentId: string | null         // 学生ID
+  loading: boolean                 // ローディング状態
+  showOnlyParticipating: boolean   // 参加予定のみ表示フラグ
 }
 
+// タイムスロット（15分単位）型
 interface TimeSlot {
   value: number
   display: string
 }
 
+// 時間割グリッド表示コンポーネント
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
+  // 11:00〜23:45まで15分刻みのタイムスロットを生成
   const generateTimeSlots = (): TimeSlot[] => {
     const slots = []
     for (let hour = 11; hour <= 23; hour++) {
@@ -32,10 +38,12 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
 
   const timeSlots = generateTimeSlots()
 
+  // 指定イベントに参加しているか判定
   const isParticipant = (event: RecreationEvent): boolean => {
     return studentId ? event.participants.includes(studentId) : false
   }
 
+  // イベントの所要時間（15分単位）を計算
   const getEventDurationUnits = (event: RecreationEvent): number => {
     const startHours = Math.floor(event.startTime / 100)
     const startMinutes = event.startTime % 100
@@ -49,6 +57,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
     return Math.ceil(durationInMinutes / 15)
   }
 
+  // 単位数から「○時間○分」形式に変換
   const formatDuration = (units: number): string => {
     const totalMinutes = units * 15
     const hours = Math.floor(totalMinutes / 60)
@@ -62,14 +71,14 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
     }
   }
 
-  // 重なりを検出し、イベントのレイアウトを計算する関数
+  // イベントの重なりを検出し、レイアウト（位置・幅）を計算
   const calculateEventLayout = (events: RecreationEvent[]) => {
     const eventPositions = new Map<number, { top: number; height: number; column: number; totalColumns: number }>()
 
     // 時間順でソート
     const sortedEvents = [...events].sort((a, b) => a.startTime - b.startTime)
 
-    // 重なりを検出するための配列
+    // 重なり検出用カラム配列
     const columns: Array<{ events: RecreationEvent[]; endTime: number }> = []
 
     sortedEvents.forEach(event => {
@@ -94,14 +103,14 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
 
       // ポジション情報を保存
       eventPositions.set(event.id, {
-        top: eventStartUnits * 16,
-        height: getEventDurationUnits(event) * 16 - 2,
-        column: columnIndex,
-        totalColumns: 0 
+        top: eventStartUnits * 16, // 上からの位置(px)
+        height: getEventDurationUnits(event) * 16 - 2, // 高さ(px)
+        column: columnIndex, // 何列目か
+        totalColumns: 0 // 後で全体列数をセット
       })
     })
 
-    // totalColumnsを更新
+    // 各イベントに全体列数をセット
     eventPositions.forEach((position) => {
       position.totalColumns = columns.length
     })
@@ -109,11 +118,13 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
     return eventPositions
   }
 
+  // イベントごとのレイアウト情報
   const eventLayout = calculateEventLayout(displayEvents)
 
+  // JSX描画
   return (
     <div className="relative">
-      {/* タイムスロット背景 */}
+      {/* タイムスロット背景（左側の時間帯表示） */}
       {timeSlots.map((timeSlot, index) => {
         const slotHeight = 16
         const isHourStart = index % 4 === 0
@@ -121,6 +132,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         return (
           <div key={index} className="relative">
             <div className="flex" style={{ position: 'relative', zIndex: 1 }}>
+              {/* 時間ラベル部分 */}
               <div
                 className={`w-24 text-sm text-gray-300 border-r flex items-center ${
                   isHourStart ? 'bg-gray-800 font-medium' : 'bg-gray-900'
@@ -131,6 +143,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
                   {isHourStart ? timeSlot.display : ''}
                 </div>
               </div>
+              {/* スロット背景部分 */}
               <div className="flex-1 relative" style={{ height: `${slotHeight}px` }}>
                 {/* 1時間ごとの背景線 - イベントがない場合のみ表示 */}
                 {isHourStart && displayEvents.filter((event) => {
@@ -176,6 +189,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
           const left = getOptimalLeft(layout.column, layout.totalColumns)
 
           return (
+            // イベントボックス
             <div
               key={event.id}
               className={`absolute text-black rounded p-1 shadow-sm transition-all hover:shadow-md cursor-pointer text-xs ${
@@ -192,13 +206,16 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
               }}
               title={`${event.title} - ${formatTime(event.startTime)}〜${formatTime(event.endTime)} (${durationUnits}単位 = ${formatDuration(durationUnits)}) ${participant ? '(参加予定)' : ''}`}
             >
+              {/* イベントタイトル・単位数 */}
               <div className="font-medium truncate" style={{ fontSize: '10px', lineHeight: '12px' }}>
                 {event.title}
                 <span className="ml-1 text-gray-600">({durationUnits})</span>
               </div>
+              {/* 開始・終了時刻 */}
               <div className="text-gray-700 truncate" style={{ fontSize: '9px', lineHeight: '10px' }}>
                 {formatTime(event.startTime)}〜{formatTime(event.endTime)}
               </div>
+              {/* 参加予定ラベル（30分以上の場合のみ） */}
               {participant && durationInMinutes >= 30 && (
                 <div className="text-green-800 font-bold" style={{ fontSize: '8px' }}>
                   ✓ 参加予定
@@ -209,6 +226,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         })}
       </div>
 
+      {/* イベントが無い場合のメッセージ */}
       {displayEvents.length === 0 && !loading && (
         <div className="text-center py-8 text-gray-400">
           {showOnlyParticipating ? (

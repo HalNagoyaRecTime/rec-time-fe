@@ -35,7 +35,7 @@ export default function StudentIdInputPage() {
         </div>
 
         <Card className="w-80 h-32 mb-8 flex items-center justify-center bg-white border border-gray-200 shadow-sm">
-          <div className="text-6xl font-bold text-gray-800 tracking-wider">
+          <div className="text-6xl font-bold bg-white tracking-wider">
             {inputStudentId
               .padEnd(5, "_")
               .split("")
