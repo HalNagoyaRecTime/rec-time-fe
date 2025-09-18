@@ -34,6 +34,7 @@ type EventRow = {
   f_place: string | null;
   f_gather_time: string | null; // "HHmm"
   f_summary: string | null;
+  f_is_my_entry?: boolean; // ✅ 출전 여부
 };
 type Payload = { m_students: StudentRow; t_events: EventRow[] };
 
@@ -69,6 +70,41 @@ function getStudentId(): string | null {
 }
 function setStudentId(id: string) {
   localStorage.setItem(LS_KEY_ID, id);
+}
+
+// ✅ 현재 시각 +5분 "HHmm" 형식 반환
+function getNowPlus5MinHHMM(): string {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 5);
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  return hh + mm;
+}
+
+// ✅ 테스트 이벤트를 localStorage에 자동 삽입
+function addTestEventLocally(studentId: string) {
+  const hhmm = getNowPlus5MinHHMM();
+
+  const newTestEvent: EventRow = {
+    f_event_id: String(Date.now()), // 유니크 ID
+    f_event_name: "テスト競技",
+    f_start_time: hhmm,
+    f_duration: "10",
+    f_place: "グラウンドB",
+    f_gather_time: null,
+    f_summary: "テスト用 自動追加イベント",
+    f_is_my_entry: true, // ✅ 출전자로 간주되게 설정
+  };
+
+  const key = LS_KEY_EVENTS(studentId);
+  const eventsRaw = localStorage.getItem(key);
+  const events: EventRow[] = eventsRaw ? JSON.parse(eventsRaw) : [];
+
+  // 기존 테스트 이벤트 제거 후 삽입
+  const filtered = events.filter((e) => e.f_event_name !== "テスト競技");
+  filtered.push(newTestEvent);
+
+  localStorage.setItem(key, JSON.stringify(filtered));
 }
 
 // API / mock 폴백
@@ -174,6 +210,10 @@ export default function Home() {
 
       setStatus("ok");
       setLastRun(now.getTime());
+
+      // ✅ 테스트용 경기 자동 추가
+      addTestEventLocally(id);
+
       setNextEvent(getNextMyEvent(id)); // 최신 이벤트 갱신
       return true;
     } catch (e) {
