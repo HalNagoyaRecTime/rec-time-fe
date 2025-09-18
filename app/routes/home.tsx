@@ -1,10 +1,12 @@
-// app/routes/home.tsx
+// app/routes/home.tsx (상단 import 부분만 교체)
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Welcome } from "../welcome/welcome";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 
-// ⬇ 공통 모듈 추가 import
-import { getNextEvent, getLastUpdatedDisplay } from "../common/forFrontEnd";
+// 함수(값)는 일반 import
+import { getNextMyEvent, getLastUpdatedDisplay } from "../common/forFrontEnd";
+// 타입은 type 전용 import
+import type { EventRow as FEEventRow } from "../common/forFrontEnd";
 
 export function meta() {
   return [
@@ -17,7 +19,7 @@ type Status = "idle" | "no-id" | "loading" | "ok" | "error";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 const AUTO_MIN_INTERVAL_MS = 5 * 60 * 1000; // 5분
 
-// 最小スキーマ
+// 최소 스키마
 type StudentRow = {
   f_student_id: string;
   f_class?: string | null;
@@ -55,7 +57,7 @@ function isValidPayload(x: any): x is Payload {
   );
 }
 
-// localStorage キー
+// localStorage 키
 const LS_KEY_ID = "student:id";
 const LS_KEY_STUDENT = (id: string) => `student:master:${id}`;
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
@@ -69,7 +71,7 @@ function setStudentId(id: string) {
   localStorage.setItem(LS_KEY_ID, id);
 }
 
-// API / mock フォールバック
+// API / mock 폴백
 async function fetchByGakuseki(id: string): Promise<Payload> {
   const url = `${API_BASE}/download?gakusekino=${encodeURIComponent(id)}`;
   try {
@@ -94,15 +96,15 @@ export default function Home() {
 
   // 자동 새로고침 상태
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [lastRun, setLastRun] = useState<number | null>(null); // 최근 성공 시각(메모리)
+  const [lastRun, setLastRun] = useState<number | null>(null); // 최근 성공 시각
   const [backoff, setBackoff] = useState(0);
   const runningRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  // “다음 경기” 표시용 상태
-  const [nextEvent, setNextEvent] = useState<EventRow | null>(null);
+  // “다음 경기” 표시용 상태 (공통 타입 사용)
+  const [nextEvent, setNextEvent] = useState<FEEventRow | null>(null);
 
-  // 앱 로드시, 저장돼 있던 "마지막 다운로드 시각"을 불러와서 표시
+  // 앱 로드시 마지막 다운로드 시각 불러오기
   useEffect(() => {
     const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
     if (iso) {
@@ -117,7 +119,11 @@ export default function Home() {
 
   // 학번/상태가 바뀌거나 다운로드 성공 후 → 다음 경기 재계산
   useEffect(() => {
-    if (studentId) setNextEvent(getNextEvent(studentId));
+    if (studentId) {
+      setNextEvent(getNextMyEvent(studentId));
+    } else {
+      setNextEvent(null);
+    }
   }, [studentId, status, lastRun]);
 
   async function handleSaveId() {
@@ -130,7 +136,6 @@ export default function Home() {
     setStatus("idle");
   }
 
-  // 성공/실패 boolean 반환
   async function handleDownload(): Promise<boolean> {
     console.log("[ refresh 실행됨 ]");
 
@@ -146,7 +151,7 @@ export default function Home() {
       const now = new Date();
       const iso = now.toISOString();
 
-      // ローカル保存
+      // 로컬 저장
       localStorage.setItem(
         LS_KEY_STUDENT(id),
         JSON.stringify(payload.m_students)
@@ -157,7 +162,7 @@ export default function Home() {
       localStorage.setItem(LS_KEY_LAST, JSON.stringify(payloadWithMeta));
       localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
 
-      // (任意) SW에 로그
+      // (옵션) SW 로그
       const msg = { type: "LOG_JSON", payload: { id, ...payloadWithMeta } };
       if (navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage(msg);
@@ -168,8 +173,8 @@ export default function Home() {
       }
 
       setStatus("ok");
-      setLastRun(now.getTime()); // 화면 표시 갱신
-      setNextEvent(getNextEvent(id)); // 최신 이벤트로 갱신
+      setLastRun(now.getTime());
+      setNextEvent(getNextMyEvent(id)); // 최신 이벤트 갱신
       return true;
     } catch (e) {
       console.error(e);
@@ -178,7 +183,6 @@ export default function Home() {
     }
   }
 
-  // 안전 래퍼
   async function handleDownloadSafe() {
     if (runningRef.current) return;
     runningRef.current = true;
@@ -217,7 +221,6 @@ export default function Home() {
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, lastRun, backoff]);
 
   useEffect(() => {
@@ -226,10 +229,8 @@ export default function Home() {
       if (canAutoRefreshNow()) void handleDownloadSafe();
     }, 60 * 1000);
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, lastRun, backoff]);
 
-  // 스와이프(풀다운)으로 실행
   const { pullDistance, isRefreshing } = usePullToRefresh({
     threshold: 60,
     onRefresh: handleDownloadSafe,
@@ -251,7 +252,7 @@ export default function Home() {
 
       <Welcome />
 
-      {/* 1. 学籍番号 保存 */}
+      {/* 학번 저장 */}
       {!studentId && (
         <div className="space-y-2">
           <div className="font-semibold">学籍番号を入力してください</div>
@@ -267,7 +268,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 2. サーバーからダウンロード + 自動更新 */}
+      {/* 서버에서 다운로드 + 자동 업데이트 */}
       {studentId && (
         <div className="space-y-3">
           <div>
@@ -305,7 +306,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* 저장된 시각 표시 (공통 헬퍼로 표기) */}
+          {/* 마지막 업데이트 시각 */}
           <div className="text-xs opacity-70">
             最終更新:{" "}
             {getLastUpdatedDisplay("ja-JP") ??
