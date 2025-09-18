@@ -1,6 +1,13 @@
 // scripts/addFutureEvent.js
 // mock.json に「テスト競技」を常に最新1件だけ残す
+// ⚠️ 現在は使用されていません。テスト用に保存中です。
+/**
+ * ✅ 개발용 테스트 이벤트 삽입 스크립트
+ * Cloudflare 또는 mock API에 정적 테스트 데이터를 추가할 때만 사용
+ * 현재는 프론트엔드에서 동적으로 처리되므로 사용되지 않음
+ */
 
+/*
 import fs from "fs";
 import path from "path";
 
@@ -41,3 +48,4 @@ fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf-8");
 console.log(
   `mock.json にテストイベントを更新しました: ${newEvent.f_event_name} (${newEvent.f_start_time})`
 );
+*/
