@@ -1,6 +1,5 @@
 // src/App.jsx
 
-import React from 'react';
 import CurrentTime from './CurrentTime'; // 作成したコンポーネントをインポート
 import './App.css'; // スタイルはお好みで
 
