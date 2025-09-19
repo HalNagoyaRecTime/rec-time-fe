@@ -11,7 +11,7 @@ function MovingLine() {
     const intervalId = setInterval(() => {
       // 現在の位置に30を足して、stateを更新する
       setPosition(prevPosition => prevPosition + 30);
-    }, 60000);
+    }, 3600000);
 
     // コンポーネントが不要になったらタイマーを停止
     return () => {
