@@ -1,5 +1,4 @@
 // src/MovingLine.jsx
-
 import React, { useState, useEffect } from 'react';
 
 function MovingLine() {
