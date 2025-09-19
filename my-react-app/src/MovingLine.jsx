@@ -9,8 +9,8 @@ function MovingLine() {
   useEffect(() => {
     // 60000ミリ秒（1分）ごとに実行するタイマー
     const intervalId = setInterval(() => {
-      // 現在の位置に30を足して、stateを更新する
-      setPosition(prevPosition => prevPosition + 1);
+      // 現在の位置に1を足して、stateを更新する
+      setPosition(prevPosition => prevPosition + 30);
     }, 3600000);
 
     // コンポーネントが不要になったらタイマーを停止
