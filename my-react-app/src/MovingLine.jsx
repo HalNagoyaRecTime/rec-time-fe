@@ -10,7 +10,7 @@ function MovingLine() {
     // 60000ミリ秒（1分）ごとに実行するタイマー
     const intervalId = setInterval(() => {
       // 現在の位置に30を足して、stateを更新する
-      setPosition(prevPosition => prevPosition + 30);
+      setPosition(prevPosition => prevPosition + 1);
     }, 3600000);
 
     // コンポーネントが不要になったらタイマーを停止
