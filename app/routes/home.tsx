@@ -271,6 +271,7 @@ export default function Home() {
     return () => clearInterval(t);
   }, [autoRefresh, lastRun, backoff]);
 
+  // 스와이프 새로고침
   const { pullDistance, isRefreshing } = usePullToRefresh({
     threshold: 60,
     onRefresh: handleDownloadSafe,
