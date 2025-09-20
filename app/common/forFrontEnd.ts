@@ -11,8 +11,12 @@
 =======
 // Frontend 팀용: LocalStorage 데이터 접근/헬퍼 (1~6 전부 지원)
 
+<<<<<<< HEAD
 //// 타입 정의
 >>>>>>> ee88045 ([feat] add common 内容追加)
+=======
+//// 타입 정의 タイプ定義
+>>>>>>> 59d7621 ()
 export type StudentRow = {
   f_student_id: string;
   f_class?: string | null;
@@ -64,34 +68,38 @@ export type UpdateRow = {
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 =======
 
-  // 출전 정보 (팀 규칙에 따라 둘 중 하나 사용)
-  f_is_my_entry?: boolean; // A) 내가 출전하는지 여부
-  f_entries?: string[] | null; // B) 출전 학번 목록
+  // 출전 정보 (팀 규칙에 따라 둘 중 하나 사용) 出典情報(チームルールに従って二つのうち一つを使用)
+  f_is_my_entry?: boolean; // A) 내가 출전하는지 여부 私が出場するかどうか
+  f_entries?: string[] | null; // B) 출전 학번 목록 出走学番の一覧
 };
 
-// ⑤ 알림 기록
+// ⑤ 알림 기록 通知記録
 export type NotifRow = {
   notif_id: string;
   event_id?: string | null;
   kind: "remind-5min" | "info" | "system";
-  at_iso: string; // ISO 시각
+  at_iso: string; // ISO 시각 ISO時刻
   status: "queued" | "sent" | "clicked" | "dismissed" | "error";
   meta?: any;
 };
 
-// ⑥ 변경 기록
+// ⑥ 변경 기록 変更記録
 export type UpdateRow = {
   update_id: string;
   event_id?: string | null;
-  field: string; // 변경된 필드명 (예: "f_start_time")
+  field: string; // 변경된 필드명 (예: "f_start_time") 変更されたフィールド名(例: "f_start_time")
   old_value: any;
   new_value: any;
-  at_iso: string; // ISO 시각
+  at_iso: string; // ISO 시각 ISO時刻
   source?: "server" | "admin" | "client";
 };
 
+<<<<<<< HEAD
 //// 저장 키
 >>>>>>> ee88045 ([feat] add common 内容追加)
+=======
+//// 저장 키 保存キー
+>>>>>>> 59d7621 ()
 const LS_KEY_ID = "student:id";
 const LS_KEY_STUDENT = (id: string) => `student:master:${id}`;
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
@@ -109,8 +117,12 @@ const LS_KEY_UPDATES = (id: string) => `updates:list:${id}`;
 const LS_KEY_NOTIFS = (id: string) => `notifs:list:${id}`;
 const LS_KEY_UPDATES = (id: string) => `updates:list:${id}`;
 
+<<<<<<< HEAD
 //// 내부 유틸
 >>>>>>> ee88045 ([feat] add common 内容追加)
+=======
+//// 내부 유틸 内部ユーティリティ
+>>>>>>> 59d7621 ()
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
@@ -141,12 +153,16 @@ function nowHHMM(): string {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 //// ① 학생 정보 学生情報
 =======
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 =======
 //// ① 학생 정보
 >>>>>>> ee88045 ([feat] add common 内容追加)
+=======
+//// ① 학생 정보 学生情報
+>>>>>>> 59d7621 ()
 export function getStudentId(): string | null {
   if (!isBrowser()) return null;
   return localStorage.getItem(LS_KEY_ID);
@@ -161,6 +177,7 @@ export function fetchStudent(
 }
 
 //// ② 이벤트 정보 (+출전 여부) イベント情報(+出場可否)
+<<<<<<< HEAD
 export function fetchEvents(id: string | null = getStudentId()): EventRow[] {
   if (!id) return [];
   return readJSON<EventRow[]>(LS_KEY_EVENTS(id), []);
@@ -215,11 +232,13 @@ export function fetchStudent(
 }
 
 //// ② 이벤트 정보 (+출전 여부)
+=======
+>>>>>>> 59d7621 ()
 export function fetchEvents(id: string | null = getStudentId()): EventRow[] {
   if (!id) return [];
   return readJSON<EventRow[]>(LS_KEY_EVENTS(id), []);
 }
-/** 내가 출전하는 경기인지 확인 */
+/** 내가 출전하는 경기인지 확인 自分が出場する試合なのか確認 */
 export function isMyEntry(
   ev: EventRow,
   studentId: string | null = getStudentId()
@@ -229,7 +248,7 @@ export function isMyEntry(
   if (Array.isArray(ev.f_entries)) return ev.f_entries.includes(studentId);
   return false;
 }
-/** 출전 여부에 따른 색상 클래스 (예시) */
+/** 출전 여부에 따른 색상 클래스 (예시)  出場有無によるカラークラス(例)*/
 export function getEventColorClass(
   ev: EventRow,
   studentId: string | null = getStudentId()
@@ -239,15 +258,19 @@ export function getEventColorClass(
     : "bg-gray-50 dark:bg-gray-900 border-gray-300";
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 export function getNextEvent(id: string | null = getStudentId()) {
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 =======
 /** 내가 출전하는 이벤트 목록 */
+=======
+/** 내가 출전하는 이벤트 목록 私が出場するイベントリスト*/
+>>>>>>> 59d7621 ()
 export function fetchMyEvents(id: string | null = getStudentId()): EventRow[] {
   return fetchEvents(id).filter((ev) => isMyEntry(ev, id));
 }
 
-//// ③ 최종 업데이트 시각
+//// ③ 최종 업데이트 시각 最終更新時刻
 export function getLastUpdatedDisplay(locale?: string): string | null {
   if (!isBrowser()) return null;
   const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
@@ -257,7 +280,7 @@ export function getLastUpdatedDisplay(locale?: string): string | null {
   return new Date(t).toLocaleString(locale);
 }
 
-//// ④ 직후 출전 이벤트
+//// ④ 직후 출전 이벤트 直後の出場イベント
 export function getNextMyEvent(
   id: string | null = getStudentId()
 ): EventRow | null {
@@ -319,7 +342,7 @@ export function getLastUpdatedDisplay(locale?: string): string | null {
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
 =======
 
-//// ⑤ 알림 기록 (아직 저장은 안 함, 읽기만 가능)
+//// ⑤ 알림 기록 (아직 저장은 안 함, 읽기만 가능) 通知記録(まだ保存はしていない、読み込みのみ)
 export function fetchNotifHistory(
   id: string | null = getStudentId()
 ): NotifRow[] {
@@ -327,7 +350,7 @@ export function fetchNotifHistory(
   return readJSON<NotifRow[]>(LS_KEY_NOTIFS(id), []);
 }
 
-//// ⑥ 변경 기록 (아직 저장은 안 함, 읽기만 가능)
+//// ⑥ 변경 기록 (아직 저장은 안 함, 읽기만 가능) 変更記録(まだ保存はしていない、読み込みのみ)
 export function fetchUpdateHistory(
   id: string | null = getStudentId()
 ): UpdateRow[] {
