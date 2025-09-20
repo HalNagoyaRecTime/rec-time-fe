@@ -1,0 +1,17 @@
+name = "rec-time-fe"                # プロジェクト名
+compatibility_date = "2025-09-15"   # 今日の日付入れ
+ 
+
+# 基本環境(Preview=ステージング)
+[[d1_databases]]
+binding = "DB"                       # コードからenv.DBにアクセス
+database_name = "rec_time_stg"
+database_id = "9020f5af-63e2-4256-9357-9a6ec63d4dd1"
+
+[env.production]
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "rec_time_prod"
+database_id = "<プロダクション DB ID>"
+
+migrations_dir = "migrations"      # 移行SQLファイルを置くフォルダ
