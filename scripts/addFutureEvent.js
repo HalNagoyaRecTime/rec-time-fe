@@ -10,6 +10,7 @@
  */
 
 /*
+<<<<<<< HEAD
 =======
 // 기존 mock.json 구조 유지하면서, "지금 +5분" 이벤트를 t_events에 추가
 =======
@@ -17,6 +18,8 @@
 >>>>>>> 394121f ()
 
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
+=======
+>>>>>>> 29cf1a4 ()
 import fs from "fs";
 import path from "path";
 
@@ -81,4 +84,8 @@ console.log(
   `mock.json にテストイベントを更新しました: ${newEvent.f_event_name} (${newEvent.f_start_time})`
 >>>>>>> 394121f ()
 );
+<<<<<<< HEAD
 >>>>>>> 31f37d1 ([feat ]機能及びファイル追加)
+=======
+*/
+>>>>>>> 29cf1a4 ()
