@@ -6,16 +6,25 @@ function TimeTable() {
 
   const [topPosition, setTopPosition] = useState(0);
 
+  const HOUR_HEIGHT = 80;
+
+  const stopPosition = (18-9) * HOUR_HEIGHT;
+
   useEffect(() => {
 
     const intervalId = setInterval(() => {
-      setTopPosition(prevPosition => prevPosition + 1);
+
+        if (prevPosition >= stopPosition) {
+            clearInterval(intervalId);
+            return stopPosition;
+        }
+      return prevPosition + 1;
     }, 1000);
 
     return () => clearInterval(intervalId);
   }, []);
 
-  const hours = Array.from({ length: 12 }, (_, i) => i + 9);
+  const hours = Array.from({ length: 10 }, (_, i) => i + 9);
 
 
   const timelineContainerStyle = {
@@ -29,7 +38,7 @@ function TimeTable() {
     position: 'absolute',
     top: `${topPosition}px`,
     left: 0,
-    width: '100px',
+    width: '550px',
     height: '2px',
     backgroundColor: 'red',
     transition: 'top 0.5s ease-out',
@@ -62,7 +71,7 @@ function TimeTable() {
                 color: '#555',
               }}
             >
-              {`${hour}:00`}
+              {`${hour}:00`}    
             </span>
           </div>
         ))}
