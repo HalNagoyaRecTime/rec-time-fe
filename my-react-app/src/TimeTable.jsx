@@ -14,11 +14,14 @@ function TimeTable() {
 
     const intervalId = setInterval(() => {
 
+      setTopPosition(prevPosition => {
+
         if (prevPosition >= stopPosition) {
             clearInterval(intervalId);
             return stopPosition;
         }
       return prevPosition + 1;
+      });
     }, 1000);
 
     return () => clearInterval(intervalId);
