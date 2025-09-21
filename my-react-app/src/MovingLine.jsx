@@ -1,15 +1,16 @@
 // src/MovingLine.jsx
+
 import React, { useState, useEffect } from 'react';
 
 function MovingLine() {
   // 線の垂直位置(top)を管理するstate。初期値は0。
-  const [topPosition, setPosition] = useState(0);
+  const [topPosition, setTopPosition] = useState(0);
 
   useEffect(() => {
-    // 3600000ミリ秒（1秒）ごとに実行するタイマー
+    // 1000ミリ秒（1秒）ごとに実行するタイマー
     const intervalId = setInterval(() => {
-      // 現在の位置に1を足して、stateを更新する
-      setPosition(prevPosition => prevPosition + 1);
+      // 現在の位置に30を足して、stateを更新する
+      setTopPosition(prevPosition => prevPosition + 1);
     }, 1000);
 
     // コンポーネントが不要になったらタイマーを停止
