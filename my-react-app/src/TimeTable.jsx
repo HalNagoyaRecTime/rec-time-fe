@@ -4,23 +4,43 @@ import React, { useState, useEffect } from 'react';
 
 function TimeTable() {
 
-  const [topPosition, setTopPosition] = useState(0);
-
   const HOUR_HEIGHT = 80;
-
   const stopPosition = (18-9) * HOUR_HEIGHT;
 
+  // 現在時刻に基づいて初期位置を計算
+  const getCurrentPosition = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const second = now.getSeconds();
+    
+    // 9時から18時までの範囲内でのみ計算
+    if (hour < 9 || hour >= 18) {
+      return 0;
+    }
+    
+    // 9時を基準とした時間差（時間）
+    const hourDiff = hour - 9;
+    // 分と秒を考慮した位置計算
+    const minutePosition = (minute * 60 + second) * (HOUR_HEIGHT / 3600);
+    
+    return hourDiff * HOUR_HEIGHT + minutePosition;
+  };
+
+  const [topPosition, setTopPosition] = useState(getCurrentPosition());
+
   useEffect(() => {
+    // 現在時刻から開始位置を再計算
+    const initialPosition = getCurrentPosition();
+    setTopPosition(initialPosition);
 
     const intervalId = setInterval(() => {
-
       setTopPosition(prevPosition => {
-
         if (prevPosition >= stopPosition) {
             clearInterval(intervalId);
             return stopPosition;
         }
-      return prevPosition + 1;
+        return prevPosition + 1;
       });
     }, 1000);
 
