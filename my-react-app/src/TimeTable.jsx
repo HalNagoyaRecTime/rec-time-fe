@@ -5,32 +5,39 @@ import React, { useState, useEffect } from 'react';
 function TimeTable() {
 
   const HOUR_HEIGHT = 80;
-  const stopPosition = (18-9) * HOUR_HEIGHT;
+  // --- ここから変更 ---
+  const PADDING_TOP = 20; // 上の余白を定数として定義
 
-  // 現在時刻に基づいて初期位置を計算
+  // 停止位置にパディングを追加
+  const stopPosition = (18-9) * HOUR_HEIGHT + PADDING_TOP;
+
+  // 現在時刻に基づいて初期位置を計算する関数
   const getCurrentPosition = () => {
     const now = new Date();
     const hour = now.getHours();
     const minute = now.getMinutes();
     const second = now.getSeconds();
     
-    // 9時から18時までの範囲内でのみ計算
-    if (hour < 9 || hour >= 18) {
-      return 0;
+    // 9時より前なら、9時の位置（=パディング分）を返す
+    if (hour < 9) {
+      return PADDING_TOP;
+    }
+    // 18時以降なら、18時の位置を返す
+    if (hour >= 18) {
+      return stopPosition;
     }
     
-    // 9時を基準とした時間差（時間）
     const hourDiff = hour - 9;
-    // 分と秒を考慮した位置計算
     const minutePosition = (minute * 60 + second) * (HOUR_HEIGHT / 3600);
     
-    return hourDiff * HOUR_HEIGHT + minutePosition;
+    // 計算結果にパディングを追加して返す
+    return hourDiff * HOUR_HEIGHT + minutePosition + PADDING_TOP;
   };
 
   const [topPosition, setTopPosition] = useState(getCurrentPosition());
 
   useEffect(() => {
-    // 現在時刻から開始位置を再計算
+    // useEffect内でも、パディングを考慮した位置を再設定
     const initialPosition = getCurrentPosition();
     setTopPosition(initialPosition);
 
@@ -40,7 +47,7 @@ function TimeTable() {
             clearInterval(intervalId);
             return stopPosition;
         }
-        return prevPosition + 1;
+        return prevPosition + (HOUR_HEIGHT / 3600); // 1秒あたりの移動距離を正確に
       });
     }, 1000);
 
@@ -49,13 +56,14 @@ function TimeTable() {
 
   const hours = Array.from({ length: 10 }, (_, i) => i + 9);
 
-
+  // コンテナのスタイル定義に定数を使用
   const timelineContainerStyle = {
     position: 'relative',
-    padding: '20px 0 20px 70px',
+    padding: `${PADDING_TOP}px 0 20px 70px`,
     borderLeft: '2px solid #ddd',
     marginTop: '20px',
   };
+  // --- ここまで変更 ---
 
   const lineStyle = {
     position: 'absolute',
@@ -64,7 +72,7 @@ function TimeTable() {
     width: '550px',
     height: '2px',
     backgroundColor: 'red',
-    transition: 'top 0.5s ease-out',
+    transition: 'top 0.1s linear', // アニメーションを滑らかに
     zIndex: 10
   };
 
@@ -80,7 +88,7 @@ function TimeTable() {
             key={hour}
             style={{
               position: 'relative',
-              height: '80px',
+              height: `${HOUR_HEIGHT}px`,
               borderTop: '1px solid #eee',
             }}
           >
