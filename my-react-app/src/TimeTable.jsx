@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 function TimeTable() {
 
   const HOUR_HEIGHT = 80;
-  // --- ここから変更 ---
+
   const PADDING_TOP = 20; // 上の余白を定数として定義
 
   // 停止位置にパディングを追加
