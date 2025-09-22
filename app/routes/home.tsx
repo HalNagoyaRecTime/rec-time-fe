@@ -1,12 +1,8 @@
-// app/routes/home.tsx (상단 import 부분만 교체)
+// app/routes/home.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Welcome } from "../welcome/welcome";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
-
-// 함수(값)는 일반 import
-import { getNextMyEvent, getLastUpdatedDisplay } from "../common/forFrontEnd";
-// 타입은 type 전용 import
-import type { EventRow as FEEventRow } from "../common/forFrontEnd";
+import { getLastUpdatedDisplay } from "../common/forFrontEnd";
 
 export function meta() {
   return [
@@ -16,10 +12,15 @@ export function meta() {
 }
 
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+// ✅ 기본값을 /api로 강제
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(
+  /\/$/,
+  ""
+);
 const AUTO_MIN_INTERVAL_MS = 5 * 60 * 1000; // 5분
 
-// 최소 스키마
+// ===== 최소 스키마 =====
 type StudentRow = {
   f_student_id: string;
   f_class?: string | null;
@@ -29,12 +30,12 @@ type StudentRow = {
 type EventRow = {
   f_event_id: string;
   f_event_name: string | null;
-  f_start_time: string | null; // "HHmm"
+  f_start_time: string | null;
   f_duration: string | null;
   f_place: string | null;
-  f_gather_time: string | null; // "HHmm"
+  f_gather_time: string | null;
   f_summary: string | null;
-  f_is_my_entry?: boolean; // ✅ 출전 여부
+  f_is_my_entry?: boolean;
 };
 type Payload = { m_students: StudentRow; t_events: EventRow[] };
 
@@ -58,12 +59,12 @@ function isValidPayload(x: any): x is Payload {
   );
 }
 
-// localStorage 키
+// ===== localStorage 키 =====
 const LS_KEY_ID = "student:id";
 const LS_KEY_STUDENT = (id: string) => `student:master:${id}`;
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
-const LS_KEY_LAST = "student:payload:last"; // 전체 JSON
-const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated"; // ISO 시각만 저장
+const LS_KEY_LAST = "student:payload:last";
+const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated";
 
 function getStudentId(): string | null {
   return localStorage.getItem(LS_KEY_ID);
@@ -72,57 +73,61 @@ function setStudentId(id: string) {
   localStorage.setItem(LS_KEY_ID, id);
 }
 
-// ✅ 현재 시각 +5분 "HHmm" 형식 반환
-function getNowPlus5MinHHMM(): string {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + 5);
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  return hh + mm;
-}
-
-// ✅ 테스트 이벤트를 localStorage에 자동 삽입
-function addTestEventLocally(studentId: string) {
-  const hhmm = getNowPlus5MinHHMM();
-
-  const newTestEvent: EventRow = {
-    f_event_id: String(Date.now()), // 유니크 ID
-    f_event_name: "テスト競技",
-    f_start_time: hhmm,
-    f_duration: "10",
-    f_place: "グラウンドB",
-    f_gather_time: null,
-    f_summary: "テスト用 自動追加イベント",
-    f_is_my_entry: true, // ✅ 출전자로 간주되게 설정
+// ===== 매핑 =====
+function mapStudentToFE(raw: any): StudentRow {
+  return {
+    f_student_id: String(raw.f_student_id ?? raw.id ?? ""),
+    f_class: raw.f_class ?? null,
+    f_number: raw.f_number ?? null,
+    f_name: raw.f_name ?? null,
   };
-
-  const key = LS_KEY_EVENTS(studentId);
-  const eventsRaw = localStorage.getItem(key);
-  const events: EventRow[] = eventsRaw ? JSON.parse(eventsRaw) : [];
-
-  // 기존 테스트 이벤트 제거 후 삽입
-  const filtered = events.filter((e) => e.f_event_name !== "テスト競技");
-  filtered.push(newTestEvent);
-
-  localStorage.setItem(key, JSON.stringify(filtered));
 }
 
-// API / mock 폴백
+function mapEventToFE(raw: any): EventRow {
+  return {
+    f_event_id: String(raw.f_event_id ?? raw.id ?? ""),
+    f_event_name: raw.f_event_name ?? raw.title ?? null,
+    f_start_time: typeof raw.f_time === "string" ? raw.f_time : null,
+    f_duration: raw.f_duration ? String(raw.f_duration) : null,
+    f_place: raw.f_place ?? null,
+    f_gather_time:
+      typeof raw.f_gather_time === "string" ? raw.f_gather_time : null,
+    f_summary: raw.f_summary ?? null,
+    f_is_my_entry: Boolean(raw.f_is_my_entry ?? false),
+  };
+}
+
+// ===== API 호출 =====
 async function fetchByGakuseki(id: string): Promise<Payload> {
-  const url = `${API_BASE}/download?gakusekino=${encodeURIComponent(id)}`;
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error(`API ${res.status}`);
-    const data = await res.json();
-    if (!isValidPayload(data)) throw new Error("invalid payload");
-    return data;
-  } catch {
-    const mock = await fetch("/mock.json");
-    if (!mock.ok) throw new Error(`mock ${mock.status}`);
-    const data = await mock.json();
-    if (!isValidPayload(data)) throw new Error("invalid mock payload");
-    return data;
-  }
+  const sRes = await fetch(
+    `${API_BASE}/v1/students/${encodeURIComponent(id)}`,
+    {
+      credentials: "include",
+    }
+  );
+  if (!sRes.ok) throw new Error(`students ${sRes.status}`);
+  const sJson = await sRes.json();
+
+  const eRes = await fetch(`${API_BASE}/v1/events`, { credentials: "include" });
+  if (!eRes.ok) throw new Error(`events ${eRes.status}`);
+  const eJson = await eRes.json();
+
+  const eListRaw = Array.isArray(eJson?.events)
+    ? eJson.events
+    : Array.isArray(eJson)
+      ? eJson
+      : Array.isArray(eJson?.data)
+        ? eJson.data
+        : [];
+
+  const m_students = mapStudentToFE(
+    Array.isArray(sJson) ? (sJson[0] ?? {}) : sJson
+  );
+  const t_events = eListRaw.map(mapEventToFE);
+
+  const payload: Payload = { m_students, t_events };
+  if (!isValidPayload(payload)) throw new Error("invalid combined payload");
+  return payload;
 }
 
 export default function Home() {
@@ -130,17 +135,11 @@ export default function Home() {
   const [inputId, setInputId] = useState("");
   const studentId = useMemo(() => getStudentId(), [status]);
 
-  // 자동 새로고침 상태
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [lastRun, setLastRun] = useState<number | null>(null); // 최근 성공 시각
+  const [lastRun, setLastRun] = useState<number | null>(null);
   const [backoff, setBackoff] = useState(0);
   const runningRef = useRef(false);
-  const abortRef = useRef<AbortController | null>(null);
 
-  // “다음 경기” 표시용 상태 (공통 타입 사용)
-  const [nextEvent, setNextEvent] = useState<FEEventRow | null>(null);
-
-  // 앱 로드시 마지막 다운로드 시각 불러오기
   useEffect(() => {
     const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
     if (iso) {
@@ -153,15 +152,6 @@ export default function Home() {
     setStatus(studentId ? "idle" : "no-id");
   }, [studentId]);
 
-  // 학번/상태가 바뀌거나 다운로드 성공 후 → 다음 경기 재계산
-  useEffect(() => {
-    if (studentId) {
-      setNextEvent(getNextMyEvent(studentId));
-    } else {
-      setNextEvent(null);
-    }
-  }, [studentId, status, lastRun]);
-
   async function handleSaveId() {
     const id = inputId.trim();
     if (!/^\d+$/.test(id)) {
@@ -173,8 +163,6 @@ export default function Home() {
   }
 
   async function handleDownload(): Promise<boolean> {
-    console.log("[ refresh 실행됨 ]");
-
     const id = getStudentId();
     if (!id) {
       setStatus("no-id");
@@ -187,7 +175,6 @@ export default function Home() {
       const now = new Date();
       const iso = now.toISOString();
 
-      // 로컬 저장
       localStorage.setItem(
         LS_KEY_STUDENT(id),
         JSON.stringify(payload.m_students)
@@ -198,23 +185,8 @@ export default function Home() {
       localStorage.setItem(LS_KEY_LAST, JSON.stringify(payloadWithMeta));
       localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
 
-      // (옵션) SW 로그
-      const msg = { type: "LOG_JSON", payload: { id, ...payloadWithMeta } };
-      if (navigator.serviceWorker?.controller) {
-        navigator.serviceWorker.controller.postMessage(msg);
-      } else {
-        navigator.serviceWorker?.ready.then((reg) =>
-          reg.active?.postMessage(msg)
-        );
-      }
-
       setStatus("ok");
       setLastRun(now.getTime());
-
-      // ✅ 테스트용 경기 자동 추가
-      addTestEventLocally(id);
-
-      setNextEvent(getNextMyEvent(id)); // 최신 이벤트 갱신
       return true;
     } catch (e) {
       console.error(e);
@@ -226,18 +198,13 @@ export default function Home() {
   async function handleDownloadSafe() {
     if (runningRef.current) return;
     runningRef.current = true;
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
-
     try {
       const ok = await handleDownload();
-      if (ok) {
-        setBackoff(0);
-      } else {
+      if (ok) setBackoff(0);
+      else
         setBackoff((prev) =>
           Math.min(prev ? prev * 2 : AUTO_MIN_INTERVAL_MS, 30 * 60 * 1000)
         );
-      }
     } finally {
       runningRef.current = false;
     }
@@ -271,7 +238,6 @@ export default function Home() {
     return () => clearInterval(t);
   }, [autoRefresh, lastRun, backoff]);
 
-  // 스와이프 새로고침
   const { pullDistance, isRefreshing } = usePullToRefresh({
     threshold: 60,
     onRefresh: handleDownloadSafe,
@@ -279,7 +245,6 @@ export default function Home() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* 풀다운 인디케이터 */}
       <div aria-hidden style={{ height: pullDistance }} />
       {(pullDistance > 0 || isRefreshing) && (
         <div className="text-center text-xs opacity-80 -mt-2">
@@ -293,13 +258,14 @@ export default function Home() {
 
       <Welcome />
 
-      {/* 학번 저장 */}
       {!studentId && (
         <div className="space-y-2">
-          <div className="font-semibold">学籍番号を入力してください</div>
+          <div className="font-semibold">
+            学籍番号を入力してください (※ 今銀PK値使用)
+          </div>
           <input
             className="border rounded px-2 py-1"
-            placeholder='例）"50416"'
+            placeholder='例）"1"'
             value={inputId}
             onChange={(e) => setInputId(e.target.value)}
           />
@@ -309,7 +275,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 서버에서 다운로드 + 자동 업데이트 */}
       {studentId && (
         <div className="space-y-3">
           <div>
@@ -337,17 +302,6 @@ export default function Home() {
             </label>
           </div>
 
-          {/* 다음 경기 카드 */}
-          {nextEvent && (
-            <div className="mt-2 p-3 border rounded bg-gray-50 dark:bg-gray-900 text-sm">
-              <div className="font-semibold mb-1">次の競技</div>
-              <div>競技名：{nextEvent.f_event_name ?? "—"}</div>
-              <div>開始時刻：{nextEvent.f_start_time ?? "—"}</div>
-              {nextEvent.f_place && <div>場所：{nextEvent.f_place}</div>}
-            </div>
-          )}
-
-          {/* 마지막 업데이트 시각 */}
           <div className="text-xs opacity-70">
             最終更新:{" "}
             {getLastUpdatedDisplay("ja-JP") ??
@@ -357,7 +311,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 상태 메시지 */}
       <p className="mt-2">
         {status === "no-id" && "学籍番号が未設定です。入力してください。"}
         {status === "idle" && "準備OK"}
