@@ -10,7 +10,7 @@ import {
 } from "react-router";
 import { useEffect } from "react";
 
-import type { Route } from "./+types/root";
+import type { Route } from "./types/root";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
