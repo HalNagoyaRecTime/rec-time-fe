@@ -9,13 +9,17 @@ if (!("Notification" in window)) {
 }
 
 function App() {
-  const [count, setCount] = useState(0);
-  // イベントデータを保存するための state
   const [events, setEvents] = useState([]);
-
-  // アプリが読み込まれたときに JSON データを取得する
+  
+  // イベントデータを読み込み、通知をスケジュールする
   useEffect(() => {
-    fetch('/events.json') // publicフォルダから JSON ファイルを取得
+    // 通知の許可をリクエスト
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+    
+    // JSON ファイルからイベントデータを取得
+    fetch('/events.json')
       .then(response => {
         if (!response.ok) {
           throw new Error('ネットワークエラーが発生しました');
@@ -23,50 +27,44 @@ function App() {
         return response.json();
       })
       .then(data => {
-        setEvents(data); // データを state にセット
+        setEvents(data);
         console.log("JSON データが正常に読み込まれました：", data);
+        
+        // スケジュールされた通知をセット
+        scheduleNotifications(data);
       })
       .catch(error => {
         console.error('JSON データの読み込みに失敗しました：', error);
       });
-  }, []); // 空の配列は、この effect が初回レンダリング時のみ実行されることを意味します
+  }, []);
 
-  // 通知許可をリクエストする関数
-  const requestNotificationPermission = () => {
-    // 許可の状態を確認
+  // 通知をスケジュールする関数
+  const scheduleNotifications = (eventsData) => {
     if (Notification.permission === "granted") {
-      console.log("すでに通知の許可を得ています。");
-    } else if (Notification.permission !== "denied") {
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          console.log("ユーザーが通知を許可しました！");
-        } else {
-          console.log("ユーザーが通知を拒否しました。");
+      eventsData.forEach(event => {
+        const eventTime = new Date(event.time);
+        const now = new Date();
+        const timeDifference = eventTime.getTime() - now.getTime();
+        
+        // イベントが未来にあり、かつ1時間以内であればスケジュール
+        if (timeDifference > 0 && timeDifference <= 3600000) {
+          setTimeout(() => {
+            // 時刻をフォーマット
+            const eventHour = eventTime.getHours().toString().padStart(2, '0');
+            const eventMinute = eventTime.getMinutes().toString().padStart(2, '0');
+            const formattedTime = `${eventHour}${eventMinute}`;
+
+            // 通知のフォーマットを生成
+            const notificationTitle = `次のイベントの集合時刻`;
+            const notificationBody = `${event.studentName}さんの次の予定は${event.title}で、${formattedTime}分に集合場所${event.location}に集合です。`;
+
+            new Notification(notificationTitle, { body: notificationBody });
+          }, timeDifference);
         }
       });
+      console.log("通知スケジューリング完了。");
     }
   };
-
-  // 通知を表示する関数
-  const showNotification = () => {
-    if (Notification.permission === "granted") {
-      // JSONデータから最初のイベントを使って通知を作成
-      const firstEvent = events[0];
-      if (firstEvent) {
-        new Notification(`イベント通知: ${firstEvent.name}がまもなく始まります`, {
-          body: `${firstEvent.studentName}さん、${firstEvent.name}は${firstEvent.location}でまもなく始まります。`
-        });
-      } else {
-        console.log("通知するイベントデータがありません。");
-      }
-    } else {
-      console.log("通知の許可がないため、通知を送信できません。");
-    }
-  };
-  
-  // 今は手動で通知をトリガーする関数を呼び出していますが、
-  // 実際のプロジェクトでは、これをタイマー（setTimeout）で自動的に実行します。
-  // 例： setTimeout(() => showNotification(firstEvent), 5000); // 5秒後に通知
 
   return (
     <>
@@ -80,9 +78,6 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
@@ -90,11 +85,9 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-
-      {/* 追加したボタン */}
       <div style={{ marginTop: '20px' }}>
-        <button onClick={requestNotificationPermission}>通知の許可をリクエスト</button>
-        <button onClick={showNotification} style={{ marginLeft: '10px' }}>通知を表示</button>
+        <p>通知は自動的にスケジュールされます。</p>
+        <p>ブラウザの許可を確認してください。</p>
       </div>
     </>
   );
