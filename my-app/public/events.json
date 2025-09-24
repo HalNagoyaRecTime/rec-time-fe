@@ -1,26 +1,26 @@
 [
   {
-    "name": "短距離走",
-    "time": "2025-11-07T09:00:00Z",
+    "title": "短距離走",
+    "studentName": "岡南幸暉",
     "location": "トラックA",
-    "studentName": "岡南幸暉"
+    "time": "2025-09-24T10:54:00"
   },
   {
-    "name": "高跳び",
-    "time": "2025-11-07T10:30:00Z",
+    "title": "高跳び",
+    "studentName": "牧野和道",
     "location": "フィールドB",
-    "studentName": "金秀ミン"
+    "time": "2025-09-24T10:55:00"
   },
   {
-    "name": "リレー",
-    "time": "2025-11-07T14:00:00Z",
-    "location": "トラックA",
-    "studentName": "郭翰東"
+    "title": "リレー",
+    "studentName": "金秀ミン",
+    "location": "トラックB",
+    "time": "2025-09-24T19:07:00"
   },
   {
-    "name": "綱引き",
-    "time": "2025-11-07T15:30:00Z",
+    "title": "綱引き",
+    "studentName": "郭翰東",
     "location": "芝生エリア",
-    "studentName": "牧野和道"
+    "time": "2025-09-24T19:08:00"
   }
 ]
