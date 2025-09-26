@@ -108,9 +108,14 @@ function scheduleNotification(event: EventRow) {
 // }
 
 // ✅ 데이터가 없어서 대체하는 mock.json 버전
-async function fetchByGakuseki(id: string): Promise<Payload> {
+async function fetchByGakuseki(id: string): Promise<{payload: Payload, isFromCache: boolean}> {
   const res = await fetch("/mock.json", { cache: "no-store" });
   if (!res.ok) throw new Error("Mock データ読み込み失敗");
+
+  const isFromCache = res.headers.get('X-Cache-Source') === 'service-worker';
+  if (isFromCache) {
+    console.log("[App] キャッシュからデータを取得しました");
+  }
 
   const data = await res.json();
 
@@ -143,7 +148,7 @@ async function fetchByGakuseki(id: string): Promise<Payload> {
     }, 5000);
   }
 
-  return { m_students: student, t_events: events };
+  return { payload: { m_students: student, t_events: events }, isFromCache };
 }
 
 // ↑ 여기까지가 mock.json 버전
@@ -210,18 +215,25 @@ export default function Home() {
     }
     setStatus("loading");
     try {
-      const payload = await fetchByGakuseki(id);
-      const now = new Date();
-      const iso = now.toISOString();
+      const result = await fetchByGakuseki(id);
+      const payload = result.payload;
+      const isFromCache = result.isFromCache;
 
       localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
-      localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
+
+      // オンライン取得時のみ最終更新時間を更新
+      if (!isFromCache) {
+        const now = new Date();
+        const iso = now.toISOString();
+        localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
+        setLastRun(now.getTime());
+      }
 
       setEvents(payload.t_events);
       scheduleAll(payload.t_events);
 
-      setStatus("ok");
-      setLastRun(now.getTime());
+      // キャッシュ取得時は異なるステータスを設定
+      setStatus(isFromCache ? "error" : "ok");
       return true;
     } catch (e) {
       console.error(e);
