@@ -13,7 +13,7 @@ export function NumberKeypad({ onNumberClick, onClear }: NumberKeypadProps) {
           key={num}
           variant="outline"
           size="lg"
-          className="w-16 h-16 text-2xl font-bold bg-white border border-gray-300 hover:bg-gray-50"
+          className="w-16 h-16 text-2xl font-bold border border-gray-300"
           onClick={() => onNumberClick(num.toString())}
         >
           {num}
@@ -22,7 +22,7 @@ export function NumberKeypad({ onNumberClick, onClear }: NumberKeypadProps) {
       <Button
         variant="outline"
         size="lg"
-        className="w-16 h-16 text-lg font-bold bg-white border border-gray-300 hover:bg-gray-50"
+        className="w-16 h-16 text-lg font-bold border border-gray-300"
         onClick={onClear}
       >
         C
@@ -30,7 +30,7 @@ export function NumberKeypad({ onNumberClick, onClear }: NumberKeypadProps) {
       <Button
         variant="outline"
         size="lg"
-        className="w-16 h-16 text-2xl font-bold bg-white border border-gray-300 hover:bg-gray-50"
+        className="w-16 h-16 text-2xl font-bold border border-gray-300"
         onClick={() => onNumberClick("0")}
       >
         0
