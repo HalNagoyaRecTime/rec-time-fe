@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { Button } from "../../components/ui/button"
+import { HamburgerMenu } from "../../components/hamburger-menu"
 
 interface TimetableHeaderProps {
   studentId: string | null
