@@ -10,11 +10,11 @@ export function TimetableHeader({ studentId }: TimetableHeaderProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="flex items-center justify-between p-6 pb-4 bg-black border-b border-gray-700">
+    <div className="flex items-center p-6 pb-4 bg-blue-800 border-b border-gray-700">
       <div className="flex-1"></div>
       <div className="text-center">
-        <h1 className="text-xl font-bold text-white">TimeTable</h1>
-        <div className="text-sm text-gray-400">
+        <h1 className="text-xl font-bold text-yellow-300">TimeTable</h1>
+        <div className="text-sm text-white-400">
           最終更新 {new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
@@ -24,7 +24,6 @@ export function TimetableHeader({ studentId }: TimetableHeaderProps) {
           size="icon"
           onClick={() => navigate(`/profile?studentId=${studentId}`)}
         >
-          <Settings className="w-5 h-5 text-white" />
         </Button>
       </div>
     </div>

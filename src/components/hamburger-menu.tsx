@@ -30,8 +30,8 @@ export function HamburgerMenu() {
       
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-gray-700">
-          <Menu className="h-6 w-6" />
+        <Button variant="ghost" size="lg" className="text-yellow-400">
+          <Menu className="h-8 w-8" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-80 bg-white">

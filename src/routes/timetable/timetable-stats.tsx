@@ -62,7 +62,7 @@ export function TimetableStats({
               総時間: <span className="text-gray-100 font-bold">{formatDuration(totalEventDuration)}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <label className="text-sm text-gray-300">
               <input
                 type="checkbox"
@@ -72,10 +72,10 @@ export function TimetableStats({
               />
               参加予定のみ表示
             </label>
-          </div>
+          </div> */}
         </div>
 
-        <div className="text-sm text-gray-300 mb-2">凡例:</div>
+        {/* <div className="text-sm text-gray-300 mb-2">凡例:</div>
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-amber-200 rounded"></div>
@@ -85,7 +85,7 @@ export function TimetableStats({
             <div className="w-4 h-4 bg-green-400 rounded"></div>
             <span className="text-xs text-gray-400">参加予定</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {events.length > 0 && !loading && (
