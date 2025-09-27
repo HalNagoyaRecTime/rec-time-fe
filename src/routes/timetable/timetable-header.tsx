@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom"
 import { Button } from "../../components/ui/button"
-import { Settings } from "lucide-react"
 
 interface TimetableHeaderProps {
   studentId: string | null
@@ -10,7 +9,7 @@ export function TimetableHeader({ studentId }: TimetableHeaderProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="flex items-center p-6 pb-4 bg-blue-800 border-b border-gray-700">
+    <div className="sticky top-0 z-50 flex items-center p-6 pb-4 bg-blue-800 border-b border-gray-700">
       <div className="flex-1"></div>
       <div className="text-center">
         <h1>
