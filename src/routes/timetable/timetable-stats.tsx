@@ -54,12 +54,11 @@ export function TimetableStats({
         <div className="flex justify-between items-center mb-4">
           <div className="text-sm text-gray-300">
             <div className="mb-1">
-              参加予定: <span className="text-green-400 font-bold">{participatingEvents.length}件</span> /
-              全体: <span className="text-gray-100 font-bold">{events.length}件</span>
+              次の予定: <span className="text-green-400 font-bold">{participatingEvents.length}件</span>
             </div>
             <div className="text-xs text-gray-400">
-              参加時間: <span className="text-green-400 font-bold">{formatDuration(totalParticipatingDuration)}</span> /
-              総時間: <span className="text-gray-100 font-bold">{formatDuration(totalEventDuration)}</span>
+              集合時間: <span className="text-green-400 font-bold">{formatDuration(totalParticipatingDuration)}</span> /
+              あと <span className="text-gray-100 font-bold">{formatDuration(totalEventDuration)}</span>
             </div>
           </div>
           {/* <div className="flex items-center gap-2">
