@@ -10,8 +10,8 @@ export default function DevNavigation() {
             <Link to="/timetable" className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">
                 timetable
             </Link>
-            <Link to="/id-input" className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">
-                <span className="text-white">id-input</span>
+            <Link to="/check-in" className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">
+                <span className="text-white">check-in</span>
             </Link>
             <Link to="/settings" className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">
                 settings

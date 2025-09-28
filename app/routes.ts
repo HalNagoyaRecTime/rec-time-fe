@@ -5,7 +5,7 @@ export default [
     { path: "/timetable", file: "routes/timetable.tsx" },
     { path: "/home", file: "routes/home.tsx" },
     // 開発中
-    { path: "/id-input", file: "routes/id-input.tsx" },
+    { path: "/check-in", file: "routes/check-in.tsx" },
     { path: "/settings", file: "routes/settings.tsx" },
     { path: "/map", file: "routes/map.tsx" },
 ] satisfies RouteConfig;

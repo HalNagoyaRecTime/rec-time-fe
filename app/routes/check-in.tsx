@@ -3,7 +3,7 @@ import RecTimeFlame from "../components/recTimeFlame";
 import NumberKeypad from "../components/number-keypad";
 import { Link } from "react-router";
 
-export default function IdInput() {
+export default function CheckIn() {
     const [studentId, setStudentId] = useState("");
 
     const handleNumberClick = (num: string) => {

@@ -19,11 +19,11 @@ export default function settings() {
         <RecTimeFlame>
             <div className="flex w-full flex-col gap-6">
                 {/*ユーザーカード*/}
-                <div className="overflow-hidden　border-1 box-border rounded-lg border-[#FFB400] bg-blue-500 shadow-lg">
+                <div className="box-border overflow-hidden rounded-lg border-1 border-[#FFB400] bg-blue-500 shadow-lg">
                     <div className="relative flex items-center justify-center bg-white p-4 pt-11 pb-4">
                         <p className="cursor-pointer text-3xl font-medium text-blue-950">40517</p>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
-                        <Link to="/id-input" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
+                        <Link to="/check-in" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
                             <img src={penYellow} alt="" />
                         </Link>
                     </div>
