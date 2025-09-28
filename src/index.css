@@ -47,7 +47,6 @@
       display: grid;
       grid-template-columns: 100px 1fr; /* 左のラベル用に100px、右の値用に残りの幅を確保 */
       gap: 0.75rem 1rem; /* 行と列の隙間 */
-      text-align: left;
       font-size: 14px;
     }
 
