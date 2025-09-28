@@ -20,7 +20,7 @@ export function TimetableHeader({ studentId }: TimetableHeaderProps) {
       </div>
 
       <div>
-        <span className="text-sm text-gray-300">
+        <span className="ml-9 text-sm text-gray-300">
           最終更新 {new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>

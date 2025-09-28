@@ -26,12 +26,12 @@ export function HamburgerMenu() {
 
   return (
     // 位置固定 左上に配置
-    <div className="fixed top-2 left-0 z-45">
+    <div className="fixed top-6 left-0 z-45">
       
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="lg" className="text-yellow-400 !w-fit !h-fit">
-          <Menu className={"!w-16 !h-16"}/>
+          <Menu className={"!w-8 !h-8"}/>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-80 bg-white">
