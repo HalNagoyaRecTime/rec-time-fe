@@ -1,8 +1,8 @@
 import React from "react";
 import RecTimeFlame from "../components/recTimeFlame";
-import map1 from "/images/map1.jpg";
-import map2 from "/images/map2.jpg";
-import map3 from "/images/map3.jpg";
+import map1 from "/images/map-class-area.jpg";
+import map2 from "/images/map-1f.jpg";
+import map3 from "/images/map-2f.jpg";
 
 export default function map() {
     return (
@@ -18,6 +18,7 @@ export default function map() {
                     <img src={map2} alt="" />
                 </button>
                 <button className="overflow-hidden rounded-xs">
+                    2
                     <img src={map3} alt="" />
                 </button>
             </div>

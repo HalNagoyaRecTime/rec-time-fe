@@ -3,6 +3,19 @@ import RecTimeFlame from "../components/recTimeFlame";
 import NumberKeypad from "../components/number-keypad";
 import { Link } from "react-router";
 
+// === 저장 키 ===
+const LS_KEY_ID = "student:id";
+const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
+const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated";
+
+function getStudentId(): string | null {
+    return localStorage.getItem(LS_KEY_ID);
+}
+
+function saveStudentId(id: string) {
+    localStorage.setItem(LS_KEY_ID, id);
+}
+
 export default function CheckIn() {
     const [studentId, setStudentId] = useState("");
 
@@ -21,13 +34,31 @@ export default function CheckIn() {
         setStudentId((prev) => prev.slice(0, -1));
     };
 
+    // === 학번 저장 ===
     const handleSubmit = () => {
-        if (studentId.length === 5) {
-            console.log("学籍番号:", studentId);
-            // ここでローカルストレージに保存やAPI送信など
-            // localStorage.setItem("student:id", studentId);
-            // alert(`学籍番号 ${studentId} が登録されました`);
+        const id = studentId.trim();
+
+        // 空欄チェック
+        if (!id) {
+            alert("学籍番号を入力してください");
+            return;
         }
+
+        // 5桁チェック
+        if (id.length !== 5) {
+            alert("5桁の学籍番号を入力してください");
+            return;
+        }
+
+        // 数字チェック
+        if (!/^\d+$/.test(id)) {
+            alert("学籍番号は数字のみで入力してください");
+            return;
+        }
+
+        console.log("学籍番号登録:", id);
+        saveStudentId(id);
+        alert(`学籍番号 ${id} を登録しました`);
     };
 
     return (
