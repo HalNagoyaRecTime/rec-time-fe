@@ -50,42 +50,23 @@ export function TimetableStats({
 
   return (
     <>
-      <div className="p-4 bg-gray-900 border-b border-gray-700">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-sm text-gray-300">
-            <div className="mb-1">
-              次の予定: <span className="text-green-400 font-bold">{participatingEvents.length}件</span>
-            </div>
-            <div className="text-xs text-gray-400">
-              集合時間: <span className="text-green-400 font-bold">{formatDuration(totalParticipatingDuration)}</span> /
-              あと <span className="text-gray-100 font-bold">{formatDuration(totalEventDuration)}</span>
-            </div>
-          </div>
-          {/* <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-300">
-              <input
-                type="checkbox"
-                checked={showOnlyParticipating}
-                onChange={(e) => onFilterChange(e.target.checked)}
-                className="mr-2"
-              />
-              参加予定のみ表示
-            </label>
-          </div> */}
-        </div>
-
-        {/* <div className="text-sm text-gray-300 mb-2">凡例:</div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-amber-200 rounded"></div>
-            <span className="text-xs text-gray-400">一般活動</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-400 rounded"></div>
-            <span className="text-xs text-gray-400">参加予定</span>
-          </div>
-        </div> */}
+      <div className="event-card">
+    <div className="event-badge">次の予定</div>
+    
+    <h2 className="event-title">四天王ドッチボール</h2>
+    
+    <div className="event-details">
+      <span className="detail-label">集合時間</span>
+      <div>
+        <span className="detail-value">11:30</span>
+        <span className="time-remaining">30分後</span>
       </div>
+      
+      <span className="detail-label">集合場所</span>
+      <span className="detail-value">招集場所A</span>
+    </div>
+  </div>
+
 
       {events.length > 0 && !loading && (
         <div className="p-4 bg-gray-900 border-t border-gray-700">
