@@ -4,7 +4,8 @@
 .event-card {
       position: relative; /* バッジを絶対位置で配置するための基準 */
       max-width: 2000px;
-      margin-top: 1rem;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
       padding: 2rem 1.5rem;
       background-color: hsl(242, 59%, 23%); /* カードの背景色 */
       border-radius: 12px;
