@@ -120,7 +120,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
 
         return (
           <div key={index} className="relative">
-            <div className="flex" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="flex" style={{ zIndex: 1 }}>
               <div
                 className={`w-24 text-sm text-gray-300 border-r flex items-center ${
                   isHourStart ? 'bg-gray-800 font-medium' : 'bg-gray-900'
@@ -147,10 +147,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         )
       })}
 
-      <div className="time-indicator">
-            <div className="time-label">11:45</div>
-            <div className="time-line"></div>
-      </div>
+      
 
       {/* イベント表示 - 絶対位置で配置 */}
       <div className="absolute top-0 left-24 right-0" style={{ height: `${timeSlots.length * 16}px` }}>
@@ -228,6 +225,11 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
           )}
         </div>
       )}
+      <div className="time-indicator">
+        <div className="time-label">11:45</div>
+        <div className="time-line"></div>
+      </div>
     </div>
+
   )
 }
