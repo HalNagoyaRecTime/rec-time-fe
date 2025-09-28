@@ -16,7 +16,7 @@ interface TimeSlot {
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
   const generateTimeSlots = (): TimeSlot[] => {
     const slots = []
-    for (let hour = 9; hour <= 20; hour++) {
+    for (let hour = 10; hour <= 20; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         const timeValue = hour * 100 + minute
         const displayTime = hour > 12
