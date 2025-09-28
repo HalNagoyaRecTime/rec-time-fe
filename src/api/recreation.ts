@@ -79,9 +79,9 @@ const mapBackendToFrontend = (backendRecreation: BackendRecreation): RecreationE
 const mockTestData: RecreationEvent[] = [
     {
         id: 9001,
-        title: "ヨガ教室",
-        startTime: 1115, // 11:15
-        endTime: 1200,   // 12:00
+        title: "開会式",
+        startTime: 900, // 09:00
+        endTime: 930,   // 09:30
         date: new Date().toISOString().split('T')[0],
         startSlot: 0,
         duration: 1,
