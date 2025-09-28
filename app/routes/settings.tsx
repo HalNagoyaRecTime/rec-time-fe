@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router";
 import RecTimeFlame from "../components/recTimeFlame";
 import penYellow from "/icons/app-icon/pen-yellow.png";
 import settingsYellow from "/icons/app-icon/settings-yellow.png";
-
 
 export default function settings() {
     const [isPushEnabled, setIsPushEnabled] = useState(false);
@@ -15,21 +15,20 @@ export default function settings() {
         }
     }, [isPushEnabled]);
 
-
     return (
         <RecTimeFlame>
-            <div className="w-full flex flex-col gap-6">
-                 {/*ユーザーカード*/}
-                <div className=" bg-blue-500 rounded-lg overflow-hidden border-1 border-[#FFB400] box-border shadow-lg">
-                    <div className="bg-white relative flex items-center justify-center pt-11 pb-4 p-4">
-                        <p className="text-blue-950 text-3xl cursor-pointer font-medium">40517</p>
-                        <h3 className="text-blue-950  absolute left-4 top-3 font-medium">学籍番号</h3>
-                        <button className="absolute right-3 bottom-2 w-6 h-6 cursor-pointer">
-                            <img src={penYellow} alt=""/>
-                        </button>
+            <div className="flex w-full flex-col gap-6">
+                {/*ユーザーカード*/}
+                <div className="overflow-hidden　border-1 box-border rounded-lg border-[#FFB400] bg-blue-500 shadow-lg">
+                    <div className="relative flex items-center justify-center bg-white p-4 pt-11 pb-4">
+                        <p className="cursor-pointer text-3xl font-medium text-blue-950">40517</p>
+                        <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
+                        <Link to="/id-input" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
+                            <img src={penYellow} alt="" />
+                        </Link>
                     </div>
-                    <div className="bg-blue-600 px-6 py-4 flex">
-                        <div className="text-[#FFB400] pr-5">
+                    <div className="flex bg-blue-600 px-6 py-4">
+                        <div className="pr-5 text-[#FFB400]">
                             <p>クラス</p>
                             <p>出席番号</p>
                             <p>氏名</p>
@@ -42,26 +41,28 @@ export default function settings() {
                     </div>
                 </div>
 
-
                 {/*設定*/}
                 <div className="px-2">
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8">
-                                <img src={settingsYellow} alt=""/>
+                            <div className="h-8 w-8">
+                                <img src={settingsYellow} alt="" />
                             </div>
                             <p>プッシュ通知</p>
                         </div>
 
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={isPushEnabled} onChange={(e) => setIsPushEnabled(e.target.checked)}/>
-                            <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFB400]"></div>
+                        <label className="relative inline-flex cursor-pointer items-center">
+                            <input
+                                type="checkbox"
+                                className="peer sr-only"
+                                checked={isPushEnabled}
+                                onChange={(e) => setIsPushEnabled(e.target.checked)}
+                            />
+                            <div className="peer relative h-6 w-11 rounded-full bg-gray-600 peer-checked:bg-[#FFB400] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                         </label>
                     </div>
                 </div>
             </div>
-
         </RecTimeFlame>
-
-    )
+    );
 }
