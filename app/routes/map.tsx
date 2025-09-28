@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React from "react";
 import RecTimeFlame from "../components/recTimeFlame";
 import map1 from "/images/map1.jpg";
 import map2 from "/images/map2.jpg";
