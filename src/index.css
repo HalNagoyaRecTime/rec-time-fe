@@ -6,7 +6,7 @@
       max-width: 2000px;
       margin-top: 1rem;
       padding: 2rem 1.5rem;
-      background-color: #1a185c; /* カードの背景色 */
+      background-color: hsl(242, 59%, 23%); /* カードの背景色 */
       border-radius: 12px;
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans CJK JP', sans-serif;
@@ -54,11 +54,13 @@
     /* 「集合時間」「集合場所」のラベル */
     .detail-label {
       color: #93c5fd; /* 少し薄い青色 */
+      text-align: center;
     }
 
     /* 「11:30」「招集場所A」などの値 */
     .detail-value {
       font-weight: bold;
+      text-align: center;
     }
 
     /* 「30分後」の残り時間表示 */
@@ -66,4 +68,5 @@
       color: #f87171; /* 赤系の色 */
       font-weight: bold;
       margin-left: 0.5rem;
+      text-align: center;
     }
