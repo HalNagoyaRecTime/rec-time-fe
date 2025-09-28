@@ -89,9 +89,9 @@ const mockTestData: RecreationEvent[] = [
     },
     {
         id: 9002,
-        title: "卓球トーナメント",
-        startTime: 1330, // 13:30
-        endTime: 1515,   // 15:15
+        title: "走れ〇人〇脚！",
+        startTime: 1000, // 10:00
+        endTime: 1100,   // 11:00
         date: new Date().toISOString().split('T')[0],
         startSlot: 2,
         duration: 2,
