@@ -184,3 +184,102 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+/* Google FontsからNoto Sans JPをインポート */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+/* --- スケジュール全体のコンテナ --- */
+.schedule-container {
+    position: relative; /* 子要素の絶対配置の基準とする */
+    background-color: #001f5a; /* コンテナの背景色 */
+    padding: 40px 20px;
+    border-radius: 12px;
+    width: 600px;
+    /* bodyからfont-familyをこちらに移動 */
+    font-family: 'Noto Sans JP', sans-serif; 
+}
+
+/* --- イベントをまとめるラッパー --- */
+.events-wrapper {
+    display: flex; /* イベントを横並びにする */
+    gap: 10px; /* イベント間の隙間 */
+}
+
+/* --- 各イベントの共通スタイル --- */
+.event {
+    padding: 15px;
+    border-radius: 12px;
+    color: #001f5a;
+    flex: 1; /* 親要素の幅に応じて均等に広がる */
+    position: relative; /* 装飾用の疑似要素の基準 */
+    overflow: hidden; /* 角丸の外にはみ出す要素を隠す */
+}
+
+/* --- 1つ目のイベント（白） --- */
+.event-one {
+    background-color: #ffffff;
+}
+
+/* 左側の青い縦線 */
+.event-one::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background-color: #001f5a;
+}
+
+/* --- 2つ目のイベント（黄） --- */
+.event-two {
+    background-color: #f7d079;
+}
+
+/* --- イベント内のコンテンツ（アイコンとテキスト） --- */
+.event-content {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* アイコンとテキストの間の隙間 */
+}
+
+/* イベントの左にある青い丸 */
+.event-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #001f5a;
+    border-radius: 50%;
+    flex-shrink: 0; /* コンテナが縮んでも円形を維持 */
+}
+
+.event-title {
+    font-weight: 500;
+}
+
+/* --- 現在時刻を示すインジケーター --- */
+.time-indicator {
+    position: absolute;
+    top: 50%; /* コンテナの垂直中央に配置 */
+    left: 0;
+    right: 0;
+    transform: translateY(-50%); /* 正確に中央に配置するための調整 */
+    display: flex;
+    align-items: center;
+}
+
+/* 時刻ラベル */
+.time-label {
+    background-color: #ffc400;
+    color: #000000;
+    padding: 4px 10px;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 1; /* 線の上に表示 */
+}
+
+/* 水平線 */
+.time-line {
+    height: 3px;
+    background-color: #ffc400;
+    flex-grow: 1; /* 残りの幅を全て埋める */
+    margin-left: -5px; /* ラベルと少し重ねる */
+}

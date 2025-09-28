@@ -147,6 +147,11 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         )
       })}
 
+      <div className="time-indicator">
+            <div className="time-label z-1">11:45</div>
+            <div className="time-line"></div>
+      </div>
+
       {/* イベント表示 - 絶対位置で配置 */}
       <div className="absolute top-0 left-24 right-0" style={{ height: `${timeSlots.length * 16}px` }}>
         {displayEvents.map((event) => {
