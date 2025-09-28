@@ -26,7 +26,7 @@ export function HamburgerMenu() {
 
   return (
     // 位置固定 左上に配置
-    <div className="fixed top-4 left-4 z-45">
+    <div className="fixed top-2 left-0 z-45">
       
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
