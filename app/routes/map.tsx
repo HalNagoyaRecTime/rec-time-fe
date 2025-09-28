@@ -1,5 +1,5 @@
 import React from "react";
-import RecTimeFlame from "../components/recTimeFlame";
+import RecTimeFlame from "../components/ui/recTimeFlame";
 import map1 from "/images/map-class-area.jpg";
 import map2 from "/images/map-1f.jpg";
 import map3 from "/images/map-2f.jpg";

@@ -1,11 +1,10 @@
 // app/root.tsx
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, Link } from "react-router";
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect } from "react";
-
 import type { Route } from "./types/root";
-import DevNavigation from "./components/devNavigation";
-import Footer from "./components/footer";
-import Header from "./components/header";
+import DevNavigation from "./components/ui/devNavigation";
+import Footer from "./components/ui/footer";
+import Header from "./components/ui/header";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [

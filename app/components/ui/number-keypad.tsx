@@ -10,18 +10,24 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
     // キーボードイベントハンドラー
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Ctrl+Delete の組み合わせの場合、ブラウザキャッシュ削除を許可し、Cキーの動作を無効化
+            if (event.ctrlKey && event.key === "Delete") {
+                // ブラウザのデフォルト動作（キャッシュ削除など）を許可
+                return;
+            }
+
             // 数字キー（0-9）
             if (event.key >= "0" && event.key <= "9") {
                 event.preventDefault();
                 onNumberClick(event.key);
             }
-            // Escapeキーでクリア
-            else if (event.key === "Escape" || event.key === "c" || event.key === "C") {
+            // Escapeキーでクリア、またはCキー（Ctrl+Deleteでない場合のみ）
+            else if (event.key === "Escape" || (event.key === "c" || event.key === "C") && !event.ctrlKey) {
                 event.preventDefault();
                 onClear();
             }
-            // BackspaceまたはDeleteキー
-            else if ((event.key === "Backspace" || event.key === "Delete") && onBackspace) {
+            // BackspaceまたはDeleteキー（Ctrlが押されていない場合のみ）
+            else if ((event.key === "Backspace" || event.key === "Delete") && onBackspace && !event.ctrlKey) {
                 event.preventDefault();
                 onBackspace();
             }
