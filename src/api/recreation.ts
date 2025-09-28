@@ -172,9 +172,10 @@ const mockTestData: RecreationEvent[] = [
 ];
 
 export const getRecreationEvents = async (): Promise<RecreationEvent[]> => {
-    const response: RecreationsResponse = await apiGet('/api/v1/recreations');
-    const backendEvents = response.recreations.map(mapBackendToFrontend);
+    // const response: RecreationsResponse = await apiGet('/api/v1/recreations');
+    // const backendEvents = response.recreations.map(mapBackendToFrontend);
 
     // バックエンドのデータとテスト用データを結合
-    return [...backendEvents, ...mockTestData];
+    return [...mockTestData];
+    // return [...backendEvents, ...mockTestData];
 };
