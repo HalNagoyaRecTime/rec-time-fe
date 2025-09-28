@@ -100,9 +100,9 @@ const mockTestData: RecreationEvent[] = [
     // 重なりテスト: 14:00-15:00の時間帯に3つの予定
     {
         id: 9003,
-        title: "料理教室A",
-        startTime: 1400, // 14:00
-        endTime: 1500,   // 15:00
+        title: "8人x50mチャレンジ",
+        startTime: 1000, // 10:00
+        endTime: 1100,   // 11:00
         date: new Date().toISOString().split('T')[0],
         startSlot: 3,
         duration: 1,
