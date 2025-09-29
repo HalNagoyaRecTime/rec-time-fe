@@ -1,19 +1,81 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
-import RecTimeFlame from "../components/recTimeFlame";
+import RecTimeFlame from "../components/ui/recTimeFlame";
 import penYellow from "/icons/app-icon/pen-yellow.png";
 import settingsYellow from "/icons/app-icon/settings-yellow.png";
+import {
+    getNotificationSetting,
+    saveNotificationSetting,
+    requestNotificationPermission,
+    scheduleAllNotifications,
+} from "../utils/notifications";
+
+type StudentData = {
+    f_student_id: string;
+    f_class?: string | null;
+    f_number?: string | null;
+    f_name?: string | null;
+};
 
 export default function settings() {
     const [isPushEnabled, setIsPushEnabled] = useState(false);
+    const [studentData, setStudentData] = useState<StudentData | null>(null);
 
+    // 初期化: ユーザーデータと通知設定を取得
     useEffect(() => {
-        if (isPushEnabled) {
-            console.log("通知オン");
-        } else {
-            console.log("通知オフ");
+        // ユーザーデータの取得
+        const savedData = localStorage.getItem("student:data");
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                setStudentData(data);
+            } catch (error) {
+                console.error("ユーザーデータの読み込みエラー:", error);
+            }
         }
-    }, [isPushEnabled]);
+
+        // 通知設定の取得
+        const notificationEnabled = getNotificationSetting();
+        setIsPushEnabled(notificationEnabled);
+    }, []);
+
+    // Todo:通知のオンのロジックを考え直す
+    // 通知設定が変更された時の処理
+    const handleNotificationToggle = async (enabled: boolean) => {
+        if (enabled) {
+            // 通知をオンにする場合は権限を要求
+            const permission = await requestNotificationPermission();
+            if (permission === "granted") {
+                saveNotificationSetting(true);
+                setIsPushEnabled(true);
+                // console.log("[設定] 通知オン - 権限許可済み");
+
+                // 既存のイベントデータがあれば通知を再スケジュール
+                const studentId = localStorage.getItem("student:id");
+                if (studentId) {
+                    const eventsData = localStorage.getItem(`events:list:${studentId}`);
+                    if (eventsData) {
+                        try {
+                            // イベントの再スケジュール
+                            const events = JSON.parse(eventsData);
+                            scheduleAllNotifications(events);
+                        } catch (error) {
+                            console.error("イベントデータの読み込みエラー:", error);
+                        }
+                    }
+                }
+            } else {
+                // Todo:アラートをテキストにする。
+                alert("通知を有効にするには、ブラウザで通知許可が必要です");
+                setIsPushEnabled(false);
+                console.log("[設定] 通知権限が拒否されました");
+            }
+        } else {
+            // 通知をオフにする
+            saveNotificationSetting(false);
+            setIsPushEnabled(false);
+        }
+    };
 
     return (
         <RecTimeFlame>
@@ -21,7 +83,9 @@ export default function settings() {
                 {/*ユーザーカード*/}
                 <div className="box-border overflow-hidden rounded-lg border-1 border-[#FFB400] bg-blue-500 shadow-lg">
                     <div className="relative flex items-center justify-center bg-white p-4 pt-11 pb-4">
-                        <p className="cursor-pointer text-3xl font-medium text-blue-950">40517</p>
+                        <p className="cursor-pointer text-3xl font-medium text-blue-950">
+                            {studentData?.f_student_id || "-----"}
+                        </p>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
                         <Link to="/check-in" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
                             <img src={penYellow} alt="" />
@@ -34,9 +98,9 @@ export default function settings() {
                             <p>氏名</p>
                         </div>
                         <div className="text-white">
-                            <p className="">IH12A203</p>
-                            <p>20</p>
-                            <p>太郎</p>
+                            <p className="">{studentData?.f_class || "未設定"}</p>
+                            <p>{studentData?.f_number || "未設定"}</p>
+                            <p>{studentData?.f_name || "未設定"}</p>
                         </div>
                     </div>
                 </div>
@@ -56,7 +120,7 @@ export default function settings() {
                                 type="checkbox"
                                 className="peer sr-only"
                                 checked={isPushEnabled}
-                                onChange={(e) => setIsPushEnabled(e.target.checked)}
+                                onChange={(e) => handleNotificationToggle(e.target.checked)}
                             />
                             <div className="peer relative h-6 w-11 rounded-full bg-gray-600 peer-checked:bg-[#FFB400] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                         </label>
