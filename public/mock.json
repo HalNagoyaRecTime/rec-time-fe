@@ -1,8 +1,8 @@
 {
   "m_students": {
-    "f_student_id": "1",
-    "f_class": "1A",
-    "f_number": "01",
+    "f_student_id": "12345",
+    "f_class": "IA12A-203",
+    "f_number": "16",
     "f_name": "田中太郎"
   },
   "t_events": [
