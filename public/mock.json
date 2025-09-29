@@ -1,0 +1,20 @@
+{
+  "m_students": {
+    "f_student_id": "12345",
+    "f_class": "IA12A-203",
+    "f_number": "16",
+    "f_name": "田中太郎"
+  },
+  "t_events": [
+    {
+      "f_event_id": "1",
+      "f_event_name": "バレーボール大会",
+      "f_start_time": "0930",
+      "f_duration": "60",
+      "f_place": "体育館",
+      "f_gather_time": "0915",
+      "f_summary": "学年対抗サッカー大会",
+      "f_is_my_entry": true
+    }
+  ]
+}
