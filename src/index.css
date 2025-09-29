@@ -270,6 +270,7 @@ button:focus-visible {
 .time-label {
     background-color: #ffc400;
     color: #000000;
+    border-radius: 10px;
     padding: 4px 10px;
     font-weight: 700;
     font-size: 14px;
