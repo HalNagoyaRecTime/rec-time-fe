@@ -1,52 +1,68 @@
 <!DOCTYPE html>
-
 <html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>map</title>
+  <!-- CSSファイルの読み込み -->
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./my-app/src/css/common.css">
+</head>
+<body>
 
-  <head>
+  <!-- ハンバーガーメニュー -->
+  <div class="hamburger-container">
+    <button id="menuToggle" class="menu-toggle">☰</button>
+  </div>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+  
+  <!-- サイドメニューの外に追加 -->
+  <div id="overlay" class="overlay hidden"> </div>
+  <nav id="sideMenu" class="side-menu">
+    <h2>メニュー</h2>
+    <ul>
+      <li><button data-path="/"><a href="#">学籍番号入力</a></button></li>
+      <li><button data-path="/timetable"><a href="#">予定一覧</a></button></li>
+      <li><button data-path="/notifications"><a href="#">通知設定</a></button></li>
+      <li><button data-path="/profile"><a href="#">学生情報確認</a></button></li>        <li><button data-path="/profile"><a href="#">マップ</a></button></li>
+      <li><button data-path="/profile"><a href="#">レクサイト</a></button></li>
+    </ul>
+   </nav>
+ 
 
-    <title>map</title>
+  <header>
+    <h1>マップ</h1>
+  </header>
 
-    <link rel="stylesheet" type="text/css" href="css/common.css">
-
-  </head>
-
-  <body>
-
-    <nav></nav>
-
-    <header>
-      <h1>マップ</h1>
-    </header>
-
-    <main>
-
-      <div class="gaiyou">
-        <h2>集合場所</h2>
-        <div class="syuugou">
-          <img src="./images/map1.jpg" width="" height="" alt="map1">
-        </div>
+  <main>
+    <div class="gaiyou">
+      <h2>集合場所</h2>
+      <div class="syuugou">
+        <img src="./images/map1.jpg" alt="集合場所マップ">
       </div>
-      <div class="gaiyou">
-        <h2>施設案内マップ</h2>
-        <div class="sisetu">
-          <img src="./images/map2.jpg" width="" height="" alt="map2">
-        </div>
-        <div class="sisetu2">
-          <img src="./images/map3.jpg" width="" height="" alt="map3">
-        </div>
+    </div>
+    <div class="gaiyou">
+      <h2>施設案内マップ</h2>
+      <div class="sisetu">
+        <img src="./images/map2.jpg" alt="施設案内マップ1">
       </div>
-
-    </main>
-
-    <footer>
-      <div>
-        copyright &copy; <script>new Date().getFullYear() > 2000 && document.write("" + new Date().getFullYear());</script> iwataayaka. All rights reserved.
+      <div class="sisetu2">
+        <img src="./images/map3.jpg" alt="施設案内マップ2">
       </div>
-    </footer>
+    </div>
+  </main>
 
-  </body>
+  <footer>
+    <div>
+      copyright &copy;
+      <script>
+        new Date().getFullYear() > 2000 && document.write("" + new Date().getFullYear());
+      </script>
+      iwataayaka. All rights reserved.
+    </div>
+  </footer>
 
+  <!-- JavaScriptファイルの読み込み（TypeScriptをコンパイルしたもの） -->
+  <script src="./map.js"></script>
+</body>
 </html>
