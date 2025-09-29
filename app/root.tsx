@@ -3,6 +3,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import { useEffect } from "react";
 import type { Route } from "./types/root";
 import DevNavigation from "./components/ui/devNavigation";
+import HamburgerMenu from "./components/ui/hamburger-menu";
 import Footer from "./components/ui/footer";
 import Header from "./components/ui/header";
 import "./app.css";
@@ -17,6 +18,11 @@ export const links: Route.LinksFunction = () => [
     {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    },
+    // Adobe Fonts - 源ノ角ゴシック Heavy for titles
+    {
+        rel: "stylesheet",
+        href: "https://use.typekit.net/kux1ncf.css",
     },
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
@@ -60,7 +66,7 @@ export default function App() {
 
     return (
         <div className="flex min-h-screen w-screen flex-col bg-black">
-            <div className="wrapper mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950">
+            <div className="wrapper relative mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950">
                 <Header />
                 <main className="flex flex-1 px-2">
                     <Outlet />
