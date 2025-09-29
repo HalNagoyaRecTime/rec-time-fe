@@ -79,9 +79,9 @@ const mapBackendToFrontend = (backendRecreation: BackendRecreation): RecreationE
 const mockTestData: RecreationEvent[] = [
     {
         id: 9001,
-        title: "ヨガ教室",
-        startTime: 1115, // 11:15
-        endTime: 1200,   // 12:00
+        title: "開会式",
+        startTime: 900, // 09:00
+        endTime: 930,   // 09:30
         date: new Date().toISOString().split('T')[0],
         startSlot: 0,
         duration: 1,
@@ -89,9 +89,9 @@ const mockTestData: RecreationEvent[] = [
     },
     {
         id: 9002,
-        title: "卓球トーナメント",
-        startTime: 1330, // 13:30
-        endTime: 1515,   // 15:15
+        title: "走れ〇人〇脚！",
+        startTime: 1000, // 10:00
+        endTime: 1100,   // 11:00
         date: new Date().toISOString().split('T')[0],
         startSlot: 2,
         duration: 2,
@@ -100,9 +100,9 @@ const mockTestData: RecreationEvent[] = [
     // 重なりテスト: 14:00-15:00の時間帯に3つの予定
     {
         id: 9003,
-        title: "料理教室A",
-        startTime: 1400, // 14:00
-        endTime: 1500,   // 15:00
+        title: "8人x50mチャレンジ",
+        startTime: 1000, // 10:00
+        endTime: 1100,   // 11:00
         date: new Date().toISOString().split('T')[0],
         startSlot: 3,
         duration: 1,
@@ -110,9 +110,9 @@ const mockTestData: RecreationEvent[] = [
     },
     {
         id: 9004,
-        title: "英会話クラス",
-        startTime: 1415, // 14:15
-        endTime: 1445,   // 14:45
+        title: "真のストライカーは...",
+        startTime: 1130, // 11:30
+        endTime: 1230,   // 12:30
         date: new Date().toISOString().split('T')[0],
         startSlot: 3,
         duration: 1,
@@ -120,9 +120,9 @@ const mockTestData: RecreationEvent[] = [
     },
     {
         id: 9005,
-        title: "音楽教室",
-        startTime: 1430, // 14:30
-        endTime: 1530,   // 15:30
+        title: "四天王ドッチボール",
+        startTime: 1130, // 11:30
+        endTime: 1230,   // 12:30
         date: new Date().toISOString().split('T')[0],
         startSlot: 3,
         duration: 1,
@@ -131,50 +131,21 @@ const mockTestData: RecreationEvent[] = [
     // 重なりテスト: 16:30-17:30の時間帯に2つの予定
     {
         id: 9006,
-        title: "テニス教室",
-        startTime: 1630, // 16:30
-        endTime: 1730,   // 17:30
+        title: "HALダービー・レクリエーション杯",
+        startTime: 1330, // 13:30
+        endTime: 1530,   // 15:30
         date: new Date().toISOString().split('T')[0],
         startSlot: 5,
         duration: 1,
         participants: ["12345"]
-    },
-    {
-        id: 9007,
-        title: "水泳教室",
-        startTime: 1645, // 16:45
-        endTime: 1745,   // 17:45
-        date: new Date().toISOString().split('T')[0],
-        startSlot: 5,
-        duration: 1,
-        participants: []
-    },
-    {
-        id: 9008,
-        title: "映画鑑賞",
-        startTime: 1945, // 19:45
-        endTime: 2130,   // 21:30
-        date: new Date().toISOString().split('T')[0],
-        startSlot: 8,
-        duration: 2,
-        participants: ["12345"]
-    },
-    {
-        id: 9009,
-        title: "読書会",
-        startTime: 2100, // 21:00
-        endTime: 2130,   // 21:30
-        date: new Date().toISOString().split('T')[0],
-        startSlot: 10,
-        duration: 1,
-        participants: []
     }
 ];
 
 export const getRecreationEvents = async (): Promise<RecreationEvent[]> => {
-    const response: RecreationsResponse = await apiGet('/api/v1/recreations');
-    const backendEvents = response.recreations.map(mapBackendToFrontend);
+    // const response: RecreationsResponse = await apiGet('/api/v1/recreations');
+    // const backendEvents = response.recreations.map(mapBackendToFrontend);
 
     // バックエンドのデータとテスト用データを結合
-    return [...backendEvents, ...mockTestData];
+    return [...mockTestData];
+    // return [...backendEvents, ...mockTestData];
 };
