@@ -2,34 +2,45 @@ import { formatTime } from "../../api"
 import type { RecreationEvent } from "../../api/recreation"
 import React, { useState, useEffect } from 'react';
 
+// --- ここから追加・修正したコンポーネント ---
+
 interface CurrentTimeIndicatorProps {
   timelineStartHour: number;
-  pixelsPerMinute: number;
+  pixelsPerMinute: number; // 1分あたりのピクセル数を指定
 }
 
-const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute}: CurrentTimeIndicatorProps) => {
+/**
+ * 現在時刻を示すインジケーターコンポーネント
+ */
+const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTimeIndicatorProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   useEffect(() => {
+    // 1分ごとに現在時刻を更新するタイマーを設定
     const intervalId = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 60000); // 60秒
 
+    // コンポーネントがアンマウントされる時にタイマーを解除
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // 初回レンダリング時にのみ実行
 
+  // タイムライン開始時刻からの経過分数を計算
   const startMinutes = timelineStartHour * 60;
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
   const elapsedMinutes = currentMinutes - startMinutes;
 
+  // 経過分数と1分あたりのピクセル数からtopの位置を計算
   const topPosition = elapsedMinutes * pixelsPerMinute;
 
+  // 表示用の時刻をフォーマット (例: 13:06)
   const formattedTime = currentTime.toLocaleTimeString('ja-JP', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   });
 
+  // タイムラインの表示範囲外の場合は描画しない
   if (topPosition < 0) {
     return null;
   }
@@ -38,14 +49,14 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute}: CurrentTime
     <div
       style={{
         position: 'absolute',
-        top: '${topPosition}px',
-        left: 0,
+        top: `${topPosition}px`, // 計算した位置をtopに設定
+        left: 0, // left-24 の領域内に配置するため0にする
         right: 0,
         display: 'flex',
         alignItems: 'center',
         height: '2px',
         backgroundColor: 'gold',
-        zIndex: 20,
+        zIndex: 20, // イベント(zIndex: 10)より手前に表示
       }}
     >
       <span
@@ -55,16 +66,20 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute}: CurrentTime
           padding: '2px 8px',
           borderRadius: '4px',
           fontSize: '12px',
+          // 線の左端からの相対位置
           position: 'absolute',
-          left: '-2.5rem',
-          transform: 'translateY(-50%)',
+          left: '-2.5rem', // text-gray-300の領域にはみ出すように調整
+          transform: 'translateY(-50%)', // 線の真ん中に来るように調整
         }}
-        >
-          {formattedTime}
-        </span>
+      >
+        {formattedTime}
+      </span>
     </div>
   );
 };
+
+// --- ここまでが追加・修正したコンポーネント ---
+
 
 interface TimeSlotGridProps {
   displayEvents: RecreationEvent[]
@@ -127,48 +142,48 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
     }
   }
 
-  // 重なりを検出し、イベントのレイアウトを計算する関数
   const calculateEventLayout = (events: RecreationEvent[]) => {
     const eventPositions = new Map<number, { top: number; height: number; column: number; totalColumns: number }>()
-
-    // 時間順でソート
     const sortedEvents = [...events].sort((a, b) => a.startTime - b.startTime)
-
-    // 重なりを検出するための配列
     const columns: Array<{ events: RecreationEvent[]; endTime: number }> = []
 
     sortedEvents.forEach(event => {
       const startHours = Math.floor(event.startTime / 100)
       const startMinutes = event.startTime % 100
       const startTotalMinutes = startHours * 60 + startMinutes
-      const baseMinutes = 11 * 60
+      // 基準の時刻を9時に変更
+      const baseMinutes = 9 * 60
       const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / 15)
 
-      // 利用可能なカラムを探す
       let columnIndex = columns.findIndex(col => col.endTime <= event.startTime)
-
       if (columnIndex === -1) {
-        // 新しいカラムを作成
         columnIndex = columns.length
         columns.push({ events: [], endTime: 0 })
       }
 
-      // カラムにイベントを追加
       columns[columnIndex].events.push(event)
       columns[columnIndex].endTime = event.endTime
 
-      // ポジション情報を保存
       eventPositions.set(event.id, {
         top: eventStartUnits * 16,
         height: getEventDurationUnits(event) * 16 - 2,
         column: columnIndex,
-        totalColumns: 0 
+        totalColumns: 0
       })
     })
 
-    // totalColumnsを更新
     eventPositions.forEach((position) => {
-      position.totalColumns = columns.length
+      // 重なり合うイベントグループごとにカラム数を計算
+      const overlappingEvents = sortedEvents.filter(e => {
+          const eLayout = eventPositions.get(e.id);
+          const pLayout = position;
+          if (!eLayout) return false;
+          // 簡単な重なり判定: 開始時間と終了時間が少しでも被るか
+          const pEndTop = pLayout.top + pLayout.height;
+          const eEndTop = eLayout.top + eLayout.height;
+          return Math.max(pLayout.top, eLayout.top) < Math.min(pEndTop, eEndTop);
+      });
+      position.totalColumns = new Set(overlappingEvents.map(e => eventPositions.get(e.id)?.column)).size;
     })
 
     return eventPositions
@@ -193,18 +208,12 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
                 style={{ height: `${slotHeight}px` }}
               >
                 <div className="px-2">
-                  {isHourStart ? timeSlot.display : ''}
+                  {isHourStart ? timeSlot.display.substring(2) : ''}
                 </div>
               </div>
               <div className="flex-1 relative" style={{ height: `${slotHeight}px` }}>
-                {/* 1時間ごとの背景線 - イベントがない場合のみ表示 */}
-                {isHourStart && displayEvents.filter((event) => {
-                  const eventStartMinutes = Math.floor(event.startTime / 100) * 60 + (event.startTime % 100)
-                  const slotStartMinutes = Math.floor(timeSlot.value / 100) * 60 + (timeSlot.value % 100)
-                  const eventSlotStart = Math.floor(eventStartMinutes / 15) * 15
-                  return eventSlotStart === slotStartMinutes
-                }).length === 0 && (
-                  <div className="absolute top-0 left-0 w-full h-0.5 bg-gray-600 -z-50"></div>
+                {isHourStart && (
+                  <div className="absolute top-0 left-0 w-full h-px bg-gray-600"></div>
                 )}
               </div>
             </div>
@@ -212,10 +221,14 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         )
       })}
 
-      
-
-      {/* イベント表示 - 絶対位置で配置 */}
+      {/* イベント表示と現在時刻インジケーターのコンテナ */}
       <div className="absolute top-0 left-24 right-0" style={{ height: `${timeSlots.length * 16}px` }}>
+        {/* --- 現在時刻インジケーターをここに配置 --- */}
+        <CurrentTimeIndicator
+          timelineStartHour={9}
+          pixelsPerMinute={16 / 15} // 15分で16px -> 1分あたりは 16/15 px
+        />
+
         {displayEvents.map((event) => {
           const participant = isParticipant(event)
           const durationUnits = getEventDurationUnits(event)
@@ -223,20 +236,15 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
           const layout = eventLayout.get(event.id)
 
           if (!layout) return null
-
-          // 予定数に応じて動的に幅を調整
+          
           const getOptimalWidth = (totalColumns: number) => {
-            if (totalColumns === 1) return 'calc(100% - 8px)'
-            if (totalColumns === 2) return '48%' // 2つの場合は48%ずつで余裕を持たせる
-            if (totalColumns === 3) return '32%' // 3つの場合は32%ずつ
-            return `${Math.max(20, 100 / totalColumns)}%` // 4つ以上は均等分割（最小20%）
+             if (totalColumns === 1) return 'calc(100% - 8px)'
+             return `calc(${100 / totalColumns}% - 4px)`
           }
 
           const getOptimalLeft = (column: number, totalColumns: number) => {
-            if (totalColumns === 1) return '4px'
-            if (totalColumns === 2) return `${column * 50 + 1}%`
-            if (totalColumns === 3) return `${column * 33 + 0.5}%`
-            return `${(column * 100) / totalColumns}%`
+              if (totalColumns === 1) return '4px'
+              return `calc(${ (column * 100) / totalColumns }% + 2px)`
           }
 
           const width = getOptimalWidth(layout.totalColumns)
@@ -249,7 +257,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
                 participant
                   ? 'bg-green-400 hover:bg-green-500'
                   : 'bg-amber-200 hover:bg-amber-300'
-              } ${layout.totalColumns > 1 ? 'mr-0.5' : ''}`}
+              }`}
               style={{
                 top: `${layout.top}px`,
                 height: `${Math.max(layout.height, 12)}px`,
@@ -261,7 +269,6 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
             >
               <div className="font-medium truncate" style={{ fontSize: '10px', lineHeight: '12px' }}>
                 {event.title}
-                <span className="ml-1 text-gray-600">({durationUnits})</span>
               </div>
               <div className="text-gray-700 truncate" style={{ fontSize: '9px', lineHeight: '10px' }}>
                 {formatTime(event.startTime)}〜{formatTime(event.endTime)}
@@ -277,7 +284,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
       </div>
 
       {displayEvents.length === 0 && !loading && (
-        <div className="text-center py-8 text-gray-400">
+        <div className="absolute top-0 left-24 right-0 text-center py-8 text-gray-400">
           {showOnlyParticipating ? (
             <div>
               <div className="mb-2">参加予定のレクリエーション活動がありません</div>
@@ -291,6 +298,5 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
         </div>
       )}
     </div>
-
   )
 }
