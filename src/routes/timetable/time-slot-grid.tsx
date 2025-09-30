@@ -2,16 +2,11 @@ import { formatTime } from "../../api"
 import type { RecreationEvent } from "../../api/recreation"
 import React, { useState, useEffect } from 'react';
 
-// --- ここから追加・修正したコンポーネント ---
-
 interface CurrentTimeIndicatorProps {
   timelineStartHour: number;
   pixelsPerMinute: number; // 1分あたりのピクセル数を指定
 }
 
-/**
- * 現在時刻を示すインジケーターコンポーネント
- */
 const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTimeIndicatorProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -77,9 +72,6 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTim
     </div>
   );
 };
-
-// --- ここまでが追加・修正したコンポーネント ---
-
 
 interface TimeSlotGridProps {
   displayEvents: RecreationEvent[]
@@ -223,7 +215,6 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
 
       {/* イベント表示と現在時刻インジケーターのコンテナ */}
       <div className="absolute top-0 left-24 right-0" style={{ height: `${timeSlots.length * 16}px` }}>
-        {/* --- 現在時刻インジケーターをここに配置 --- */}
         <CurrentTimeIndicator
           timelineStartHour={9}
           pixelsPerMinute={16 / 15} // 15分で16px -> 1分あたりは 16/15 px
