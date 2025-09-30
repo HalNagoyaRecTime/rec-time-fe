@@ -76,7 +76,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
       const startHours = Math.floor(event.startTime / 100)
       const startMinutes = event.startTime % 100
       const startTotalMinutes = startHours * 60 + startMinutes
-      const baseMinutes = 11 * 60
+      const baseMinutes = 9 * 60
       const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / 15)
 
       // 利用可能なカラムを探す
