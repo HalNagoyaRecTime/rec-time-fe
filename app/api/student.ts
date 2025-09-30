@@ -30,7 +30,7 @@ export type ApiPayload = {
 
 // ✅ 실제 백엔드에서 학생 데이터 호출
 export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
-    const baseUrl = import.meta.env.VITE_API_URL ?? "";
+    const baseUrl = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8787/api";
     // ✅ HTTPS 백엔드 라우트에 맞춤
     const url = `${baseUrl}/student-data/${id}`;
 

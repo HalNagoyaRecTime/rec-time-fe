@@ -1,3 +1,4 @@
+// src/routes/home.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Welcome } from "../welcome/welcome";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
@@ -25,7 +26,23 @@ type EventRow = {
     f_summary: string | null;
     f_is_my_entry?: boolean;
 };
-type Payload = { m_students: StudentRow; t_events: EventRow[] };
+type EntryGroupRow = {
+    f_event_id: string;
+    f_seq: string;
+    f_place: string;
+    f_gather_time?: string | null;
+};
+type EntryRow = {
+    f_student_id: string;
+    f_event_id: string;
+    f_seq: string;
+};
+type Payload = {
+    m_students: StudentRow;
+    t_events: EventRow[];
+    t_entry_groups: EntryGroupRow[];
+    t_entries: EntryRow[];
+};
 
 // === 저장 키 ===
 const LS_KEY_ID = "student:id";
@@ -85,9 +102,11 @@ function scheduleNotification(event: EventRow) {
     }
 }
 
-// ✅ 실제 API 호출 버전
+// ✅ 실제 API 호출 (풀 페이로드)
 async function fetchByGakuseki(id: string): Promise<{ payload: Payload; isFromCache: boolean }> {
-    const url = `${API_BASE}/students/by-student-num/${id}`;
+    const url = `${API_BASE}/students/full/${id}`;
+    console.log("fetch url =", url);
+
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
         throw new Error(`API 呼び出し失敗: ${res.status} ${res.statusText}`);
@@ -120,10 +139,35 @@ async function fetchByGakuseki(id: string): Promise<{ payload: Payload; isFromCa
           }))
         : [];
 
+    const groups: EntryGroupRow[] = Array.isArray(data?.t_entry_groups)
+        ? data.t_entry_groups.map((g: any) => ({
+              f_event_id: String(g.f_event_id ?? ""),
+              f_seq: String(g.f_seq ?? ""),
+              f_place: g.f_place ?? "",
+              f_gather_time: g.f_gather_time ?? null,
+          }))
+        : [];
+
+    const entries: EntryRow[] = Array.isArray(data?.t_entries)
+        ? data.t_entries.map((e: any) => ({
+              f_student_id: String(e.f_student_id ?? ""),
+              f_event_id: String(e.f_event_id ?? ""),
+              f_seq: String(e.f_seq ?? ""),
+          }))
+        : [];
+
     // 알림 예약
     events.forEach(scheduleNotification);
 
-    return { payload: { m_students: student, t_events: events }, isFromCache };
+    return {
+        payload: {
+            m_students: student,
+            t_events: events,
+            t_entry_groups: groups,
+            t_entries: entries,
+        },
+        isFromCache,
+    };
 }
 
 // === 컴포넌트 ===
@@ -135,6 +179,8 @@ export default function Home() {
     const [status, setStatus] = useState<Status>("idle");
     const [inputId, setInputId] = useState("");
     const [events, setEvents] = useState<EventRow[]>([]);
+    const [groups, setGroups] = useState<EntryGroupRow[]>([]);
+    const [entries, setEntries] = useState<EntryRow[]>([]);
     const [lastRun, setLastRun] = useState<number | null>(null);
     const runningRef = useRef(false);
 
@@ -198,6 +244,8 @@ export default function Home() {
             }
 
             setEvents(payload.t_events);
+            setGroups(payload.t_entry_groups);
+            setEntries(payload.t_entries);
             scheduleAll(payload.t_events);
 
             setStatus(isFromCache ? "error" : "ok");
@@ -271,6 +319,39 @@ export default function Home() {
                 {status === "ok" && "保存OK・通知予約完了"}
                 {status === "error" && "取得に失敗しました。"}
             </p>
+
+            {/* 全イベント一覧 */}
+            {events.length > 0 && (
+                <div>
+                    <h3 className="font-semibold">全イベント一覧</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                        {events.map((ev, idx) => (
+                            <li key={idx}>
+                                {ev.f_event_name ?? "不明なイベント"} （開始時間: {ev.f_start_time ?? "未定"}）
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* あなたの出場イベント */}
+            {entries.length > 0 && (
+                <div>
+                    <h3 className="font-semibold">あなたの出場イベント</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                        {entries.map((e, idx) => {
+                            const ev = events.find((ev) => ev.f_event_id === e.f_event_id);
+                            const group = groups.find((g) => g.f_event_id === e.f_event_id && g.f_seq === e.f_seq);
+                            return (
+                                <li key={idx}>
+                                    {ev?.f_event_name ?? "不明なイベント"}
+                                    （集合場所: {group?.f_place ?? "未定"}, 集合時間: {group?.f_gather_time ?? "未定"}）
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
         </div>
     );
 }
