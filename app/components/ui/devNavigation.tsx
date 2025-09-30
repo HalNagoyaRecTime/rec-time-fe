@@ -22,6 +22,7 @@ export default function DevNavigation() {
             <Link to="/home" className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">
                 home
             </Link>
+            <button className="cursor-pointer rounded-sm px-2 py-1 hover:bg-gray-800">navToggle</button>
         </div>
     );
 }

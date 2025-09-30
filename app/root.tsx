@@ -1,11 +1,12 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Route } from "./types/root";
 import DevNavigation from "./components/ui/devNavigation";
+import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import Footer from "./components/ui/footer";
-import Header from "./components/ui/header";
+
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -55,6 +56,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     useEffect(() => {
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
@@ -67,7 +70,8 @@ export default function App() {
     return (
         <div className="flex min-h-screen w-screen flex-col bg-black">
             <div className="wrapper relative mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950">
-                <Header />
+                <Header onMenuOpen={() => setIsMenuOpen(true)} />
+                <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <main className="flex flex-1 px-2">
                     <Outlet />
                 </main>

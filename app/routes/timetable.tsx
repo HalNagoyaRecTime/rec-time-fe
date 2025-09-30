@@ -4,7 +4,7 @@ import React from "react";
 export default function Timetable() {
     return (
         <RecTimeFlame>
-            <div className="flex h-full max-w-160 flex-col">
+            <div className="flex h-full flex-col">
                 <div className="flex w-full flex-col items-end">
                     <p className="text-xs text-white/70">
                         最終更新：<span>12:20</span>
@@ -39,7 +39,7 @@ export default function Timetable() {
                     </div>
                 </div>
 
-                <div className="relative h-200 w-full rounded-lg bg-blue-950 p-4">
+                <div className="relative h-200 w-full rounded-lg bg-blue-950">
                     {/* 時間軸の線 */}
                     <div className="absolute top-4 right-4 bottom-4 left-12">
                         {/* 横線 */}

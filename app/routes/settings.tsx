@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import RecTimeFlame from "../components/ui/recTimeFlame";
-import penYellow from "/icons/app-icon/pen-yellow.png";
-import settingsYellow from "/icons/app-icon/settings-yellow.png";
+import penYellow from "/icons/app-icon/pen.svg";
+import settingsYellow from "/icons/app-icon/settings.svg";
 import {
     getNotificationSetting,
     saveNotificationSetting,
     requestNotificationPermission,
     scheduleAllNotifications,
-} from "../utils/notifications";
+} from "~/utils/notifications";
 
 type StudentData = {
     f_student_id: string;

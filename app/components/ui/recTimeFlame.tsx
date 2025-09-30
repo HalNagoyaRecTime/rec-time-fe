@@ -6,8 +6,8 @@ interface RecTimeFlameProps {
 
 export default function RecTimeFlame({ children }: RecTimeFlameProps) {
     return (
-        <div className="flex w-full flex-col items-center pt-5">
-            <div className="max-w-200 min-w-90 px-8">{children}</div>
+        <div className="flame flex w-full flex-col items-center">
+            <div className="w-full max-w-screen px-8 sm:max-w-115">{children}</div>
         </div>
     );
 }
