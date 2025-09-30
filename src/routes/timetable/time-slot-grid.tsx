@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react';
 
 interface CurrentTimeIndicatorProps {
   timelineStartHour: number;
+  timelineEndHour: number;
   pixelsPerMinute: number; // 1分あたりのピクセル数を指定
 }
 
-const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTimeIndicatorProps) => {
+const CurrentTimeIndicator = ({ timelineStartHour, timelineEndHour, pixelsPerMinute }: CurrentTimeIndicatorProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -19,6 +20,12 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTim
     // コンポーネントがアンマウントされる時にタイマーを解除
     return () => clearInterval(intervalId);
   }, []); // 初回レンダリング時にのみ実行
+
+  const currentHour = currentTime.getHours();
+  if(currentHour < timelineStartHour || currentHour >= timelineEndHour) {
+    return null;
+  }
+
 
   // タイムライン開始時刻からの経過分数を計算
   const startMinutes = timelineStartHour * 60;
@@ -34,11 +41,6 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute }: CurrentTim
     minute: '2-digit',
     hour12: false,
   });
-
-  // タイムラインの表示範囲外の場合は描画しない
-  if (topPosition < 0) {
-    return null;
-  }
 
   return (
     <div
@@ -217,6 +219,7 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
       <div className="absolute top-0 left-24 right-0" style={{ height: `${timeSlots.length * 16}px` }}>
         <CurrentTimeIndicator
           timelineStartHour={9}
+          timelineEndHour={20}
           pixelsPerMinute={16 / 15} // 15分で16px -> 1分あたりは 16/15 px
         />
 
