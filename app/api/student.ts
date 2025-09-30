@@ -1,5 +1,4 @@
 // === 데이터 타입 정의 ===
-// === データタイプ定義 ===
 export type StudentRow = {
     f_student_id: string;
     f_class?: string | null;
@@ -18,14 +17,22 @@ export type EventRow = {
     f_is_my_entry?: boolean;
 };
 
-export type ApiPayload = { m_students: StudentRow; t_events: EventRow[] };
+// ✅ 백엔드에서 내려주는 전체 페이로드 타입
+export type ApiPayload = {
+    m_students: StudentRow;
+    t_events: EventRow[];
+    // 필요하면 아래도 확장 가능
+    // t_entries: EntryRow[];
+    // t_entry_groups: EntryGroupRow[];
+    // t_notifications: NotificationRow[];
+    // t_change_logs: ChangeLogRow[];
+};
 
 // ✅ 실제 백엔드에서 학생 데이터 호출
 export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
-    // 환경 변수에서 API URL 가져오기
     const baseUrl = import.meta.env.VITE_API_URL ?? "";
-    // ✅ 백엔드 라우트에 맞게 수정
-    const url = `${baseUrl}/students/by-student-num/${id}`;
+    // ✅ HTTPS 백엔드 라우트에 맞춤
+    const url = `${baseUrl}/student-data/${id}`;
 
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
@@ -33,10 +40,8 @@ export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload
     }
 
     const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
-
     const data = await res.json();
 
-    // 학생 정보 파싱
     const student: StudentRow = {
         f_student_id: data?.m_students?.f_student_id ?? "",
         f_class: data?.m_students?.f_class ?? null,
@@ -44,7 +49,6 @@ export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload
         f_name: data?.m_students?.f_name ?? null,
     };
 
-    // 이벤트 정보 파싱
     const events: EventRow[] = Array.isArray(data?.t_events)
         ? data.t_events.map((ev: any) => ({
               f_event_id: String(ev.f_event_id ?? ""),

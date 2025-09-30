@@ -16,22 +16,22 @@ export default defineConfig(({ mode }) => {
             reactRouter(),
             tailwindcss(),
             VitePWA({
-                injectRegister: null, // SW 등록 코드 주입 금지
+                injectRegister: null,
                 includeAssets: ["favicon.ico", "icons/*"],
-                manifest: false, // public/manifest.webmanifest 사용
-                devOptions: { enabled: false }, // 개발 모드 SW 생성 비활성
-                filename: "pwa-sw.js", // 혹시 생성돼도 sw.js와 충돌 방지
+                manifest: false,
+                devOptions: { enabled: false },
+                filename: "pwa-sw.js",
             }),
         ],
         server: {
             proxy: {
                 "/api": {
-                    target: "http://127.0.0.1:8787", // 백엔드 주소
+                    // 개발 환경에서는 .env.development 참고
+                    target: env.VITE_API_BASE_URL || "http://127.0.0.1:8787",
                     changeOrigin: true,
                 },
             },
         },
-
         preview: {
             host: env.VITE_HOST || "0.0.0.0",
             port: Number(env.VITE_PREVIEW_PORT) || 4173,
