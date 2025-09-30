@@ -26,7 +26,13 @@ const CurrentTimeIndicator = ({ timelineStartHour = 0}) => {
     const intervalId = setInterval(() => {
       setCurrentTime(new Date());
     },60000)
-  })
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const startMinutes = timelineStartHour * 60;
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+  const topPosition = currentMinutes - startMinutes;
 }
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
   const generateTimeSlots = (): TimeSlot[] => {
