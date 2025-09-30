@@ -17,7 +17,54 @@ const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute}: CurrentTime
 
     return () => clearInterval(intervalId);
   }, []);
-}
+
+  const startMinutes = timelineStartHour * 60;
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+  const elapsedMinutes = currentMinutes - startMinutes;
+
+  const topPosition = elapsedMinutes * pixelsPerMinute;
+
+  const formattedTime = currentTime.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  if (topPosition < 0) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: '${topPosition}px',
+        left: 0,
+        right: 0,
+        display: 'flex',
+        alignItems: 'center',
+        height: '2px',
+        backgroundColor: 'gold',
+        zIndex: 20,
+      }}
+    >
+      <span
+        style={{
+          backgroundColor: 'gold',
+          color: 'black',
+          padding: '2px 8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          position: 'absolute',
+          left: '-2.5rem',
+          transform: 'translateY(-50%)',
+        }}
+        >
+          {formattedTime}
+        </span>
+    </div>
+  );
+};
 
 interface TimeSlotGridProps {
   displayEvents: RecreationEvent[]
