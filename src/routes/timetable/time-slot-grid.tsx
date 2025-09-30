@@ -1,5 +1,12 @@
 import { formatTime } from "../../api"
 import type { RecreationEvent } from "../../api/recreation"
+import React, { useState, useEffect } from 'react';
+
+/**
+ * 現在時刻を示すインジケーターコンポーネント
+ * @param {object} props
+ * @param {number} props.timelineStartHour - タイムラインの開始時刻 (0-23)
+ */
 
 interface TimeSlotGridProps {
   displayEvents: RecreationEvent[]
@@ -12,7 +19,15 @@ interface TimeSlot {
   value: number
   display: string
 }
+const CurrentTimeIndicator = ({ timelineStartHour = 0}) => {
+  const[currentTime, setCurrentTime] = useState(new Date());
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    },60000)
+  })
+}
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
   const generateTimeSlots = (): TimeSlot[] => {
     const slots = []
