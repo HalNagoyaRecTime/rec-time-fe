@@ -4,8 +4,9 @@ import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { getLastUpdatedDisplay } from "../common/forFrontEnd";
 
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
-const AUTO_MIN_INTERVAL_MS = 5 * 60 * 1000;
+
+// ✅ 프록시 모드 전용 API base
+const API_BASE = "/api";
 
 // === 데이터 타입 정의 ===
 type StudentRow = {
@@ -20,7 +21,7 @@ type EventRow = {
     f_start_time: string | null;
     f_duration: string | null;
     f_place: string | null;
-    f_gather_time: string | null; // ✅ 알람 기준
+    f_gather_time: string | null;
     f_summary: string | null;
     f_is_my_entry?: boolean;
 };
@@ -84,32 +85,17 @@ function scheduleNotification(event: EventRow) {
     }
 }
 
-// === API 호출 === (데이터 완성되면 이걸로 바꾸기)
-// async function fetchByGakuseki(id: string): Promise<Payload> {
-//   // mock.json에서 통합 데이터 로드
-//   const res = await fetch(`/mock.json`, { cache: "no-store" });
-//   if (!res.ok) throw new Error(`mock.json ${res.status}`);
-//   const data = await res.json();
-
-//   const events: EventRow[] = Array.isArray(data?.t_events) ? data.t_events : [];
-//   const sJson = data?.m_students ?? {};
-// const student: StudentRow = {
-//   f_student_id: sJson?.f_student_id ?? "",
-//   f_class: sJson?.f_class ?? null,
-//   f_number: sJson?.f_number ?? null,
-//   f_name: sJson?.f_name ?? null,
-// };
-//   return { m_students: student, t_events: events };
-// }
-
-// ✅ 데이터가 없어서 대체하는 mock.json 버전
+// ✅ 실제 API 호출 버전
 async function fetchByGakuseki(id: string): Promise<{ payload: Payload; isFromCache: boolean }> {
-    const res = await fetch("/mock.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("Mock データ読み込み失敗");
+    const url = `${API_BASE}/students/by-student-num/${id}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+        throw new Error(`API 呼び出し失敗: ${res.status} ${res.statusText}`);
+    }
 
     const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
     if (isFromCache) {
-        console.log("[App] キャッシュからデータを取得しました");
+        console.log("[App] サービスワーカーキャッシュからデータを取得しました");
     }
 
     const data = await res.json();
@@ -134,18 +120,13 @@ async function fetchByGakuseki(id: string): Promise<{ payload: Payload; isFromCa
           }))
         : [];
 
-    // ✅ 테스트용: 5초 후 첫 알림 확인
-    if (events.length > 0) {
-        setTimeout(() => {
-            showEventNotification(events[0]);
-        }, 5000);
-    }
+    // 알림 예약
+    events.forEach(scheduleNotification);
 
     return { payload: { m_students: student, t_events: events }, isFromCache };
 }
 
-// ↑ 여기까지가 mock.json 버전
-
+// === 컴포넌트 ===
 export function meta() {
     return [{ title: "Rectime PWA" }, { name: "description", content: "学籍番号でデータ取得" }];
 }
@@ -154,9 +135,7 @@ export default function Home() {
     const [status, setStatus] = useState<Status>("idle");
     const [inputId, setInputId] = useState("");
     const [events, setEvents] = useState<EventRow[]>([]);
-    const [autoRefresh, setAutoRefresh] = useState(false);
     const [lastRun, setLastRun] = useState<number | null>(null);
-    const [backoff, setBackoff] = useState(0);
     const runningRef = useRef(false);
 
     const studentId = useMemo(() => getStudentId(), [status]);
@@ -211,7 +190,6 @@ export default function Home() {
 
             localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
 
-            // オンライン取得時のみ最終更新時間を更新
             if (!isFromCache) {
                 const now = new Date();
                 const iso = now.toISOString();
@@ -222,7 +200,6 @@ export default function Home() {
             setEvents(payload.t_events);
             scheduleAll(payload.t_events);
 
-            // キャッシュ取得時は異なるステータスを設定
             setStatus(isFromCache ? "error" : "ok");
             return true;
         } catch (e) {
