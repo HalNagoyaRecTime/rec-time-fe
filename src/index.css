@@ -258,31 +258,3 @@ button:focus-visible {
     font-weight: 500;
 }
 
-/* --- 現在時刻を示すインジケーター --- */
-.time-indicator {
-    position: absolute;
-    top: 50%; /* コンテナの垂直中央に配置 */
-    left: 0;
-    right: 0;
-    transform: translateY(-50%); /* 正確に中央に配置するための調整 */
-    display: flex;
-    align-items: center;
-}
-
-/* 時刻ラベル */
-.time-label {
-    background-color: rgba(255, 242, 0, 0.6);
-    color: #000000;
-    border-radius: 10px;
-    padding: 4px 10px;
-    font-weight: 700;
-    font-size: 14px;
-    z-index: 1; /* 線の上に表示 */
-}
-
-/* 水平線 */
-.time-line {
-    height: 3px;
-    background-color: rgba(255, 242, 0, 0.6);
-    flex-grow: 1; /* 残りの幅を全て埋める */
-}

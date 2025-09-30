@@ -290,10 +290,6 @@ export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyPartic
           )}
         </div>
       )}
-      <div className="time-indicator">
-        <div className="time-label">14:45</div>
-        <div className="time-line"></div>
-      </div>
     </div>
 
   )
