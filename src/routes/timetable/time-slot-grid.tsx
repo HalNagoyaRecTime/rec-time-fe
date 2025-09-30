@@ -33,6 +33,16 @@ const CurrentTimeIndicator = ({ timelineStartHour = 0}) => {
   const startMinutes = timelineStartHour * 60;
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
   const topPosition = currentMinutes - startMinutes;
+
+  const frormattedTime = currentTime.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  if (topPosition < 0) {
+    return null;
+  }
 }
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
   const generateTimeSlots = (): TimeSlot[] => {
