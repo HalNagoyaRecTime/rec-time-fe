@@ -2,11 +2,22 @@ import { formatTime } from "../../api"
 import type { RecreationEvent } from "../../api/recreation"
 import React, { useState, useEffect } from 'react';
 
-/**
- * 現在時刻を示すインジケーターコンポーネント
- * @param {object} props
- * @param {number} props.timelineStartHour - タイムラインの開始時刻 (0-23)
- */
+interface CurrentTimeIndicatorProps {
+  timelineStartHour: number;
+  pixelsPerMinute: number;
+}
+
+const CurrentTimeIndicator = ({ timelineStartHour, pixelsPerMinute}: CurrentTimeIndicatorProps) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+}
 
 interface TimeSlotGridProps {
   displayEvents: RecreationEvent[]
@@ -19,31 +30,7 @@ interface TimeSlot {
   value: number
   display: string
 }
-const CurrentTimeIndicator = ({ timelineStartHour = 0}) => {
-  const[currentTime, setCurrentTime] = useState(new Date());
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentTime(new Date());
-    },60000)
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const startMinutes = timelineStartHour * 60;
-  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-  const topPosition = currentMinutes - startMinutes;
-
-  const frormattedTime = currentTime.toLocaleTimeString('ja-JP', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  if (topPosition < 0) {
-    return null;
-  }
-}
 export function TimeSlotGrid({ displayEvents, studentId, loading, showOnlyParticipating }: TimeSlotGridProps) {
   const generateTimeSlots = (): TimeSlot[] => {
     const slots = []
