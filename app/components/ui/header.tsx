@@ -23,7 +23,7 @@ export default function header({ onMenuOpen }: HeaderProps) {
 
     return (
         // 最大幅を取得するための要素
-        <header className="sticky flex h-14 w-full items-end px-3 md:px-6">
+        <header className="fixed top-0 left-0 z-100 flex h-16 w-full items-end bg-blue-950 px-3 pb-2 md:px-6">
             <button onClick={onMenuOpen} className="mr-3 h-10 w-10 cursor-pointer p-2 text-white">
                 <img src="/icons/app-icon/hamburger-menu.png" alt="" />
             </button>
