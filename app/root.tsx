@@ -69,7 +69,7 @@ export default function App() {
 
     return (
         <div className="flex min-h-screen w-screen flex-col bg-black">
-            <div className="wrapper relative mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950">
+            <div className="wrapper relative mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950 pt-14">
                 <Header onMenuOpen={() => setIsMenuOpen(true)} />
                 <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
                 <main className="flex flex-1">
