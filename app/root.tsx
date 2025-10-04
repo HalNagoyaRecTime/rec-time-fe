@@ -5,6 +5,7 @@ import type { Route } from "./types/root";
 import DevNavigation from "./components/ui/devNavigation";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
+import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
 
 import "./app.css";
@@ -46,7 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Meta />
                 <Links />
             </head>
-            <body>
+            <body className="overflow-hidden">
                 {children}
                 <ScrollRestoration />
                 <Scripts />
@@ -68,17 +69,16 @@ export default function App() {
     }, []);
 
     return (
-        <div className="flex min-h-screen w-screen flex-col bg-black">
-            <div className="wrapper relative mx-auto flex h-full w-full max-w-6xl flex-1 flex-col bg-blue-950 pt-14">
-                <Header onMenuOpen={() => setIsMenuOpen(true)} />
-                <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-                <main className="flex flex-1">
-                    <Outlet />
-                </main>
-                {/* ↓仮のナビゲーション↓ */}
-                <DevNavigation />
+        <div className="wrapper flex h-screen w-screen flex-col bg-blue-950">
+            <Header />
+            <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+            <HamburgerMenuBtn onClick={() => setIsMenuOpen(!isMenuOpen)} isOpen={isMenuOpen} />
+            <main className="flex-1 overflow-y-auto">
+                <Outlet />
                 <Footer />
-            </div>
+            </main>
+            {/* ↓デバック用ナビゲーション↓ */}
+            <DevNavigation />
         </div>
     );
 }

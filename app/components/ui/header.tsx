@@ -1,11 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router";
 
-interface HeaderProps {
-    onMenuOpen: () => void;
-}
-
-export default function header({ onMenuOpen }: HeaderProps) {
+export default function header() {
     const location = useLocation();
 
     const getPageTitle = () => {
@@ -23,13 +19,10 @@ export default function header({ onMenuOpen }: HeaderProps) {
 
     return (
         // 最大幅を取得するための要素
-        <header className="fixed top-0 left-0 z-100 flex h-16 w-full items-end bg-blue-950 px-3 pb-2 md:px-6">
-            <button onClick={onMenuOpen} className="mr-3 h-10 w-10 cursor-pointer p-2 text-white">
-                <img src="/icons/app-icon/hamburger-menu.png" alt="" />
-            </button>
-            <div className="mb-[7px] flex items-end">
+        <header className="top-0 left-0 z-80 flex h-18 w-full items-center drop-shadow-2xl bg-blue-950/90 pl-16 md:pl-18 shrink-0">
+            <div className=" flex items-end">
                 <h1
-                    className="mr-7 text-3xl leading-[27px] font-extrabold whitespace-nowrap"
+                    className="mr-7 text-[1.625rem]/7 font-extrabold whitespace-nowrap"
                     style={{
                         backgroundImage: `linear-gradient(90deg, #fec42e, #fce6a0)`,
                         WebkitBackgroundClip: "text",
@@ -39,7 +32,7 @@ export default function header({ onMenuOpen }: HeaderProps) {
                 >
                     {getPageTitle()}
                 </h1>
-                <p className="text-xs text-white/80">
+                <p className="text-xs text-white/80 pb-[2px]">
                     <span>最終更新：</span>
                     <span>12:20</span>
                 </p>

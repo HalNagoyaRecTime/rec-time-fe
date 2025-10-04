@@ -15,9 +15,11 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
         if (isOpen) {
             setIsVisible(true);
             setTimeout(() => setIsAnimating(true), 10);
+            document.body.style.overflow = 'hidden';
         } else {
             setIsAnimating(false);
             setTimeout(() => setIsVisible(false), 300);
+            document.body.style.overflow = '';
         }
     }, [isOpen]);
 
@@ -50,7 +52,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
     return (
         // 位置固定 左上に配置
         <div
-            className={`absolute z-10 h-screen w-full bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+            className={`absolute top-0 z-90 h-screen w-full bg-black/50 transition-opacity duration-300 ${isAnimating ? "opacity-100" : "opacity-0"}`}
             onClick={onClose}
         >
             <div className="relative h-full w-full">
@@ -58,15 +60,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                     className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-64" : "w-0"}`}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="h-full min-w-fit bg-blue-950 px-6">
-                        <div
-                            className={`flex justify-start pt-7 pb-10 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
-                        >
-                            <button onClick={onClose} className="h-5 w-5 cursor-pointer">
-                                <img src="/icons/app-icon/x-mark.png" alt="" />
-                            </button>
-                        </div>
-
+                    <div className="h-full min-w-fit bg-blue-950 px-6 pt-24">
                         <div
                             className={`flex flex-col gap-6 pr-7 pl-5 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
