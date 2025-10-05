@@ -1,7 +1,7 @@
 import { get } from "http";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import React, { useEffect } from "react";
-import { fetchEvents, getLastUpdatedDisplay, getNextMyEvent, getStudentId } from "~/common/forFrontEnd";
+import { fetchEvents, getLastUpdatedDisplay, getNextMyEvent, getStudentId } from "../common/forFrontEnd";
 import clsx from 'clsx'
 
 export default function Timetable() {
