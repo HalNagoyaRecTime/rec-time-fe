@@ -1,33 +1,39 @@
+import { get } from "http";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import React from "react";
+import { getLastUpdatedDisplay, getNextMyEvent, getStudentId } from "~/common/forFrontEnd";
 
 export default function Timetable() {
+    const studentsId = getStudentId();
+    const LastUpdatetime = getLastUpdatedDisplay("ja-JP");
+    const nextEvent = getNextMyEvent(studentsId);
     return (
         <RecTimeFlame>
             <div className="flex h-full flex-col">
                 <div className="flex w-full flex-col items-end">
                     <p className="text-xs text-white/70">
-                        最終更新：<span>12:20</span>
+                        最終更新：<span>{LastUpdatetime}</span>
                     </p>
                     <p className="text-sm text-white/70">
-                        学籍番号：<span>13579</span>
+                        学籍番号：<span>{studentsId}</span>
                     </p>
                 </div>
 
                 <div className="relative mt-4 mb-5 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
-                    <h3 className="font-title text-lg font-black text-white">四天王ドッジボール</h3>
+                    <h3 className="font-title text-lg font-black text-white">{nextEvent?.f_event_name}</h3>
                     <div className="flex w-full flex-1 justify-center">
                         {/*Todo:横幅が大きくなった時に文字をどう表示するか*/}
                         <div className="flex w-7/10 gap-3 pl-3">
                             <div className="min-w-fit font-normal text-[#FFB400]">
                                 <p>集合時間</p>
-                                <p>集合時間</p>
+                                <p>集合場所</p>
                             </div>
                             <div className="flex flex-col overflow-hidden text-white">
                                 <p className="flex gap-2 truncate">
-                                    11:30<span>30分後</span>
+                                    {/* TODO:gather_time計算？ */}
+                                    {nextEvent?.f_start_time}<span>{nextEvent?.f_gather_time}</span>
                                 </p>
-                                <p className="truncate">招集場所A</p>
+                                <p className="truncate">{nextEvent?.f_place}</p>
                             </div>
                         </div>
                     </div>
@@ -72,40 +78,13 @@ export default function Timetable() {
                     <div className="absolute top-158 left-4 text-sm font-bold text-yellow-300">20:00</div>
 
                     {/* イベントブロック */}
+                    
                     <div className="absolute top-6 left-16 h-7 w-56 rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-black">
                         朝会
                         <br />
                         9:00-9:30
                     </div>
 
-                    <div className="absolute top-20 left-16 h-14 w-28 rounded border border-blue-200 bg-white px-2 py-1 text-xs font-bold text-blue-800">
-                        走れ〇×問題！
-                        <br />
-                        10:00-11:00
-                    </div>
-                    <div className="absolute top-20 left-44 h-14 w-28 rounded bg-white px-2 py-1 text-xs font-bold text-blue-800">
-                        8人30分チャレンジ
-                        <br />
-                        10:00-11:00
-                    </div>
-
-                    <div className="absolute top-40 left-44 h-14 w-28 rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-blue-800">
-                        四天王ドッジボール
-                        <br />
-                        11:30-12:30
-                    </div>
-
-                    <div className="absolute top-40 left-16 h-14 w-28 rounded bg-white px-2 py-1 text-xs font-bold text-blue-800">
-                        昼のストライカーは...
-                        <br />
-                        11:30-12:30
-                    </div>
-
-                    <div className="absolute top-70 left-16 h-14 w-56 rounded bg-yellow-400 px-2 py-1 text-xs font-bold text-black">
-                        HALダービー・レクリエーション杯
-                        <br />
-                        13:30-15:30
-                    </div>
 
                     {/* 11:45 現在時刻インジケーター */}
                     <div className="absolute top-40 left-4 flex items-center">
