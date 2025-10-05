@@ -2,6 +2,7 @@
 // === データタイプ定義 ===
 export type StudentRow = {
     f_student_id: string;
+    f_student_num: string; // 학번 (学籍番号)
     f_class?: string | null;
     f_number?: string | null;
     f_name?: string | null;
@@ -34,7 +35,8 @@ export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload
     const data = await res.json();
 
     const student: StudentRow = {
-        f_student_id: data?.m_students?.f_student_id ?? "",
+        f_student_id: String(data?.m_students?.f_student_id ?? ""),
+        f_student_num: String(data?.m_students?.f_student_num ?? ""),
         f_class: data?.m_students?.f_class ?? null,
         f_number: data?.m_students?.f_number ?? null,
         f_name: data?.m_students?.f_name ?? null,
@@ -44,10 +46,11 @@ export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload
         ? data.t_events.map((ev: any) => ({
               f_event_id: String(ev.f_event_id ?? ""),
               f_event_name: ev.f_event_name ?? null,
-              f_start_time: typeof ev.f_start_time === "string" ? ev.f_start_time : null,
+              // バックエンド形式 f_time → フロントエンド f_start_time にマッピング
+              f_start_time: ev.f_time ? String(ev.f_time) : (ev.f_start_time ? String(ev.f_start_time) : null),
               f_duration: ev.f_duration ? String(ev.f_duration) : null,
               f_place: ev.f_place ?? null,
-              f_gather_time: typeof ev.f_gather_time === "string" ? ev.f_gather_time : null,
+              f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
               f_summary: ev.f_summary ?? null,
               f_is_my_entry: Boolean(ev.f_is_my_entry ?? false),
           }))

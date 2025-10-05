@@ -12,6 +12,7 @@ import {
 
 type StudentData = {
     f_student_id: string;
+    f_student_num: string;
     f_class?: string | null;
     f_number?: string | null;
     f_name?: string | null;
@@ -84,7 +85,7 @@ export default function settings() {
                 <div className="box-border overflow-hidden rounded-lg border-1 border-[#FFB400] bg-blue-500 shadow-lg">
                     <div className="relative flex items-center justify-center bg-white p-4 pt-11 pb-4">
                         <p className="cursor-pointer text-3xl font-medium text-blue-950">
-                            {studentData?.f_student_id || "-----"}
+                            {studentData?.f_student_num || "-----"}
                         </p>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
                         <Link to="/check-in" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">

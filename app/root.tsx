@@ -73,7 +73,7 @@ export default function App() {
             <Header />
             <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <HamburgerMenuBtn onClick={() => setIsMenuOpen(!isMenuOpen)} isOpen={isMenuOpen} />
-            <main className="flex-1 overflow-y-auto">
+            <main className="flex-1 overflow-y-auto flex flex-col">
                 <Outlet />
                 <Footer />
             </main>

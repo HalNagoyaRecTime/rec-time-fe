@@ -1,9 +1,44 @@
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import PullToRefresh from "../components/ui/PullToRefresh";
-import TimeSlotGrid from "../components/timetable/TimeSlotGrid";
-import React from "react";
+import TimeSlotGridWithEvents from "../components/timetable/TimeSlotGridWithEvents";
+import StudentInfoBar from "../components/timetable/StudentInfoBar";
+import React, { useState, useEffect } from "react";
+import { downloadAndSaveEvents, getStudentId } from "../utils/dataFetcher";
+import { loadEventsFromStorage } from "../utils/loadEventsFromStorage";
+import type { EventRow } from "../api/student";
 
 export default function Timetable() {
+    const [events, setEvents] = useState<EventRow[]>([]);
+    const [studentId, setStudentId] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // === 初期化：学籍番号とイベントデータを取得 ===
+    // === 초기화: 학번과 이벤트 데이터 취득 ===
+    useEffect(() => {
+        const id = getStudentId();
+        setStudentId(id);
+
+        // LocalStorageからイベントデータを読み込む
+        if (id) {
+            const storedEvents = loadEventsFromStorage(id);
+            setEvents(storedEvents);
+        }
+    }, []);
+
+    // === データ更新ハンドラー（スワイプでも再利用可能） ===
+    // === 데이터 갱신 핸들러（스와이프로도 재사용 가능） ===
+    const handleDataUpdate = async () => {
+        setIsLoading(true);
+        const result = await downloadAndSaveEvents();
+
+        if (result.success) {
+            setEvents(result.events);
+        } else {
+            console.error("[Timetable] データ更新失敗");
+        }
+        setIsLoading(false);
+    };
+
     const handleRefresh = async () => {
         // モックデータ更新処理（0.5秒）
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -12,15 +47,8 @@ export default function Timetable() {
     return (
         // <PullToRefresh onRefresh={handleRefresh}>
             <RecTimeFlame>
-                <div className="flex h-full flex-col pt-2">
-                    <div className="flex w-full items-center justify-end gap-6 pb-5">
-                        <p className="text-sm text-white/70">
-                            学籍番号：<span>13579</span>
-                        </p>
-                        <button className="h-auto w-9 cursor-pointer px-2">
-                            <img src="/icons/app-icon/close.png" alt="" />
-                        </button>
-                    </div>
+                <div className="flex h-full flex-col">
+                    <StudentInfoBar studentId={studentId} onUpdate={handleDataUpdate} isLoading={isLoading} />
 
                     <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
                         <h3 className="font-title text-lg font-black text-white">四天王ドッジボール</h3>
@@ -47,7 +75,7 @@ export default function Timetable() {
                         </div>
                     </div>
 
-                    <TimeSlotGrid />
+                    <TimeSlotGridWithEvents displayEvents={events} studentId={studentId} loading={isLoading} />
                 </div>
             </RecTimeFlame>
         // </PullToRefresh>
