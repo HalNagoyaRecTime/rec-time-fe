@@ -62,7 +62,7 @@ export default function CheckIn() {
             const isFromCache = result.isFromCache;
 
             // 学籍番号チェック
-            if (payload.m_students.f_student_id !== id) {
+            if (payload.m_students.f_student_num !== id) {
                 setStatus("no-id");
                 return;
             }
