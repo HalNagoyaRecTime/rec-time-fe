@@ -1,4 +1,4 @@
-import { get } from "http";
+// import { get } from "http";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import React, { useEffect } from "react";
 import { fetchEvents, getLastUpdatedDisplay, getNextMyEvent, getStudentId } from "../common/forFrontEnd";
@@ -102,7 +102,8 @@ export default function Timetable() {
 
                 {/* 11:45 現在時刻インジケーター */}
                 <div className="absolute top-40 left-4 flex items-center">
-                    <div className="rounded bg-red-500 px-2 py-1 text-xs font-bold text-white">11:45</div>
+                    {/* TODO: 赤線が黄色い時刻と同期するように */}
+                    <div className="rounded bg-red-500 px-2 py-1 text-xs font-bold text-white">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                     <div className="ml-2 h-0.5 w-64 bg-red-500"></div>
                 </div>
             </div>
