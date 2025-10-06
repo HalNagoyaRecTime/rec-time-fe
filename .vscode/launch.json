@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "type": "msedge",
+            "name": "http://localhost:5173/api/students/by-student-num/50350/birthday/20061212",
+            "request": "launch",
+            "url": "http://localhost:5173/api/students/by-student-num/50350/birthday/20061212"
+        }
+    ]
+}

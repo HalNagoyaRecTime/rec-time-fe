@@ -1,7 +1,7 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import { useEffect, useState } from "react";
-import type { Route } from "./types/root";
+import { useState } from "react";
+import React, { useEffect, type ReactNode } from "react"; // ✅ ReactNode 타입 가져오기
 import DevNavigation from "./components/ui/devNavigation";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
@@ -9,7 +9,8 @@ import Footer from "./components/ui/footer";
 
 import "./app.css";
 
-export const links: Route.LinksFunction = () => [
+// ✅ React Router SPA에서는 links() 함수에 타입 필요 없음
+export const links = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     {
         rel: "preconnect",
@@ -35,7 +36,7 @@ export const links: Route.LinksFunction = () => [
     { rel: "apple-touch-icon", href: "/icons/pwa-192.png" },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
     return (
         <html lang="en">
             <head>
@@ -83,7 +84,8 @@ export default function App() {
     );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+// ✅ React Router SPA용 ErrorBoundary
+export function ErrorBoundary({ error }: { error: unknown }) {
     let message = "Oops!";
     let details = "An unexpected error occurred.";
     let stack: string | undefined;
@@ -91,7 +93,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     if (isRouteErrorResponse(error)) {
         message = error.status === 404 ? "404" : "Error";
         details = error.status === 404 ? "The requested page could not be found." : error.statusText || details;
-    } else if (import.meta.env.DEV && error && error instanceof Error) {
+    } else if (import.meta.env.DEV && error instanceof Error) {
         details = error.message;
         stack = error.stack;
     }

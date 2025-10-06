@@ -1,36 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Welcome } from "../welcome/welcome";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { getLastUpdatedDisplay } from "../common/forFrontEnd";
 
+// ✅ 상태 타입 정의 / 状態タイプ定義
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
-const AUTO_MIN_INTERVAL_MS = 5 * 60 * 1000;
 
-// === 데이터 타입 정의 ===
-type StudentRow = {
-    f_student_id: string;
-    f_class?: string | null;
-    f_number?: string | null;
-    f_name?: string | null;
-};
+const API_BASE = "/api";
+
+// ✅ 학생 및 이벤트 데이터 타입 / 学生・イベントデータ型
 type EventRow = {
     f_event_id: string;
     f_event_name: string | null;
     f_start_time: string | null;
     f_duration: string | null;
     f_place: string | null;
-    f_gather_time: string | null; // ✅ 알람 기준
+    f_gather_time: string | null;
     f_summary: string | null;
     f_is_my_entry?: boolean;
 };
-type Payload = { m_students: StudentRow; t_events: EventRow[] };
 
-// === 저장 키 ===
+// ✅ 로컬 스토리지 키 정의 / ローカルストレージキー定義
 const LS_KEY_ID = "student:id";
+const LS_KEY_BIRTHDAY = "student:birthday"; // 🔒 보안 강화용 생년월일 / セキュリティ強化: 生年月日
 const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
+const LS_KEY_ENTRIES = (id: string) => `entries:list:${id}`;
 const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated";
+const LS_KEY_UPDATE_COUNT = "data:update:count"; // 🔄 데이터 변경 감지용 / データ更新検知用
 
+// ✅ 유틸 함수 / ユーティリティ関数
 function getStudentId(): string | null {
     return localStorage.getItem(LS_KEY_ID);
 }
@@ -38,22 +36,58 @@ function setStudentId(id: string) {
     localStorage.setItem(LS_KEY_ID, id);
 }
 
-// === 파싱 함수: "0930" → Date ===
-function parseHHMM(hhmm: string): Date | null {
-    const match = hhmm.match(/^(\d{2})(\d{2})$/);
-    if (!match) return null;
-    const now = new Date();
-    return new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        parseInt(match[1], 10),
-        parseInt(match[2], 10),
-        0
-    );
+// 🔒 생년월일 관련 함수 / 生年月日関連関数
+function getStudentBirthday(): string | null {
+    return localStorage.getItem(LS_KEY_BIRTHDAY);
+}
+function setStudentBirthday(birthday: string) {
+    localStorage.setItem(LS_KEY_BIRTHDAY, birthday);
 }
 
-// === 알림 권한 요청 ===
+// 🔄 데이터 업데이트 감지 함수 / データ更新検知関数
+async function checkDataUpdate(): Promise<boolean> {
+    try {
+        const lastKnownCount = localStorage.getItem(LS_KEY_UPDATE_COUNT);
+        if (!lastKnownCount) return true; // 첫 실행 시 업데이트 필요 / 初回実行時は更新必要
+
+        const response = await fetch(`${API_BASE}/data-update/check?lastKnownCount=${lastKnownCount}`);
+        const result = await response.json();
+
+        if (result.hasChanged) {
+            console.log("🔄 データが更新されました。最新データを取得してください。");
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("⚠️ データ更新チェックに失敗しました:", error);
+        return true;
+    }
+}
+
+// 🔄 데이터 업데이트 정보 저장 / データ更新情報を保存
+async function saveUpdateInfo() {
+    try {
+        const response = await fetch(`${API_BASE}/data-update/info`);
+        const info = await response.json();
+        localStorage.setItem(LS_KEY_UPDATE_COUNT, info.recordCount.toString());
+        console.log("📊 データ更新情報を保存しました:", info);
+    } catch (error) {
+        console.error("⚠️ データ更新情報の保存に失敗しました:", error);
+    }
+}
+
+// 🔒 생년월일 검증 함수 / 生年月日照合関数
+async function validateStudentBirthday(id: string, birthday: string): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE}/students/by-student-num/${id}/birthday/${birthday}`);
+        return response.ok; // OK → 검증 성공 / OKなら照合成功
+    } catch (error) {
+        console.error("⚠️ 生年月日の照合に失敗しました:", error);
+        return false;
+    }
+}
+
+// ✅ 알림 요청 / 通知許可リクエスト
 function requestNotificationPermission() {
     if (!("Notification" in window)) return;
     if (Notification.permission === "default") {
@@ -61,112 +95,160 @@ function requestNotificationPermission() {
     }
 }
 
-// === 알림 표시 ===
+// ✅ 알림 표시 / 通知表示
 function showEventNotification(event: EventRow) {
     if (Notification.permission !== "granted") return;
-    const title = `イベント通知: ${event.f_event_name ?? "イベント"}`;
-    const body = `${event.f_place ?? "場所未定"}で間もなく始まります`;
+    const title = `🚨 アラーム: ${event.f_event_name ?? "イベント"}`;
+    const body = `📢 出場イベント: ${event.f_place ?? "場所未定"}（集合: ${event.f_gather_time ?? "未定"}）`;
     new Notification(title, { body });
 }
 
-// === 알림 예약 ===
+// ✅ 알람 예약 (5초 후) / 通知を5秒後に予約
 function scheduleNotification(event: EventRow) {
-    if (!event.f_gather_time) return;
-    const time = parseHHMM(event.f_gather_time);
-    if (!time) return;
-
-    const now = Date.now();
-    const diff = time.getTime() - now;
-
-    if (diff > 0) {
-        setTimeout(() => showEventNotification(event), diff);
-        console.log(`[予約] ${event.f_event_name} → ${event.f_gather_time} に通知予定`);
-    }
+    const diff = 5 * 1000;
+    setTimeout(() => showEventNotification(event), diff);
+    console.log(`[⏰ 通知予約] ${event.f_event_name} → 5秒後に通知予定`);
 }
 
-// === API 호출 === (데이터 완성되면 이걸로 바꾸기)
-// async function fetchByGakuseki(id: string): Promise<Payload> {
-//   // mock.json에서 통합 데이터 로드
-//   const res = await fetch(`/mock.json`, { cache: "no-store" });
-//   if (!res.ok) throw new Error(`mock.json ${res.status}`);
-//   const data = await res.json();
+// ✅ 백엔드 호출 / バックエンドAPI呼び出し
+async function fetchByGakuseki(id: string, birthday?: string): Promise<{ events: EventRow[]; isFromCache: boolean }> {
+    const apiUrl = birthday
+        ? `${API_BASE}/students/by-student-num/${id}/birthday/${birthday}`
+        : `${API_BASE}/entries/alarm/${id}`;
 
-//   const events: EventRow[] = Array.isArray(data?.t_events) ? data.t_events : [];
-//   const sJson = data?.m_students ?? {};
-// const student: StudentRow = {
-//   f_student_id: sJson?.f_student_id ?? "",
-//   f_class: sJson?.f_class ?? null,
-//   f_number: sJson?.f_number ?? null,
-//   f_name: sJson?.f_name ?? null,
-// };
-//   return { m_students: student, t_events: events };
-// }
-
-// ✅ 데이터가 없어서 대체하는 mock.json 버전
-async function fetchByGakuseki(id: string): Promise<{ payload: Payload; isFromCache: boolean }> {
-    const res = await fetch("/mock.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("Mock データ読み込み失敗");
+    const res = await fetch(apiUrl, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API失敗: ${res.status}`);
 
     const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
-    if (isFromCache) {
-        console.log("[App] キャッシュからデータを取得しました");
-    }
-
     const data = await res.json();
 
-    const student: StudentRow = {
-        f_student_id: data?.m_students?.f_student_id ?? "",
-        f_class: data?.m_students?.f_class ?? null,
-        f_number: data?.m_students?.f_number ?? null,
-        f_name: data?.m_students?.f_name ?? null,
-    };
-
-    const events: EventRow[] = Array.isArray(data?.t_events)
-        ? data.t_events.map((ev: any) => ({
-              f_event_id: String(ev.f_event_id ?? ""),
-              f_event_name: ev.f_event_name ?? null,
-              f_start_time: typeof ev.f_start_time === "string" ? ev.f_start_time : null,
-              f_duration: ev.f_duration ? String(ev.f_duration) : null,
-              f_place: ev.f_place ?? null,
-              f_gather_time: typeof ev.f_gather_time === "string" ? ev.f_gather_time : null,
-              f_summary: ev.f_summary ?? null,
-              f_is_my_entry: Boolean(ev.f_is_my_entry ?? false),
-          }))
-        : [];
-
-    // ✅ 테스트용: 5초 후 첫 알림 확인
-    if (events.length > 0) {
-        setTimeout(() => {
-            showEventNotification(events[0]);
-        }, 5000);
+    let events: EventRow[] = [];
+    if (birthday) {
+        // 보안모드: 이벤트별 상세 조회 / セキュリティ強化モード
+        const eventsRes = await fetch(`${API_BASE}/entries/alarm/${id}`, { cache: "no-store" });
+        if (eventsRes.ok) {
+            const eventsData = await eventsRes.json();
+            events = Array.isArray(eventsData)
+                ? eventsData.map((ev: any) => ({
+                      f_event_id: String(ev.f_event_id ?? ""),
+                      f_event_name: ev.f_event_name ?? null,
+                      f_start_time: typeof ev.f_start_time === "string" ? ev.f_start_time : null,
+                      f_duration: ev.f_duration ? String(ev.f_duration) : null,
+                      f_place: ev.f_place ?? null,
+                      f_gather_time: typeof ev.f_gather_time === "string" ? ev.f_gather_time : null,
+                      f_summary: ev.f_summary ?? null,
+                      f_is_my_entry: Boolean(ev.f_is_my_entry ?? false),
+                  }))
+                : [];
+        }
+    } else {
+        // 일반모드 / 通常モード
+        events = Array.isArray(data)
+            ? data.map((ev: any) => ({
+                  f_event_id: String(ev.f_event_id ?? ""),
+                  f_event_name: ev.f_event_name ?? null,
+                  f_start_time: typeof ev.f_start_time === "string" ? ev.f_start_time : null,
+                  f_duration: ev.f_duration ? String(ev.f_duration) : null,
+                  f_place: ev.f_place ?? null,
+                  f_gather_time: typeof ev.f_gather_time === "string" ? ev.f_gather_time : null,
+                  f_summary: ev.f_summary ?? null,
+                  f_is_my_entry: Boolean(ev.f_is_my_entry ?? false),
+              }))
+            : [];
     }
 
-    return { payload: { m_students: student, t_events: events }, isFromCache };
-}
-
-// ↑ 여기까지가 mock.json 버전
-
-export function meta() {
-    return [{ title: "Rectime PWA" }, { name: "description", content: "学籍番号でデータ取得" }];
+    return { events, isFromCache };
 }
 
 export default function Home() {
     const [status, setStatus] = useState<Status>("idle");
     const [inputId, setInputId] = useState("");
+    const [inputBirthday, setInputBirthday] = useState("");
+    const [studentId, setStudentIdState] = useState<string | null>(null);
     const [events, setEvents] = useState<EventRow[]>([]);
-    const [autoRefresh, setAutoRefresh] = useState(false);
+    const [myEntries, setMyEntries] = useState<EventRow[]>([]);
     const [lastRun, setLastRun] = useState<number | null>(null);
-    const [backoff, setBackoff] = useState(0);
-    const runningRef = useRef(false);
+    const [birthdayError, setBirthdayError] = useState<string | null>(null);
 
-    const studentId = useMemo(() => getStudentId(), [status]);
+    const autoSyncRef = useRef<number | null>(null);
 
-    // === 초기 알림 권한 요청 ===
+    // ✅ 데이터 다운로드 (수동/자동) / データダウンロード処理（手動・自動）
+    async function handleDownload(mode: string = "manual"): Promise<boolean> {
+        const id = getStudentId();
+        if (!id) {
+            setStatus("no-id");
+            return false;
+        }
+        setStatus("loading");
+
+        try {
+            if (mode === "auto") {
+                const needsUpdate = await checkDataUpdate();
+                if (!needsUpdate) {
+                    console.log("📊 データは最新です。更新は不要です。");
+                    setStatus("ok");
+                    return true;
+                }
+            }
+
+            const birthday = getStudentBirthday();
+            const { events: fetchedEvents, isFromCache } = await fetchByGakuseki(id, birthday || undefined);
+            localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(fetchedEvents));
+
+            const entries = fetchedEvents.filter((e) => e.f_is_my_entry);
+            localStorage.setItem(LS_KEY_ENTRIES(id), JSON.stringify(entries));
+            setMyEntries(entries);
+
+            if (!isFromCache) {
+                const now = new Date();
+                localStorage.setItem(LS_KEY_LAST_UPDATED, now.toISOString());
+                setLastRun(now.getTime());
+                await saveUpdateInfo();
+            }
+
+            setEvents(fetchedEvents);
+            if (entries.length > 0) scheduleNotification(entries[0]);
+
+            setStatus(isFromCache ? "error" : "ok");
+            return true;
+        } catch (e) {
+            console.error("⚠️ データ取得中にエラーが発生しました:", e);
+            setStatus("error");
+            return false;
+        }
+    }
+
+    // ✅ pull to refresh 기능 / スワイプリロード機能
+    const { isRefreshing } = usePullToRefresh({
+        onRefresh: async () => {
+            console.log("🔄 [スクロール更新] データを再取得します。");
+            await handleDownload("pull");
+        },
+    });
+
+    // ✅ 학번 상태 불러오기 / 学籍番号を状態に反映
+    useEffect(() => {
+        const id = getStudentId();
+        setStudentIdState(id);
+    }, [status]);
+
+    // ✅ 알림 권한 요청 및 캐시 복원 / 通知権限リクエスト＋キャッシュ復元
     useEffect(() => {
         requestNotificationPermission();
-    }, []);
+        const id = getStudentId();
+        if (id) {
+            const cached = localStorage.getItem(LS_KEY_ENTRIES(id));
+            if (cached) {
+                try {
+                    setMyEntries(JSON.parse(cached) as EventRow[]);
+                } catch (e) {
+                    console.error("⚠️ キャッシュの読み込みに失敗しました:", e);
+                }
+            }
+        }
+    }, [studentId]);
 
-    // === 저장된 시간 표시용 ===
+    // ✅ 마지막 갱신 시간 복원 / 最終更新時刻の復元
     useEffect(() => {
         const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
         if (iso) {
@@ -175,80 +257,73 @@ export default function Home() {
         }
     }, []);
 
-    // === 학번 존재 여부 ===
-    useEffect(() => {
-        setStatus(studentId ? "idle" : "no-id");
-    }, [studentId]);
+    // ✅ 자동 동기화 / 自動同期設定（5分ごとチェック）
+    const toggleAutoSync = (enabled: boolean) => {
+        if (enabled) {
+            localStorage.setItem("sync:alarm:auto", "1");
+            if (autoSyncRef.current) clearInterval(autoSyncRef.current);
+            autoSyncRef.current = window.setInterval(
+                async () => {
+                    console.log("🔄 [自動同期] 5分ごとに更新チェックを実行します。");
+                    await handleDownload("auto");
+                },
+                5 * 60 * 1000
+            );
+        } else {
+            localStorage.removeItem("sync:alarm:auto");
+            if (autoSyncRef.current) clearInterval(autoSyncRef.current);
+            autoSyncRef.current = null;
+        }
+    };
 
-    // === 학번 저장 ===
-    function handleSaveId() {
+    // ✅ 학번 + 생년월일 저장 / 学籍番号＋生年月日保存処理
+    async function handleSaveId() {
         const id = inputId.trim();
+        const birthday = inputBirthday.trim();
+
         if (!/^\d+$/.test(id)) {
             alert("学籍番号（数字）を入力してください");
             return;
         }
-        setStudentId(id);
-        setStatus("idle");
-    }
 
-    // === 알림 예약 ===
-    function scheduleAll(events: EventRow[]) {
-        events.forEach(scheduleNotification);
-    }
-
-    // === 다운로드 및 예약 ===
-    async function handleDownload(): Promise<boolean> {
-        const id = getStudentId();
-        if (!id) {
-            setStatus("no-id");
-            return false;
+        // 🔒 생년월일: YYYYMMDD 형식 / 生年月日: 8桁数字のみ
+        if (birthday && !/^\d{8}$/.test(birthday)) {
+            setBirthdayError("生年月日は 8桁の数字で入力してください（例：20050315）");
+            return;
         }
-        setStatus("loading");
-        try {
-            const result = await fetchByGakuseki(id);
-            const payload = result.payload;
-            const isFromCache = result.isFromCache;
 
-            localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
-
-            // オンライン取得時のみ最終更新時間を更新
-            if (!isFromCache) {
-                const now = new Date();
-                const iso = now.toISOString();
-                localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
-                setLastRun(now.getTime());
+        if (birthday) {
+            setStatus("loading");
+            setBirthdayError(null);
+            try {
+                const isValid = await validateStudentBirthday(id, birthday);
+                if (!isValid) {
+                    setBirthdayError("❌ 入力された生年月日が学籍番号と一致しません。");
+                    setStatus("idle");
+                    return;
+                }
+                setStudentId(id);
+                setStudentBirthday(birthday);
+                setStudentIdState(id);
+                setStatus("idle");
+                await handleDownload("manual");
+            } catch (error) {
+                console.error("⚠️ 生年月日の確認中にエラーが発生しました:", error);
+                setBirthdayError("❌ 生年月日の確認中にエラーが発生しました。");
+                setStatus("idle");
+                return;
             }
-
-            setEvents(payload.t_events);
-            scheduleAll(payload.t_events);
-
-            // キャッシュ取得時は異なるステータスを設定
-            setStatus(isFromCache ? "error" : "ok");
-            return true;
-        } catch (e) {
-            console.error(e);
-            setStatus("error");
-            return false;
+        } else {
+            setStudentId(id);
+            setStudentIdState(id);
+            setStatus("idle");
+            await handleDownload("manual");
         }
     }
 
-    // === pull-to-refresh 훅 ===
-    const { pullDistance, isRefreshing } = usePullToRefresh({
-        threshold: 60,
-        onRefresh: async () => {
-            await handleDownload();
-        },
-    });
-
+    // ✅ 렌더링 / 表示レンダリング
     return (
         <div className="space-y-4 p-4">
-            <div aria-hidden style={{ height: pullDistance }} />
-            {(pullDistance > 0 || isRefreshing) && (
-                <div className="-mt-2 text-center text-xs opacity-80">
-                    {isRefreshing ? "読み込み中..." : pullDistance >= 60 ? "離すと更新" : "下にスワイプで更新"}
-                </div>
-            )}
-
             <Welcome />
 
             {!studentId && (
@@ -256,12 +331,32 @@ export default function Home() {
                     <div className="font-semibold">学籍番号を入力してください</div>
                     <input
                         className="rounded border px-2 py-1"
-                        placeholder='例）"1"'
+                        placeholder="例）50350"
                         value={inputId}
                         onChange={(e) => setInputId(e.target.value)}
                     />
-                    <button className="rounded border px-3 py-1" onClick={handleSaveId}>
-                        保存
+
+                    <div className="text-sm text-gray-600">
+                        🔒 セキュリティ強化: 生年月日を入力してください（8桁の数字）
+                    </div>
+                    <input
+                        className={`rounded border px-2 py-1 ${birthdayError ? "border-red-500" : ""}`}
+                        placeholder="例）20061215"
+                        value={inputBirthday}
+                        onChange={(e) => {
+                            setInputBirthday(e.target.value);
+                            setBirthdayError(null);
+                        }}
+                    />
+
+                    {birthdayError && (
+                        <div className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-600">
+                            {birthdayError}
+                        </div>
+                    )}
+
+                    <button className="rounded border px-3 py-1" onClick={handleSaveId} disabled={status === "loading"}>
+                        {status === "loading" ? "確認中..." : "保存"}
                     </button>
                 </div>
             )}
@@ -270,14 +365,40 @@ export default function Home() {
                 <div className="space-y-3">
                     <div>
                         学籍番号: <b>{studentId}</b>
+                        {getStudentBirthday() && (
+                            <span className="ml-2 text-sm text-green-600">🔒 セキュリティ強化モード</span>
+                        )}
                     </div>
+
+                    <label>
+                        <input
+                            type="checkbox"
+                            defaultChecked={localStorage.getItem("sync:alarm:auto") === "1"}
+                            onChange={(e) => toggleAutoSync(e.target.checked)}
+                        />
+                        通知と自動同期する（5分ごと）
+                    </label>
 
                     <button
                         className="rounded border px-3 py-2"
-                        onClick={handleDownload}
+                        onClick={() => handleDownload("manual")}
                         disabled={status === "loading"}
                     >
                         {status === "loading" ? "ダウンロード中…" : "イベントデータ取得 & 通知予約"}
+                    </button>
+
+                    {/* ✅ 테스트 버튼 / テスト用ボタン */}
+                    <button
+                        className="rounded border border-blue-400 bg-blue-50 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100"
+                        onClick={async () => {
+                            const current = parseInt(localStorage.getItem(LS_KEY_UPDATE_COUNT) || "0", 10);
+                            const newCount = current + 1;
+                            localStorage.setItem(LS_KEY_UPDATE_COUNT, newCount.toString());
+                            console.log(`🧩 [テスト] ローカルの update count を変更しました: ${current} → ${newCount}`);
+                            await handleDownload("auto");
+                        }}
+                    >
+                        🧩 テストデータ変更（コンソール確認用）
                     </button>
 
                     <div className="text-xs opacity-70">
@@ -287,13 +408,7 @@ export default function Home() {
                 </div>
             )}
 
-            <p className="mt-2">
-                {status === "no-id" && "学籍番号が未設定です。入力してください。"}
-                {status === "idle" && "準備OK"}
-                {status === "loading" && "ダウンロード中…"}
-                {status === "ok" && "保存OK・通知予約完了"}
-                {status === "error" && "取得に失敗しました。"}
-            </p>
+            {isRefreshing && <div className="mt-2 text-center text-sm text-blue-600">🔄 データ更新中です…</div>}
         </div>
     );
 }

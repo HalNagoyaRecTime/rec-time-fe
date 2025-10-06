@@ -24,7 +24,7 @@ export function usePullToRefresh({ threshold = 60, onRefresh }: Opts) {
             if (!pulling.current || startY.current === null || isRefreshing) return;
             const dy = e.touches[0].clientY - startY.current;
             if (dy > 0 && window.scrollY === 0) {
-                e.preventDefault(); // 브라우저 기본 pull-to-refresh와 충돌 완화
+                e.preventDefault();
                 const damped = Math.min(dy * 0.5, threshold * 2);
                 setPullDistance(damped);
             }
@@ -35,8 +35,10 @@ export function usePullToRefresh({ threshold = 60, onRefresh }: Opts) {
     const onTouchEnd = useCallback(async () => {
         if (!pulling.current || isRefreshing) return;
         pulling.current = false;
+
         if (pullDistance >= threshold) {
             try {
+                console.log("🔄 [스크롤 갱신] handleDownload 실행됨 / データ更新を開始します");
                 setIsRefreshing(true);
                 await onRefresh();
             } finally {

@@ -1,5 +1,4 @@
 // === 데이터 타입 정의 ===
-// === データタイプ定義 ===
 export type StudentRow = {
     f_student_id: string;
     f_class?: string | null;
@@ -18,19 +17,29 @@ export type EventRow = {
     f_is_my_entry?: boolean;
 };
 
-export type ApiPayload = { m_students: StudentRow; t_events: EventRow[] };
+// ✅ 백엔드에서 내려주는 전체 페이로드 타입
+export type ApiPayload = {
+    m_students: StudentRow;
+    t_events: EventRow[];
+    // 필요하면 아래도 확장 가능
+    // t_entries: EntryRow[];
+    // t_entry_groups: EntryGroupRow[];
+    // t_notifications: NotificationRow[];
+    // t_change_logs: ChangeLogRow[];
+};
 
-// ✅ 데이터가 없어서 대체하는 mock.json 버전
-// === API呼び出し ===
+// ✅ 실제 백엔드에서 학생 데이터 호출
 export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
-    const res = await fetch("/mock.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("Mock データ読み込み失敗");
+    const baseUrl = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8787/api";
+    // ✅ HTTPS 백엔드 라우트에 맞춤
+    const url = `${baseUrl}/student-data/${id}`;
 
-    const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
-    if (isFromCache) {
-        console.log("[API] キャッシュからデータを取得しました");
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+        throw new Error(`API 호출 실패: ${res.status} ${res.statusText}`);
     }
 
+    const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
     const data = await res.json();
 
     const student: StudentRow = {
@@ -55,21 +64,3 @@ export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload
 
     return { payload: { m_students: student, t_events: events }, isFromCache };
 }
-
-// === API 호출 === (데이터 완성되면 이걸로 바꾸기)
-// async function fetchByGakuseki(id: string): Promise<Payload> {
-//   // mock.json에서 통합 데이터 로드
-//   const res = await fetch(`/mock.json`, { cache: "no-store" });
-//   if (!res.ok) throw new Error(`mock.json ${res.status}`);
-//   const data = await res.json();
-
-//   const events: EventRow[] = Array.isArray(data?.t_events) ? data.t_events : [];
-//   const sJson = data?.m_students ?? {};
-// const student: StudentRow = {
-//   f_student_id: sJson?.f_student_id ?? "",
-//   f_class: sJson?.f_class ?? null,
-//   f_number: sJson?.f_number ?? null,
-//   f_name: sJson?.f_name ?? null,
-// };
-//   return { m_students: student, t_events: events };
-// }
