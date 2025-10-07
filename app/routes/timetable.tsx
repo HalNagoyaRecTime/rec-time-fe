@@ -112,10 +112,11 @@ export default function Timetable() {
                     return (
                         <div
                             key={index}
-                            className={clsx("absolute top-6 left-16 h-7 w-56 rounded", {
+                            className={clsx("absolute left-16 h-7 w-56 rounded", {
                                 "bg-yellow-400": isMyEntry,
                                 "bg-gray-400": !isMyEntry
                             })}
+                            style={{ top: `${6 + index * 40}px` }}
                         >
                             {event.f_event_name}
                             <br />
