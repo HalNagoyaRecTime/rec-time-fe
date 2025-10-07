@@ -7,7 +7,14 @@ import clsx from 'clsx'
 export default function Timetable() {
     const studentsId = getStudentId();
     const LastUpdatetime = getLastUpdatedDisplay("ja-JP");
-    const nextEvent = getNextMyEvent(studentsId);
+    // const nextEvent = getNextMyEvent(studentsId);　本番はこっち
+    const nextEvent = {// テスト用ダミーデータ
+        f_event_name: "リレー",
+        f_start_time: "13:00",
+        f_gather_time: "12:45",
+        f_place: "グラウンド"
+    };
+
     const getEvents = fetchEvents(studentsId);
     // 残り分数計算
     let minutesLeft = null;
@@ -45,7 +52,6 @@ export default function Timetable() {
                                     <p className="flex gap-2 truncate">
                                         {nextEvent.f_start_time}
                                         <span className="text-red-500">
-                                            {nextEvent.f_gather_time}
                                             {minutesLeft !== null && `（${minutesLeft}分後）`}
                                         </span>
                                     </p>
