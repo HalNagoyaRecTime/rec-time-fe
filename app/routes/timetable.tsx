@@ -3,9 +3,9 @@ import PullToRefresh from "../components/ui/PullToRefresh";
 import TimeSlotGridWithEvents from "../components/timetable/TimeSlotGridWithEvents";
 import StudentInfoBar from "../components/timetable/StudentInfoBar";
 import React, { useState, useEffect, useRef } from "react";
-import { downloadAndSaveEvents, getStudentId } from "../utils/dataFetcher";
-import { loadEventsFromStorage } from "../utils/loadEventsFromStorage";
-import type { EventRow } from "../api/student";
+import { downloadAndSaveEvents, getStudentId } from "~/utils/dataFetcher";
+import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
+import type { EventRow } from "~/api/student";
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
@@ -44,7 +44,7 @@ export default function Timetable() {
         // LocalStorageが空の場合、初回のみAPIからデータを取得
         if (storedEvents.length === 0 && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
-            handleDataUpdate();
+            void handleDataUpdate();
         }
     }, []);
 
