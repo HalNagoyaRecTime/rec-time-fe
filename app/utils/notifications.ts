@@ -37,10 +37,25 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
         return "denied";
     }
 
+    // iOS PWAの場合、ホーム画面に追加されているか確認
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         (window.navigator as any).standalone === true;
+
+    if (isIOS && !isStandalone) {
+        console.warn("[通知] iOS: ホーム画面に追加してから通知を有効にしてください");
+        return "denied";
+    }
+
     if (Notification.permission === "default") {
-        const permission = await Notification.requestPermission();
-        console.log(`[通知] 権限要求結果: ${permission}`);
-        return permission;
+        try {
+            const permission = await Notification.requestPermission();
+            console.log(`[通知] 権限要求結果: ${permission}`);
+            return permission;
+        } catch (error) {
+            console.error("[通知] 権限要求エラー:", error);
+            return "denied";
+        }
     }
 
     return Notification.permission;

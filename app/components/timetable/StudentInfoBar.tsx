@@ -1,4 +1,5 @@
 import React from "react";
+import { FaEject } from "react-icons/fa6";
 
 interface StudentInfoBarProps {
     studentId: string | null;
@@ -17,7 +18,7 @@ export default function StudentInfoBar({ studentId, onUpdate, isLoading }: Stude
                 onClick={onUpdate}
                 disabled={isLoading}
             >
-                <img src="/icons/app-icon/close.png" alt="" />
+                <FaEject className="h-4 w-4 text-[#FFB400]" />
             </button>
         </div>
     );

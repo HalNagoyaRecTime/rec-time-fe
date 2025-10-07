@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { IoBackspaceSharp } from "react-icons/io5";
 
 interface NumberKeypadProps {
     onNumberClick: (num: string) => void;
@@ -22,7 +23,7 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
                 onNumberClick(event.key);
             }
             // Escapeキーでクリア、またはCキー（Ctrl+Deleteでない場合のみ）
-            else if (event.key === "Escape" || (event.key === "c" || event.key === "C") && !event.ctrlKey) {
+            else if (event.key === "Escape" || ((event.key === "c" || event.key === "C") && !event.ctrlKey)) {
                 event.preventDefault();
                 onClear();
             }
@@ -41,7 +42,7 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
 
     // 共通のボタンスタイル
     const buttonClass =
-        "w-16 h-16 border-1 border-gray-400 bg-transparent text-white rounded transition-colors shadow-sm cursor-pointer hover:bg-[#FFB400] hover:border-transparent active:bg-[#FFB400] active:border-transparent";
+        "w-16 h-16 border-1 border-gray-400 bg-transparent text-white rounded transition-colors shadow-sm cursor-pointer hover:bg-[#FFB400] hover:border-transparent active:bg-[#FFB400] active:border-transparent flex items-center justify-center";
     return (
         <div className="grid max-w-xs grid-cols-3 gap-4 rounded-lg">
             {/* 数字ボタン 1-9 */}
@@ -62,8 +63,10 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
 
             {onBackspace ? (
                 <button className={buttonClass} onClick={onBackspace}>
-                    {/*Todo:BackspaceIconがない。*/}⌫
+                    {/*Todo:BackspaceIconがない。*/}
+                    {/*⌫*/}
                     {/*<img src="/images/backspace.png" alt="backspace" className="w-4 h-4"/>*/}
+                    <IoBackspaceSharp className="h-9 w-9" />
                 </button>
             ) : (
                 <div className="h-16 w-16"></div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import RecTimeFlame from "../components/ui/recTimeFlame";
-import penYellow from "/icons/app-icon/pen.svg";
 import settingsYellow from "/icons/app-icon/settings.svg";
+import { FaPen } from "react-icons/fa";
 import {
     getNotificationSetting,
     saveNotificationSetting,
@@ -21,6 +21,7 @@ type StudentData = {
 export default function settings() {
     const [isPushEnabled, setIsPushEnabled] = useState(false);
     const [studentData, setStudentData] = useState<StudentData | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // 初期化: ユーザーデータと通知設定を取得
     useEffect(() => {
@@ -40,7 +41,6 @@ export default function settings() {
         setIsPushEnabled(notificationEnabled);
     }, []);
 
-    // Todo:通知のオンのロジックを考え直す
     // 通知設定が変更された時の処理
     const handleNotificationToggle = async (enabled: boolean) => {
         if (enabled) {
@@ -72,10 +72,21 @@ export default function settings() {
                 console.log("[設定] 通知権限が拒否されました");
             }
         } else {
-            // 通知をオフにする
-            saveNotificationSetting(false);
-            setIsPushEnabled(false);
+            // 通知をオフにする前に確認
+            setShowConfirmModal(true);
         }
+    };
+
+    // 通知オフを確定
+    const confirmTurnOffNotification = () => {
+        saveNotificationSetting(false);
+        setIsPushEnabled(false);
+        setShowConfirmModal(false);
+    };
+
+    // 通知オフをキャンセル
+    const cancelTurnOffNotification = () => {
+        setShowConfirmModal(false);
     };
 
     return (
@@ -89,14 +100,7 @@ export default function settings() {
                         </p>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
                         <Link to="/register/student-id" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
-                            <img
-                                className=""
-                                src={penYellow}
-                                style={{
-                                    filter: "brightness(0) saturate(100%) invert(68%) sepia(76%) saturate(1711%) hue-rotate(1deg) brightness(102%) contrast(104%)",
-                                }}
-                                alt=""
-                            />
+                            <FaPen className="h-6 w-6 text-[#FFB400]" />
                         </Link>
                     </div>
                     <div className="flex bg-blue-600 px-6 py-4">
@@ -106,9 +110,9 @@ export default function settings() {
                             <p>氏名</p>
                         </div>
                         <div className="text-white">
-                            <p className="">{studentData?.f_class || "未設定"}</p>
-                            <p>{studentData?.f_number || "未設定"}</p>
-                            <p>{studentData?.f_name || "未設定"}</p>
+                            <p className="">{studentData?.f_class || "---"}</p>
+                            <p>{studentData?.f_number || "---"}</p>
+                            <p>{studentData?.f_name || "---"}</p>
                         </div>
                     </div>
                 </div>
@@ -130,10 +134,36 @@ export default function settings() {
                                 checked={isPushEnabled}
                                 onChange={(e) => handleNotificationToggle(e.target.checked)}
                             />
-                            <div className="peer relative h-6 w-11 rounded-full bg-gray-600 peer-checked:bg-[#FFB400] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                            <div className="peer relative h-6 w-11 rounded-full bg-gray-600 transition-colors duration-200 ease-in-out peer-checked:bg-[#FFB400] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:duration-200 after:content-[''] peer-checked:after:translate-x-full"></div>
                         </label>
                     </div>
                 </div>
+
+                {/* 確認モーダル */}
+                {showConfirmModal && (
+                    <div className="fixed inset-0 z-50 flex h-screen w-full items-center justify-center bg-black/50">
+                        <div className="w-80 rounded-lg border-1 border-[#FFB400] bg-blue-800 p-6 shadow-lg">
+                            <h3 className="mb-4 text-center text-lg font-semibold text-white">
+                                通知をオフにしますか？
+                            </h3>
+                            <p className="mb-6 text-center text-sm text-gray-300">イベントの通知が届かなくなります</p>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={cancelTurnOffNotification}
+                                    className="flex-1 cursor-pointer rounded-lg border-1 border-[#FFB400] bg-transparent px-4 py-2 text-white transition-colors hover:bg-blue-700"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={confirmTurnOffNotification}
+                                    className="flex-1 cursor-pointer rounded-lg bg-[#FFB400] px-4 py-2 text-white transition-colors hover:bg-yellow-400"
+                                >
+                                    オフにする
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </RecTimeFlame>
     );

@@ -53,7 +53,7 @@ export default function header() {
 
     return (
         // 最大幅を取得するための要素
-        <header className="top-0 left-0 z-80 flex h-18 w-full shrink-0 items-center bg-blue-950/90 pl-16 drop-shadow-2xl md:pl-18">
+        <header className="top-0 left-0 z-80 flex h-17 w-full shrink-0 items-center bg-blue-950/90 pl-16 drop-shadow-2xl md:pl-18">
             <div className="flex items-end">
                 <h1
                     className="mr-7 text-[1.625rem]/7 font-extrabold whitespace-nowrap"
@@ -66,7 +66,7 @@ export default function header() {
                 >
                     {getPageTitle()}
                 </h1>
-                <p className="pb-[2px] text-xs text-white/80">
+                <p className="pb-[2px] text-xs whitespace-nowrap text-white/80">
                     <span>最終更新：</span>
                     <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
                     <br />
