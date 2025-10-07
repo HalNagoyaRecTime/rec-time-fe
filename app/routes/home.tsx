@@ -5,7 +5,12 @@ import { getLastUpdatedDisplay } from "../common/forFrontEnd";
 
 // ✅ 상태 타입 / 状態タイプ
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
-const API_BASE = "/api";
+
+// ✅ 환경변수 기반 API URL 설정
+// const API_BASE = "/api"; // ❌ 기존 상대경로 (로컬용)
+// ✅ HTTPS 기반으로 수정 (Cloudflare 또는 .env 자동 인식)
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "https://rec-time-be.rectime-test.workers.dev/api";
+// "http://127.0.0.1:8787/api"; // 🧪 로컬테스트용
 
 // ✅ 데이터 타입 / データ型
 type EventRow = {
@@ -164,7 +169,6 @@ export default function Home() {
     const [lastRun, setLastRun] = useState<number | null>(null);
     const autoSyncRef = useRef<number | null>(null);
 
-    /* ✅ 학생 인증 및 데이터 다운로드 / 学生認証＋データ取得 */
     async function handleSaveId() {
         const id = inputId.trim();
         const birthday = inputBirthday.trim();
@@ -180,7 +184,7 @@ export default function Home() {
             return;
         }
 
-        setErrorMsg(null); // ✅ 에러메시지 초기화 / エラーリセット
+        setErrorMsg(null);
         setStudentId(id);
         setStudentBirthday(birthday);
         setStudentIdState(id);
@@ -188,7 +192,6 @@ export default function Home() {
         await handleDownload();
     }
 
-    /* ✅ 데이터 다운로드 / データダウンロード */
     async function handleDownload(mode: "manual" | "auto" = "manual") {
         const id = getStudentId();
         if (!id) return;
@@ -214,7 +217,6 @@ export default function Home() {
             localStorage.setItem(LS_KEY_LAST_UPDATED, now.toISOString());
             await saveUpdateInfo();
 
-            // ✅ 알람: 가장 빠른 경기 하나만 표시 / 最も早いイベント1件のみ通知
             if (events.length > 0) {
                 const sorted = [...events].sort((a, b) => (a.f_start_time ?? "").localeCompare(b.f_start_time ?? ""));
                 const earliest = sorted[0];
@@ -230,7 +232,6 @@ export default function Home() {
         }
     }
 
-    /* ✅ 자동 동기화 설정 / 自動同期設定 */
     const toggleAutoSync = (enabled: boolean) => {
         if (enabled) {
             localStorage.setItem("sync:alarm:auto", "1");
@@ -251,19 +252,16 @@ export default function Home() {
         }
     };
 
-    /* ✅ 초기화 / 初期化 */
     useEffect(() => {
         const id = getStudentId();
         console.log("🏠 コンポーネント初期化:", { studentId: id });
         setStudentIdState(id);
         requestNotificationPermission();
 
-        // 자동 동기화 유지 상태 확인
         const autoEnabled = localStorage.getItem("sync:alarm:auto") === "1";
         if (autoEnabled) toggleAutoSync(true);
     }, []);
 
-    // 스와이프 갱신 / スワイプ更新
     usePullToRefresh({
         onRefresh: async () => {
             console.log("🔄 [スワイプ更新] データを再取得します。");
@@ -271,9 +269,6 @@ export default function Home() {
         },
     });
 
-    /* =========================================================
-     🖥️ 화면 렌더링 / 表示レンダリング
-     ========================================================= */
     return (
         <div className="space-y-4 p-4">
             <Welcome />

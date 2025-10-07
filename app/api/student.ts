@@ -21,17 +21,24 @@ export type EventRow = {
 export type ApiPayload = {
     m_students: StudentRow;
     t_events: EventRow[];
-    // 필요하면 아래도 확장 가능
+    // 필요 시 확장 가능
     // t_entries: EntryRow[];
-    // t_entry_groups: EntryGroupRow[];
     // t_notifications: NotificationRow[];
-    // t_change_logs: ChangeLogRow[];
 };
 
 // ✅ 실제 백엔드에서 학생 데이터 호출
 export async function fetchByGakuseki(id: string): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
-    const baseUrl = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8787/api";
-    // ✅ HTTPS 백엔드 라우트에 맞춤
+    // ===============================
+    // 🌐 환경에 따라 API 경로 자동 선택
+    // ===============================
+    const baseUrl =
+        import.meta.env.VITE_API_BASE_URL ??
+        // ✅ 기본값 (Cloudflare 프로덕션)
+        "https://rec-time-be.rectime-test.workers.dev/api";
+    // 🧪 로컬 개발용 (필요 시 교체)
+    // "http://127.0.0.1:8787/api";
+
+    // 실제 호출 URL
     const url = `${baseUrl}/student-data/${id}`;
 
     const res = await fetch(url, { cache: "no-store" });
