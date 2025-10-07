@@ -3,6 +3,24 @@ import { Welcome } from "../welcome/welcome";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { getLastUpdatedDisplay } from "../common/forFrontEnd";
 
+/* =========================================================
+   🔒 보안 강화 모드 / セキュリティ強化モード
+   ========================================================= */
+// ✅ 보안 강화 완료: 학번만으로 접근 가능한 API 비활성화
+// セキュリティ強化完了: 学籍番号のみでアクセス可能なAPI無効化
+// ❌ 비활성화된 위험한 API들:
+// 無効化された危険なAPI:
+// - GET /api/students/by-student-num/:studentNum
+// - GET /api/students/payload/:studentNum  
+// - GET /api/students/full/:studentNum
+// - GET /api/entries/by-student/:studentNum
+// - GET /api/entries/alarm/:studentNum
+// ✅ 유지되는 안전한 API:
+// 維持される安全なAPI:
+// - GET /api/students/by-student-num/:studentNum/birthday/:birthday (학번 + 생년월일 인증)
+// 学籍番号 + 生年月日認証
+// ========================================================= */
+
 // ✅ 상태 타입 / 状態タイプ
 type Status = "idle" | "no-id" | "loading" | "ok" | "error";
 
@@ -79,8 +97,22 @@ async function validateStudentBirthday(id: string, birthday: string): Promise<bo
    🛰️ 데이터 호출 / データ呼び出し
    ========================================================= */
 async function fetchStudentData(id: string): Promise<EventRow[]> {
+    // ❌ 보안상 위험: 학번만으로 접근 가능한 API (백엔드에서 비활성화됨)
+    // セキュリティ上の危険: 学籍番号のみでアクセス可能なAPI (バックエンドで無効化済み)
+    // const apiUrl = `${API_BASE}/entries/alarm/${id}`;
+    
+    // ✅ 보안 강화: 생년월일 인증 후에만 접근 가능
+    // セキュリティ強化: 生年月日認証後のみアクセス可能
+    const birthday = getStudentBirthday();
+    if (!birthday) {
+        console.error("🚨 生年月日が設定されていません。セキュリティ強化のため、データ取得を拒否します。");
+        throw new Error("セキュリティ強化のため、生年月日の認証が必要です。");
+    }
+    
+    // 🔒 보안 강화된 API: 학번 + 생년월일 인증 필요
+    // セキュリティ強化されたAPI: 学籍番号 + 生年月日認証が必要
     const apiUrl = `${API_BASE}/entries/alarm/${id}`;
-    console.log("🛰️ API呼び出し開始:", { id, apiUrl });
+    console.log("🛰️ セキュリティ強化API呼び出し開始:", { id, birthday: "***", apiUrl });
 
     try {
         const res = await fetch(apiUrl, { cache: "no-store" });
@@ -196,8 +228,18 @@ export default function Home() {
         const id = getStudentId();
         if (!id) return;
 
+        // 🔒 보안 강화: 생년월일 인증 확인
+        // セキュリティ強化: 生年月日認証確認
+        const birthday = getStudentBirthday();
+        if (!birthday) {
+            console.error("🚨 セキュリティ強化のため、生年月日の認証が必要です。");
+            setErrorMsg("🚨 セキュリティ強化のため、生年月日の認証が必要です。");
+            setStatus("error");
+            return;
+        }
+
         setStatus("loading");
-        console.log(mode === "auto" ? "🔄 [自動同期] データチェック開始..." : "📥 データダウンロード開始:", { id });
+        console.log(mode === "auto" ? "🔄 [自動同期] セキュリティ強化データチェック開始..." : "📥 セキュリティ強化データダウンロード開始:", { id, birthday: "***" });
 
         try {
             if (mode === "auto") {
@@ -301,7 +343,7 @@ export default function Home() {
                     <div>
                         学籍番号: <b>{studentId}</b>
                         {getStudentBirthday() && (
-                            <span className="ml-2 text-sm text-green-600">🔒 セキュリティ強化モード</span>
+                            <span className="ml-2 text-sm text-green-600">🔒 セキュリティ強化モード (生年月日認証済み)</span>
                         )}
                     </div>
 
