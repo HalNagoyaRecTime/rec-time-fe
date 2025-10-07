@@ -41,7 +41,7 @@ export default function Timetable() {
             <div className="relative mt-4 mb-5 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
                 <h3 className="font-title text-lg font-black text-white">{nextEvent ? nextEvent.f_event_name : "次の予定はありません"}</h3>
                 <div className="flex w-full flex-1 justify-center">
-                    <div className="flex w-7/10 gap-3 pl-3">
+                    <div className="flex gap-10">
                         <div className="min-w-fit font-normal text-[#FFB400]">
                             <p>集合時間</p>
                             <p>集合場所</p>
@@ -60,7 +60,7 @@ export default function Timetable() {
                             ) : (
                                 <>
                                     <p className="flex gap-2 truncate text-white/50">--:--</p>
-                                    <p className="truncate text-white/50">---</p>
+                                    <p className="truncate text-white/50">-----</p>
                                 </>
                             )}
                         </div>
