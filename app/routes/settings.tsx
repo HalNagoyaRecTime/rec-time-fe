@@ -88,8 +88,15 @@ export default function settings() {
                             {studentData?.f_student_num || "-----"}
                         </p>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
-                        <Link to="/check-in" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
-                            <img src={penYellow} alt="" />
+                        <Link to="/register/student-id" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
+                            <img
+                                className=""
+                                src={penYellow}
+                                style={{
+                                    filter: "brightness(0) saturate(100%) invert(68%) sepia(76%) saturate(1711%) hue-rotate(1deg) brightness(102%) contrast(104%)",
+                                }}
+                                alt=""
+                            />
                         </Link>
                     </div>
                     <div className="flex bg-blue-600 px-6 py-4">

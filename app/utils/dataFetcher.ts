@@ -34,17 +34,15 @@ function dispatchDataUpdatedEvent() {
 export async function downloadAndSaveEvents(
     id: string | null = getStudentId()
 ): Promise<{ success: boolean; events: EventRow[]; isFromCache: boolean }> {
-    if (!id) {
-        return { success: false, events: [], isFromCache: false };
-    }
-
     try {
         const result = await fetchByGakuseki(id);
         const payload = result.payload;
         const isFromCache = result.isFromCache;
 
-        // LocalStorageに保存
-        localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
+        // LocalStorageに保存（idがある場合のみ）
+        if (id) {
+            localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
+        }
 
         // オンライン取得時のみ最終更新時間を更新
         if (!isFromCache) {
