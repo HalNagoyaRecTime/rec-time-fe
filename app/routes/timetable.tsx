@@ -9,6 +9,16 @@ export default function Timetable() {
     const LastUpdatetime = getLastUpdatedDisplay("ja-JP");
     const nextEvent = getNextMyEvent(studentsId);
     const getEvents = fetchEvents(studentsId);
+    // 残り分数計算
+    let minutesLeft = null;
+    if (nextEvent?.f_gather_time) {
+        const now = new Date();
+        const [gatherHour, gatherMinute] = String(nextEvent.f_gather_time).split(":").map(Number);
+        const gatherDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), gatherHour, gatherMinute);
+        const diffMs = gatherDate.getTime() - now.getTime();
+        minutesLeft = Math.max(0, Math.floor(diffMs / 60000));
+    }
+
     return (
     <RecTimeFlame>
         <div className="flex h-full flex-col">
@@ -22,20 +32,31 @@ export default function Timetable() {
             </div>
 
             <div className="relative mt-4 mb-5 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
-                <h3 className="font-title text-lg font-black text-white">{nextEvent?.f_event_name}</h3>
+                <h3 className="font-title text-lg font-black text-white">{nextEvent ? nextEvent.f_event_name : "次の予定はありません"}</h3>
                 <div className="flex w-full flex-1 justify-center">
-                    {/*Todo:横幅が大きくなった時に文字をどう表示するか*/}
                     <div className="flex w-7/10 gap-3 pl-3">
                         <div className="min-w-fit font-normal text-[#FFB400]">
                             <p>集合時間</p>
                             <p>集合場所</p>
                         </div>
                         <div className="flex flex-col overflow-hidden text-white">
-                            <p className="flex gap-2 truncate">
-                                {/* TODO:gather_time計算？ */}
-                                {nextEvent?.f_start_time}<span className="text-red-500">{nextEvent?.f_gather_time}</span>
-                            </p>
-                            <p className="truncate">{nextEvent?.f_place}</p>
+                            {nextEvent ? (
+                                <>
+                                    <p className="flex gap-2 truncate">
+                                        {nextEvent.f_start_time}
+                                        <span className="text-red-500">
+                                            {nextEvent.f_gather_time}
+                                            {minutesLeft !== null && `（${minutesLeft}分後）`}
+                                        </span>
+                                    </p>
+                                    <p className="truncate">{nextEvent.f_place}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="flex gap-2 truncate text-white/50">--:--</p>
+                                    <p className="truncate text-white/50">---</p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
