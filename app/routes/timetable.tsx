@@ -11,18 +11,22 @@ export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const hasFetchedRef = useRef(false);
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     // === 데이터 갱신 핸들러（스와이프로도 재사용 가능） ===
     const handleDataUpdate = async () => {
         setIsLoading(true);
+        setErrorMessage("");
         const result = await downloadAndSaveEvents();
 
         if (result.success) {
             setEvents(result.events);
+            setErrorMessage("");
         } else {
             console.error("[Timetable] データ更新失敗");
+            setErrorMessage("データ更新失敗");
         }
         setIsLoading(false);
     };
@@ -50,9 +54,13 @@ export default function Timetable() {
     };
 
     return (
-        // <PullToRefresh onRefresh={handleRefresh}>
+        <PullToRefresh onRefresh={handleRefresh}>
             <RecTimeFlame>
                 <div className="flex h-full flex-col">
+                    {/* ネットワークエラー表示*/}
+                    {errorMessage && (
+                        <div className="w-fit rounded-md bg-red-600 px-2 py-2 text-sm text-white">{errorMessage}</div>
+                    )}
                     <StudentInfoBar studentId={studentId} onUpdate={handleDataUpdate} isLoading={isLoading} />
 
                     <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
@@ -83,6 +91,6 @@ export default function Timetable() {
                     <TimeSlotGridWithEvents displayEvents={events} studentId={studentId} loading={isLoading} />
                 </div>
             </RecTimeFlame>
-        // </PullToRefresh>
+        </PullToRefresh>
     );
 }
