@@ -2,7 +2,7 @@ import RecTimeFlame from "../components/ui/recTimeFlame";
 import PullToRefresh from "../components/ui/PullToRefresh";
 import TimeSlotGridWithEvents from "../components/timetable/TimeSlotGridWithEvents";
 import StudentInfoBar from "../components/timetable/StudentInfoBar";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId } from "../utils/dataFetcher";
 import { loadEventsFromStorage } from "../utils/loadEventsFromStorage";
 import type { EventRow } from "../api/student";
@@ -11,19 +11,7 @@ export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    // === 初期化：学籍番号とイベントデータを取得 ===
-    // === 초기화: 학번과 이벤트 데이터 취득 ===
-    useEffect(() => {
-        const id = getStudentId();
-        setStudentId(id);
-
-        // LocalStorageからイベントデータを読み込む
-        if (id) {
-            const storedEvents = loadEventsFromStorage(id);
-            setEvents(storedEvents);
-        }
-    }, []);
+    const hasFetchedRef = useRef(false);
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     // === 데이터 갱신 핸들러（스와이프로도 재사용 가능） ===
@@ -38,6 +26,23 @@ export default function Timetable() {
         }
         setIsLoading(false);
     };
+
+    // === 初期化：学籍番号とイベントデータを取得 ===
+    // === 초기화: 학번과 이벤트 데이터 취득 ===
+    useEffect(() => {
+        const id = getStudentId();
+        setStudentId(id);
+
+        // LocalStorageからイベントデータを読み込む
+        const storedEvents = loadEventsFromStorage(id);
+        setEvents(storedEvents);
+
+        // LocalStorageが空の場合、初回のみAPIからデータを取得
+        if (storedEvents.length === 0 && !hasFetchedRef.current) {
+            hasFetchedRef.current = true;
+            handleDataUpdate();
+        }
+    }, []);
 
     const handleRefresh = async () => {
         // モックデータ更新処理（0.5秒）
