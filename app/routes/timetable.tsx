@@ -7,13 +7,13 @@ import clsx from 'clsx'
 export default function Timetable() {
     const studentsId = getStudentId();
     const LastUpdatetime = getLastUpdatedDisplay("ja-JP");
-    // const nextEvent = getNextMyEvent(studentsId);　本番はこっち
-    const nextEvent = {// テスト用ダミーデータ
-        f_event_name: "リレー",
-        f_start_time: "13:00",
-        f_gather_time: "12:45",
-        f_place: "グラウンド"
-    };
+    const nextEvent = getNextMyEvent(studentsId);
+    // const nextEvent = {// テスト用ダミーデータ
+    //     f_event_name: "リレー",
+    //     f_start_time: "13:00",
+    //     f_gather_time: "12:45",
+    //     f_place: "グラウンド"
+    // };
 
     const getEvents = fetchEvents(studentsId);
     // 残り分数計算
