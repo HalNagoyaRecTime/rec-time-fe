@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
+import { FaRegStar } from "react-icons/fa";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -15,11 +16,11 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
         if (isOpen) {
             setIsVisible(true);
             setTimeout(() => setIsAnimating(true), 10);
-            document.body.style.overflow = 'hidden';
+            document.body.style.overflow = "hidden";
         } else {
             setIsAnimating(false);
             setTimeout(() => setIsVisible(false), 300);
-            document.body.style.overflow = '';
+            document.body.style.overflow = "";
         }
     }, [isOpen]);
 
@@ -109,10 +110,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                             >
                                 <div className="flex items-center gap-3 pl-1">
                                     <div className="h-8 w-8">
-                                        <img src="/icons/app-icon/star.png" alt="" />
+                                        <FaRegStar className="h-7 w-7" />
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <p className="text-lg">レクサイト</p>
+                                        <p className="text-lg text-white">レクサイト</p>
                                         <div className="mr-5 h-5 w-5">
                                             <img src="/icons/app-icon/link.svg" alt="" />
                                         </div>

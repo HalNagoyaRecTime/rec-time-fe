@@ -28,7 +28,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
     if (id) {
         // 登録済み: localStorageから学生情報を取得し、学籍番号+生年月日で認証
-        const birthday = localStorage.getItem("student:birthday");
+        const { STORAGE_KEYS } = await import("~/constants/storage");
+        const birthday = localStorage.getItem(STORAGE_KEYS.STUDENT_BIRTHDAY);
         if (!birthday) {
             throw new Error("生年月日が保存されていません。再度ログインしてください。");
         }

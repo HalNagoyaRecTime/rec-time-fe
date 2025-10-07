@@ -2,23 +2,18 @@
 // === 데이터 취득・보존 유틸리티 ===
 import { fetchByGakuseki } from "../api/student";
 import type { EventRow } from "../api/student";
-
-// === LocalStorage キー ===
-// === LocalStorage 키 ===
-const LS_KEY_ID = "student:id";
-const LS_KEY_EVENTS = (id: string) => `events:list:${id}`;
-const LS_KEY_LAST_UPDATED = "student:payload:lastUpdated";
+import { STORAGE_KEYS } from "~/constants/storage";
 
 // === 学籍番号取得 ===
 // === 학번 취득 ===
 export function getStudentId(): string | null {
-    return localStorage.getItem(LS_KEY_ID);
+    return localStorage.getItem(STORAGE_KEYS.STUDENT_ID);
 }
 
 // === 学籍番号保存 ===
 // === 학번 보존 ===
 export function setStudentId(id: string) {
-    localStorage.setItem(LS_KEY_ID, id);
+    localStorage.setItem(STORAGE_KEYS.STUDENT_ID, id);
 }
 
 // === データ更新イベントを発火 ===
@@ -41,14 +36,14 @@ export async function downloadAndSaveEvents(
 
         // LocalStorageに保存（idがある場合のみ）
         if (id) {
-            localStorage.setItem(LS_KEY_EVENTS(id), JSON.stringify(payload.t_events));
+            localStorage.setItem(STORAGE_KEYS.EVENTS(id), JSON.stringify(payload.t_events));
         }
 
         // オンライン取得時のみ最終更新時間を更新
         if (!isFromCache) {
             const now = new Date();
             const iso = now.toISOString();
-            localStorage.setItem(LS_KEY_LAST_UPDATED, iso);
+            localStorage.setItem(STORAGE_KEYS.LAST_UPDATED, iso);
 
             // データ更新イベントを発火
             dispatchDataUpdatedEvent();
@@ -64,7 +59,7 @@ export async function downloadAndSaveEvents(
 // === 最終更新時間取得 ===
 // === 최종 갱신 시간 취득 ===
 export function getLastUpdatedTime(): Date | null {
-    const iso = localStorage.getItem(LS_KEY_LAST_UPDATED);
+    const iso = localStorage.getItem(STORAGE_KEYS.LAST_UPDATED);
     if (!iso) return null;
     const t = Date.parse(iso);
     if (Number.isNaN(t)) return null;

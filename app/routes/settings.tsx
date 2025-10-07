@@ -3,88 +3,36 @@ import { Link } from "react-router";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import settingsYellow from "/icons/app-icon/settings.svg";
 import { FaPen } from "react-icons/fa";
-import {
-    getNotificationSetting,
-    saveNotificationSetting,
-    requestNotificationPermission,
-    scheduleAllNotifications,
-} from "~/utils/notifications";
-
-type StudentData = {
-    f_student_id: string;
-    f_student_num: string;
-    f_class?: string | null;
-    f_number?: string | null;
-    f_name?: string | null;
-};
+import { useStudentData } from "~/hooks/useStudentData";
+import { useNotificationSettings } from "~/hooks/useNotificationSettings";
 
 export default function settings() {
-    const [isPushEnabled, setIsPushEnabled] = useState(false);
-    const [studentData, setStudentData] = useState<StudentData | null>(null);
+    const { studentData } = useStudentData();
+    const { isEnabled: isPushEnabled, toggleNotification } = useNotificationSettings();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
-    // 初期化: ユーザーデータと通知設定を取得
+    // 初期化: URLパラメータから登録状態を確認
     useEffect(() => {
-        // ユーザーデータの取得
-        const savedData = localStorage.getItem("student:data");
-        if (savedData) {
-            try {
-                const data = JSON.parse(savedData);
-                setStudentData(data);
-            } catch (error) {
-                console.error("ユーザーデータの読み込みエラー:", error);
-            }
-        }
-
-        // 通知設定の取得
-        const notificationEnabled = getNotificationSetting();
-        setIsPushEnabled(notificationEnabled);
-
-        // URLパラメータから登録状態を確認
         const params = new URLSearchParams(window.location.search);
         const registered = params.get("registered");
 
         if (registered === "true") {
             setSuccessMessage("登録が完了しました");
-            // URLパラメータをクリア
             window.history.replaceState({}, "", window.location.pathname);
-            // 3秒後にメッセージを消す
-            // setTimeout(() => setSuccessMessage(""), 3000);
         }
     }, []);
 
     // 通知設定が変更された時の処理
     const handleNotificationToggle = async (enabled: boolean) => {
         if (enabled) {
-            // 通知をオンにする場合は権限を要求
-            const permission = await requestNotificationPermission();
-            if (permission === "granted") {
-                saveNotificationSetting(true);
-                setIsPushEnabled(true);
+            const success = await toggleNotification(true);
+            if (success) {
                 setErrorMessage("");
                 setSuccessMessage("通知を有効にしました");
-                // console.log("[設定] 通知オン - 権限許可済み");
-
-                // 既存のイベントデータがあれば通知を再スケジュール
-                const studentId = localStorage.getItem("student:id");
-                if (studentId) {
-                    const eventsData = localStorage.getItem(`events:list:${studentId}`);
-                    if (eventsData) {
-                        try {
-                            // イベントの再スケジュール
-                            const events = JSON.parse(eventsData);
-                            scheduleAllNotifications(events);
-                        } catch (error) {
-                            console.error("イベントデータの読み込みエラー:", error);
-                        }
-                    }
-                }
             } else {
                 setErrorMessage("通知を有効にするには、ブラウザで通知許可が必要です");
-                setIsPushEnabled(false);
-                console.log("[設定] 通知権限が拒否されました");
             }
         } else {
             // 通知をオフにする前に確認
@@ -93,9 +41,8 @@ export default function settings() {
     };
 
     // 通知オフを確定
-    const confirmTurnOffNotification = () => {
-        saveNotificationSetting(false);
-        setIsPushEnabled(false);
+    const confirmTurnOffNotification = async () => {
+        await toggleNotification(false);
         setShowConfirmModal(false);
         setSuccessMessage("通知を無効にしました");
     };
@@ -146,7 +93,7 @@ export default function settings() {
                             <div className="h-8 w-8">
                                 <img src={settingsYellow} alt="" />
                             </div>
-                            <p>プッシュ通知</p>
+                            <p className="text-white">プッシュ通知</p>
                         </div>
 
                         <label className="relative inline-flex cursor-pointer items-center">

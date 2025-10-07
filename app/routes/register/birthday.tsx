@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
+import { useStudentData } from "~/hooks/useStudentData";
 
 export function meta() {
     return [{ title: "誕生日入力 - RecTime" }];
@@ -46,6 +47,7 @@ function DateInputField({
 
 export default function Birthday() {
     const navigate = useNavigate();
+    const { registerStudent } = useStudentData();
     const [year, setYear] = useState("");
     const [month, setMonth] = useState("");
     const [day, setDay] = useState("");
@@ -162,12 +164,7 @@ export default function Birthday() {
 
             const data = await res.json();
 
-            // 成功: localStorageに保存
-            localStorage.setItem("student:id", studentId);
-            localStorage.setItem("student:birthday", birthday);
-            localStorage.setItem("student:name", data.f_name || "");
-
-            // 設定画面用に完全なデータを保存
+            // 成功: useStudentDataフックで一括保存
             const studentData = {
                 f_student_id: data.f_student_id || "",
                 f_student_num: studentId,
@@ -175,12 +172,7 @@ export default function Birthday() {
                 f_number: data.f_number || null,
                 f_name: data.f_name || null,
             };
-            localStorage.setItem("student:data", JSON.stringify(studentData));
-
-            // 登録成功時刻を保存
-            const now = new Date();
-            const iso = now.toISOString();
-            localStorage.setItem("student:payload:lastUpdated", iso);
+            registerStudent(studentId, birthday, studentData);
 
             // sessionStorageをクリア
             sessionStorage.removeItem("temp-student-id");
@@ -308,7 +300,7 @@ export default function Birthday() {
                     <button
                         onClick={handleBack}
                         disabled={isLoading}
-                        className="box-border h-10 cursor-pointer rounded-lg border-1 bg-none px-6 py-2 font-medium transition-colors"
+                        className="box-border h-10 cursor-pointer rounded-lg border-1 bg-none px-6 py-2 font-medium text-white transition-colors"
                     >
                         戻る
                     </button>
