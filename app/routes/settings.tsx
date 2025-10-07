@@ -22,6 +22,8 @@ export default function settings() {
     const [isPushEnabled, setIsPushEnabled] = useState(false);
     const [studentData, setStudentData] = useState<StudentData | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     // 初期化: ユーザーデータと通知設定を取得
     useEffect(() => {
@@ -39,6 +41,18 @@ export default function settings() {
         // 通知設定の取得
         const notificationEnabled = getNotificationSetting();
         setIsPushEnabled(notificationEnabled);
+
+        // URLパラメータから登録状態を確認
+        const params = new URLSearchParams(window.location.search);
+        const registered = params.get("registered");
+
+        if (registered === "true") {
+            setSuccessMessage("登録が完了しました");
+            // URLパラメータをクリア
+            window.history.replaceState({}, "", window.location.pathname);
+            // 3秒後にメッセージを消す
+            // setTimeout(() => setSuccessMessage(""), 3000);
+        }
     }, []);
 
     // 通知設定が変更された時の処理
@@ -49,6 +63,8 @@ export default function settings() {
             if (permission === "granted") {
                 saveNotificationSetting(true);
                 setIsPushEnabled(true);
+                setErrorMessage("");
+                setSuccessMessage("通知を有効にしました");
                 // console.log("[設定] 通知オン - 権限許可済み");
 
                 // 既存のイベントデータがあれば通知を再スケジュール
@@ -66,8 +82,7 @@ export default function settings() {
                     }
                 }
             } else {
-                // Todo:アラートをテキストにする。
-                alert("通知を有効にするには、ブラウザで通知許可が必要です");
+                setErrorMessage("通知を有効にするには、ブラウザで通知許可が必要です");
                 setIsPushEnabled(false);
                 console.log("[設定] 通知権限が拒否されました");
             }
@@ -82,6 +97,7 @@ export default function settings() {
         saveNotificationSetting(false);
         setIsPushEnabled(false);
         setShowConfirmModal(false);
+        setSuccessMessage("通知を無効にしました");
     };
 
     // 通知オフをキャンセル
@@ -94,14 +110,20 @@ export default function settings() {
             <div className="flex w-full flex-col gap-6">
                 {/*ユーザーカード*/}
                 <div className="box-border overflow-hidden rounded-lg border-1 border-[#FFB400] bg-blue-500 shadow-lg">
-                    <div className="relative flex items-center justify-center bg-white p-4 pt-11 pb-4">
-                        <p className="cursor-pointer text-3xl font-medium text-blue-950">
+                    <div className="relative flex items-center justify-center bg-white p-4 pt-10 pb-5">
+                        <h2 className="cursor-pointer text-3xl font-medium text-blue-950">
                             {studentData?.f_student_num || "-----"}
-                        </p>
+                        </h2>
                         <h3 className="absolute top-3 left-4 font-medium text-blue-950">学籍番号</h3>
                         <Link to="/register/student-id" className="absolute right-3 bottom-2 h-6 w-6 cursor-pointer">
                             <FaPen className="h-6 w-6 text-[#FFB400]" />
                         </Link>
+                        <h4
+                            className={`absolute bottom-1 text-sm font-normal ${successMessage ? "text-green-600" : "text-red-600"}`}
+                        >
+                            {successMessage && successMessage}
+                            {!successMessage && errorMessage && errorMessage}
+                        </h4>
                     </div>
                     <div className="flex bg-blue-600 px-6 py-4">
                         <div className="pr-5 text-[#FFB400]">

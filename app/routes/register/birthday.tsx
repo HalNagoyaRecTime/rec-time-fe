@@ -27,10 +27,10 @@ function DateInputField({
                             <p className="w-5 text-center leading-none">{value[i]}</p>
                         ) : i === value.length && isCurrentField ? (
                             <div className="flex h-9 w-5 items-center justify-start">
-                                <div className="h-7 w-0.5 animate-pulse bg-white"></div>
+                                <div className="h-6 w-0.5 animate-pulse bg-white"></div>
                             </div>
                         ) : (
-                            <p className="w-5 text-center leading-none text-gray-500">{defaultValue[i]}</p>
+                            <p className="w-5 text-center leading-none text-gray-400">{defaultValue[i]}</p>
                         )}
                         <div className="h-[3px] w-5 rounded-full bg-[#F5F5DC]">
                             {isCurrentField && i === value.length && (
@@ -185,8 +185,8 @@ export default function Birthday() {
             // sessionStorageをクリア
             sessionStorage.removeItem("temp-student-id");
 
-            // timetableへ遷移
-            navigate("/timetable");
+            // 設定画面へ遷移（登録完了パラメータ付き）
+            navigate("/settings?registered=true");
         } catch (err) {
             console.error(err);
             setStatus("network-error");
