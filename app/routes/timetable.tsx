@@ -33,7 +33,7 @@ export default function Timetable() {
                         <div className="flex flex-col overflow-hidden text-white">
                             <p className="flex gap-2 truncate">
                                 {/* TODO:gather_time計算？ */}
-                                {nextEvent?.f_start_time}<span>{nextEvent?.f_gather_time}</span>
+                                {nextEvent?.f_start_time}<span className="text-red-500">{nextEvent?.f_gather_time}</span>
                             </p>
                             <p className="truncate">{nextEvent?.f_place}</p>
                         </div>
