@@ -45,13 +45,13 @@ export default function Timetable() {
     }, []);
 
     const handleRefresh = async () => {
-        // モックデータ更新処理（0.5秒）
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await handleDataUpdate();
     };
 
     return (
-        // <PullToRefresh onRefresh={handleRefresh}>
-            <RecTimeFlame>
+        <RecTimeFlame>
+            <PullToRefresh onRefresh={handleRefresh}>
                 <div className="flex h-full flex-col">
                     <StudentInfoBar studentId={studentId} onUpdate={handleDataUpdate} isLoading={isLoading} />
 
@@ -82,7 +82,7 @@ export default function Timetable() {
 
                     <TimeSlotGridWithEvents displayEvents={events} studentId={studentId} loading={isLoading} />
                 </div>
-            </RecTimeFlame>
-        // </PullToRefresh>
+            </PullToRefresh>
+        </RecTimeFlame>
     );
 }
