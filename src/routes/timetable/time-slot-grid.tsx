@@ -51,21 +51,22 @@ const CurrentTimeIndicator = ({ timelineStartHour, timelineEndHour, pixelsPerMin
         right: 0,
         display: 'flex',
         alignItems: 'center',
-        height: '2px',
-        backgroundColor: 'gold',
+        height: '4px',
+        backgroundColor: 'red',
         zIndex: 20, // イベント(zIndex: 10)より手前に表示
       }}
     >
       <span
         style={{
-          backgroundColor: 'gold',
+          backgroundColor: 'red',
           color: 'black',
           padding: '2px 8px',
           borderRadius: '4px',
           fontSize: '12px',
           // 線の左端からの相対位置
           position: 'absolute',
-          left: '-2.5rem', // text-gray-300の領域にはみ出すように調整
+          top: '50%',
+          left: '-2.7rem', // text-gray-300の領域にはみ出すように調整
           transform: 'translateY(-50%)', // 線の真ん中に来るように調整
         }}
       >
