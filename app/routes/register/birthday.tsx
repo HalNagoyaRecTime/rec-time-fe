@@ -5,7 +5,7 @@ import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 
 export function meta() {
-    return [{ title: "誕生日入力 - RecTime" }];
+    return [{ title: "生年月日入力 - RecTime" }];
 }
 
 function DateInputField({
@@ -53,7 +53,7 @@ export default function Birthday() {
     const [day, setDay] = useState("");
     const [currentField, setCurrentField] = useState<"year" | "month" | "day">("year");
     const [status, setStatus] = useState<
-        "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
+        "idle" | "invalid-date" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -138,8 +138,6 @@ export default function Birthday() {
 
         // データベース形式に合わせる (YYYYMMDD)
         const birthday = `${year}${month.padStart(2, "0")}${day.padStart(2, "0")}`;
-        // 表示用 (YYYY-MM-DD)
-        const birthdayDisplay = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
         setIsLoading(true);
         setStatus("idle");
@@ -153,11 +151,7 @@ export default function Birthday() {
             });
 
             if (!res.ok) {
-                if (res.status === 404) {
-                    setStatus("not-found");
-                } else {
-                    setStatus("auth-failed");
-                }
+                setStatus("auth-failed");
                 setIsLoading(false);
                 return;
             }
@@ -195,7 +189,7 @@ export default function Birthday() {
             if (event.ctrlKey && event.key === "Enter") {
                 event.preventDefault();
                 if (isComplete && !isLoading) {
-                    handleRegister();
+                    void handleRegister();
                 }
             }
         };

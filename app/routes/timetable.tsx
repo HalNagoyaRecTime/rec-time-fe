@@ -1,11 +1,15 @@
-import RecTimeFlame from "../components/ui/recTimeFlame";
-import PullToRefresh from "../components/ui/PullToRefresh";
-import TimeSlotGridWithEvents from "../components/timetable/TimeSlotGridWithEvents";
-import StudentInfoBar from "../components/timetable/StudentInfoBar";
+import RecTimeFlame from "~/components/ui/recTimeFlame";
+import TimeSlotGridWithEvents from "~/components/timetable/TimeSlotGridWithEvents";
+import StudentInfoBar from "~/components/timetable/StudentInfoBar";
+import NextEventCard from "~/components/timetable/NextEventCard";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId } from "../utils/dataFetcher";
 import { loadEventsFromStorage } from "../utils/loadEventsFromStorage";
 import type { EventRow } from "../api/student";
+import { useCurrentTime } from "../hooks/useCurrentTime";
+// === デバッグ用（本番環境では削除3/1） ===
+import DebugTimePicker from "../components/timetable/DebugTimePicker";
+// ====
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
@@ -14,22 +18,32 @@ export default function Timetable() {
     const [showRegisteredMessage, setShowRegisteredMessage] = useState(false);
     const hasFetchedRef = useRef(false);
 
+    // === デバッグ用（本番環境では削除3/2） ===
+    const [debugOffset, setDebugOffset] = useState(0);
+    const [showTimeIndicator, setShowTimeIndicator] = useState(false);
+    const currentTime = useCurrentTime(debugOffset);
+    // ===================
+    // ↓置き換える
+    // const currentTime = useCurrentTime(0);
+    // ===================
+
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
-    // === 데이터 갱신 핸들러（스와이프로도 재사용 가능） ===
     const handleDataUpdate = async () => {
         setIsLoading(true);
+        setErrorMessage("");
         const result = await downloadAndSaveEvents();
 
         if (result.success) {
             setEvents(result.events);
+            setErrorMessage("");
         } else {
             console.error("[Timetable] データ更新失敗");
+            setErrorMessage("データ更新失敗");
         }
         setIsLoading(false);
     };
 
     // === 初期化：学籍番号とイベントデータを取得 ===
-    // === 초기화: 학번과 이벤트 데이터 취득 ===
     useEffect(() => {
         const id = getStudentId();
         setStudentId(id);
@@ -52,14 +66,12 @@ export default function Timetable() {
         // LocalStorageが空の場合、初回のみAPIからデータを取得
         if (storedEvents.length === 0 && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
-            handleDataUpdate();
+            void handleDataUpdate();
         }
     }, []);
 
-    const handleRefresh = async () => {
-        // モックデータ更新処理（0.5秒）
-        await new Promise((resolve) => setTimeout(resolve, 500));
-    };
+    // === 次の予定を取得 ===
+    const nextEvent = getNextParticipatingEvent(events);
 
     return (
         // <PullToRefresh onRefresh={handleRefresh}>

@@ -1,10 +1,14 @@
+// === タイムテーブルメインコンポーネント（リファクタリング版） ===
 import React from "react";
-import type { EventRow } from "../../api/student";
+import type { EventRow } from "~/api/student";
+import CurrentTimeIndicator from "./CurrentTimeIndicator";
+import CurrentTimeLine from "./CurrentTimeLine";
 
 interface TimeSlotGridWithEventsProps {
     displayEvents: EventRow[];
     studentId: string | null;
     loading: boolean;
+    currentTime?: Date; // 現在時刻（オプション）
 }
 
 interface TimeSlot {
@@ -21,7 +25,12 @@ function formatTime(hhmm: string | null): string {
     return `${hour}:${minute}`;
 }
 
-export default function TimeSlotGridWithEvents({ displayEvents, studentId, loading }: TimeSlotGridWithEventsProps) {
+export default function TimeSlotGridWithEvents({
+    displayEvents,
+    studentId,
+    loading,
+    currentTime,
+}: TimeSlotGridWithEventsProps) {
     // === 9:00-20:00の15分刻みタイムスロットを生成 ===
     // === 9:00-20:00 15분 단위 타임슬롯 생성 ===
     const generateTimeSlots = (): TimeSlot[] => {
@@ -178,42 +187,15 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, loadi
         return eventPositions;
     };
 
+    // イベントレイアウト計算
     const eventLayout = calculateEventLayout(displayEvents);
-
-    // === 設定 ===
-    const MAX_VISIBLE_EVENTS = 5; // 表示する最大個数
-    const MIN_WIDTH_PX = 60; // 最小幅（イベント名が読める）
-
-    // === 予定数に応じて動的に幅を調整（最小幅保証付き） ===
-    // === 예정 수에 따라 동적으로 너비 조정（최소 너비 보증） ===
-    const getOptimalWidth = (actualColumns: number) => {
-        if (actualColumns === 1) return "calc(100% - 8px)";
-
-        const visibleColumns = Math.min(actualColumns, MAX_VISIBLE_EVENTS);
-        const widthPercentage = 100 / visibleColumns - 0.5;
-
-        // 最小幅を保証
-        return `max(${MIN_WIDTH_PX}px, ${widthPercentage}%)`;
-    };
-
-    const getOptimalLeft = (positionIndex: number, actualColumns: number) => {
-        if (actualColumns === 1) return "4px";
-
-        const visibleColumns = Math.min(actualColumns, MAX_VISIBLE_EVENTS);
-
-        // 表示制限を超えた場合は0を返す（後でフィルタリング）
-        if (positionIndex >= MAX_VISIBLE_EVENTS) return "0";
-
-        const leftPercentage = (positionIndex * 100) / visibleColumns;
-        return `${leftPercentage + 0.3}%`;
-    };
 
     return (
         <div className="relative h-full w-full rounded-lg bg-blue-950 px-1">
             {/* タイムスロット背景 */}
             <div className="flex">
                 {/* 左側：時間ラベル列 */}
-                <div className="w-12 flex-shrink-0">
+                <div className="relative w-12 flex-shrink-0">
                     {timeSlots.map((slot, index) => {
                         const isHourStart = index % 4 === 0;
                         return (
@@ -226,11 +208,18 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, loadi
                             </div>
                         );
                     })}
+
+                    {/* 現在時刻インジケーター（左側） */}
+                    {currentTime && (
+                        <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * 16}px` }}>
+                            <CurrentTimeIndicator currentTime={currentTime} hourHeight={64} startHour={9} />
+                        </div>
+                    )}
                 </div>
 
                 {/* 右側：イベントエリア + 区切り線 */}
                 <div className="relative flex-1">
-                    {timeSlots.map((slot, index) => {
+                    {timeSlots.map((_, index) => {
                         const isHourStart = index % 4 === 0;
 
                         return (
@@ -242,6 +231,23 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, loadi
                             </div>
                         );
                     })}
+
+                    {/* 過去の時間帯の背景（グレーオーバーレイ） */}
+                    {currentTime && (
+                        <div
+                            className="absolute top-0 right-0 left-0 z-5 bg-gray-900/30"
+                            style={{
+                                height: `${(((currentTime.getHours() - 9) * 60 + currentTime.getMinutes()) / 60) * 64}px`,
+                            }}
+                        />
+                    )}
+
+                    {/* 現在時刻ライン（右側カレンダーエリア） */}
+                    {currentTime && (
+                        <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * 16}px` }}>
+                            <CurrentTimeLine currentTime={currentTime} hourHeight={64} startHour={9} />
+                        </div>
+                    )}
 
                     {/* イベント表示 - 絶対位置で配置 */}
                     <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * 16}px` }}>
@@ -332,10 +338,6 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, loadi
                     </div>
                 </div>
             </div>
-
-            {displayEvents.length === 0 && !loading && (
-                <div className="py-8 text-center text-white/70">本日は予定されているイベントがありません</div>
-            )}
         </div>
     );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { IoArrowDown } from "react-icons/io5";
 
 interface PullToRefreshProps {
     onRefresh: () => Promise<void>;
@@ -13,7 +14,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
     // 即座に参照・更新できるref
     const pullDistanceRef = useRef(0);
     const isRefreshingRef = useRef(false);
-    const touchStateRef = useRef<'none' | 'pulling' | 'scrolling' | 'decided'>('none');
+    const touchStateRef = useRef<"none" | "pulling" | "scrolling" | "decided">("none");
     const startYRef = useRef(0);
     const startScrollTopRef = useRef(0);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -32,19 +33,37 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         const container = containerRef.current;
         if (!container) return;
 
+        // 実際のスクロールコンテナを取得（親のmain要素）
+        const getScrollContainer = (): HTMLElement => {
+            let parent = container.parentElement;
+            while (parent) {
+                const overflow = window.getComputedStyle(parent).overflowY;
+                if (overflow === "auto" || overflow === "scroll") {
+                    return parent;
+                }
+                parent = parent.parentElement;
+            }
+            return document.documentElement;
+        };
+
+        const scrollContainer = getScrollContainer();
+
         const handleTouchStart = (e: TouchEvent) => {
             // リフレッシュ中は何もしない
             if (isRefreshingRef.current) return;
 
-            const scrollTop = container.scrollTop;
+            const scrollTop = scrollContainer.scrollTop;
+            startYRef.current = e.touches[0].clientY;
+            startScrollTopRef.current = scrollTop;
 
             // スクロール位置が上部（誤差3px以内）の場合のみ初期化
             if (scrollTop <= 3) {
-                startYRef.current = e.touches[0].clientY;
-                startScrollTopRef.current = scrollTop;
-                touchStateRef.current = 'none'; // 方向未確定
+                touchStateRef.current = "none"; // 方向未確定
                 pullDistanceRef.current = 0;
                 setPullDistance(0);
+            } else {
+                // 上部でない場合は即座に決定状態に
+                touchStateRef.current = "decided";
             }
         };
 
@@ -53,28 +72,29 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
             if (isRefreshingRef.current) return;
 
             // 既に方向が確定してプルでない場合は何もしない
-            if (touchStateRef.current === 'decided') return;
+            if (touchStateRef.current === "decided") return;
 
             const currentY = e.touches[0].clientY;
             const deltaY = currentY - startYRef.current;
-            const currentScrollTop = container.scrollTop;
+            const currentScrollTop = scrollContainer.scrollTop;
 
             // 方向が未確定の場合
-            if (touchStateRef.current === 'none') {
+            if (touchStateRef.current === "none") {
                 // スクロール位置が変わった = スクロールが発生
                 if (currentScrollTop > startScrollTopRef.current + 3) {
-                    touchStateRef.current = 'decided';
+                    touchStateRef.current = "decided";
                     return;
                 }
 
                 // 一定距離移動したら方向を確定
                 if (Math.abs(deltaY) > DIRECTION_THRESHOLD) {
-                    if (deltaY > 0 && currentScrollTop <= 3) {
+                    if (deltaY > 0 && startScrollTopRef.current <= 3 && currentScrollTop <= 3) {
                         // 下方向 & まだ上部 = プル動作
-                        touchStateRef.current = 'pulling';
+                        touchStateRef.current = "pulling";
+                        e.preventDefault(); // すぐにpreventDefault
                     } else {
                         // それ以外 = 通常スクロール
-                        touchStateRef.current = 'decided';
+                        touchStateRef.current = "decided";
                         return;
                     }
                 } else {
@@ -84,10 +104,12 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
             }
 
             // プル動作確定後
-            if (touchStateRef.current === 'pulling') {
+            if (touchStateRef.current === "pulling") {
+                e.preventDefault(); // プル中は常にpreventDefault
+
                 // スクロールが発生したらキャンセル
                 if (currentScrollTop > 3) {
-                    touchStateRef.current = 'decided';
+                    touchStateRef.current = "decided";
                     pullDistanceRef.current = 0;
                     setPullDistance(0);
                     return;
@@ -95,13 +117,12 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
 
                 // 下方向のプルのみ
                 if (deltaY > 0) {
-                    e.preventDefault();
                     const resistedDistance = applyResistance(deltaY);
                     pullDistanceRef.current = resistedDistance;
                     setPullDistance(resistedDistance);
                 } else {
                     // 上方向に戻したらキャンセル
-                    touchStateRef.current = 'decided';
+                    touchStateRef.current = "decided";
                     pullDistanceRef.current = 0;
                     setPullDistance(0);
                 }
@@ -110,17 +131,22 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
 
         const handleTouchEnd = () => {
             // プル動作中でない場合は何もしない
-            if (touchStateRef.current !== 'pulling') {
-                touchStateRef.current = 'none';
+            if (touchStateRef.current !== "pulling") {
+                touchStateRef.current = "none";
                 pullDistanceRef.current = 0;
                 setPullDistance(0);
                 return;
             }
 
-            touchStateRef.current = 'none';
+            touchStateRef.current = "none";
 
             // 閾値を超えていたらリフレッシュ
             if (pullDistanceRef.current >= PULL_THRESHOLD && !isRefreshingRef.current) {
+                // 振動フィードバック（Androidのみ）
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+
                 isRefreshingRef.current = true;
                 setIsRefreshing(true);
                 pullDistanceRef.current = PULL_THRESHOLD;
@@ -165,26 +191,34 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
     return (
         <div
             ref={containerRef}
-            className="relative h-full w-full overflow-y-auto"
-            style={{ overscrollBehavior: 'none', WebkitOverflowScrolling: 'touch' }}
+            className="relative h-full w-full"
+            style={{ overscrollBehavior: "none", WebkitOverflowScrolling: "touch" }}
         >
             {/* コンテンツ全体が下に移動 */}
             <div style={contentStyle}>
                 {/* リフレッシュインジケーター */}
                 <div
-                    className="absolute top-0 right-0 left-0 z-50 -mt-16 flex h-16 items-center justify-center"
+                    className="absolute top-0 right-0 left-0 z-50 -mt-16 flex h-16 flex-col items-center justify-center gap-1"
                     style={indicatorStyle}
                 >
-                    <div className={`${isRefreshing ? "animate-spin" : ""}`}>
-                        <svg className="h-8 w-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                        </svg>
-                    </div>
+                    {isRefreshing ? (
+                        <div
+                            className="h-6 w-6 animate-spin rounded-full py-1"
+                            style={{
+                                background:
+                                    "conic-gradient(from 0deg, #FFB400 0deg, #FFB400 270deg, #FFD966 270deg, #FFD966 360deg)",
+                                WebkitMask:
+                                    "radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))",
+                                mask: "radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))",
+                            }}
+                        />
+                    ) : pullDistance > 0 ? (
+                        // プル中 - 閾値を超えたら180度回転
+                        <IoArrowDown
+                            className="h-8 w-8 text-[#FFB400] transition-transform duration-300"
+                            style={{ transform: pullDistance >= PULL_THRESHOLD ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
+                    ) : null}
                 </div>
 
                 {children}
