@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 
 export function meta() {
-    return [{ title: "誕生日入力 - RecTime" }];
+    return [{ title: "生年月日入力 - RecTime" }];
 }
 
 function DateInputField({
@@ -53,7 +53,7 @@ export default function Birthday() {
     const [day, setDay] = useState("");
     const [currentField, setCurrentField] = useState<"year" | "month" | "day">("year");
     const [status, setStatus] = useState<
-        "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
+        "idle" | "invalid-date" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -138,8 +138,6 @@ export default function Birthday() {
 
         // データベース形式に合わせる (YYYYMMDD)
         const birthday = `${year}${month.padStart(2, "0")}${day.padStart(2, "0")}`;
-        // 表示用 (YYYY-MM-DD)
-        const birthdayDisplay = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
         setIsLoading(true);
         setStatus("idle");
@@ -153,11 +151,7 @@ export default function Birthday() {
             });
 
             if (!res.ok) {
-                if (res.status === 404) {
-                    setStatus("not-found");
-                } else {
-                    setStatus("auth-failed");
-                }
+                setStatus("auth-failed");
                 setIsLoading(false);
                 return;
             }
@@ -195,7 +189,7 @@ export default function Birthday() {
             if (event.ctrlKey && event.key === "Enter") {
                 event.preventDefault();
                 if (isComplete && !isLoading) {
-                    handleRegister();
+                    void handleRegister();
                 }
             }
         };
@@ -257,8 +251,7 @@ export default function Birthday() {
 
                         <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
                             {status === "invalid-date" && "正しい日付を入力してください"}
-                            {status === "not-found" && "学籍番号または誕生日が一致しません"}
-                            {status === "auth-failed" && "認証に失敗しました"}
+                            {status === "auth-failed" && "学籍番号または誕生日が一致しません"}
                             {status === "network-error" && "ネットワークエラーが発生しました"}
                             {status === "no-student-id" && "学籍番号が設定されていません"}
                         </h4>
