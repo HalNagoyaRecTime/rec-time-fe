@@ -6,6 +6,7 @@ export type StudentRow = {
     f_class?: string | null;
     f_number?: string | null;
     f_name?: string | null;
+    f_note?: string | null; // 読み仮名 (読み仮名)
     f_birthday?: string | null; // 誕生日 (YYYY-MM-DD)
 };
 
@@ -36,7 +37,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         // 学籍番号+生年月日で学生情報を取得
         const studentRes = await fetch(`${API_BASE}/students/by-student-num/${id}/birthday/${birthday}`, {
-            cache: "no-store"
+            cache: "no-store",
         });
 
         if (!studentRes.ok) {
@@ -44,8 +45,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const studentData = await studentRes.json();
-        console.log("[DEBUG] studentData:", studentData);
-        console.log("[DEBUG] f_student_id:", studentData.f_student_id);
 
         // イベント情報を取得
         const eventsRes = await fetch(`${API_BASE}/events`, { cache: "no-store" });
@@ -58,22 +57,15 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         // 学生の出場情報を取得
         const entriesUrl = `${API_BASE}/entries?f_student_id=${studentData.f_student_id}`;
-        console.log("[DEBUG] entries URL:", entriesUrl);
         const entriesRes = await fetch(entriesUrl, {
-            cache: "no-store"
+            cache: "no-store",
         });
 
         let myEventIds = new Set<string>();
         if (entriesRes.ok) {
             const entriesData = await entriesRes.json();
-            console.log("[DEBUG] entriesData:", entriesData);
             const entries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
-            console.log("[DEBUG] entries array:", entries);
-            console.log("[DEBUG] student_id:", studentData.f_student_id);
             myEventIds = new Set(entries.map((e: any) => String(e.f_event_id)));
-            console.log("[DEBUG] myEventIds:", myEventIds);
-        } else {
-            console.log("[DEBUG] entries fetch failed:", entriesRes.status);
         }
 
         const student: StudentRow = {
@@ -82,13 +74,14 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_class: studentData.f_class ?? null,
             f_number: studentData.f_number ?? null,
             f_name: studentData.f_name ?? null,
+            f_note: studentData.f_note ?? null,
             f_birthday: studentData.f_birthday ?? null,
         };
 
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : (ev.f_start_time ? String(ev.f_start_time) : null),
+            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
@@ -116,18 +109,19 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_class: null,
             f_number: null,
             f_name: null,
+            f_note: null,
             f_birthday: null,
         };
 
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : (ev.f_start_time ? String(ev.f_start_time) : null),
+            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
             f_summary: ev.f_summary ?? null,
-            f_is_my_entry: false,  // 未登録なので全てfalse
+            f_is_my_entry: false, // 未登録なので全てfalse
         }));
 
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache };

@@ -18,19 +18,6 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
     const width = getOptimalWidth(layout.actualColumns);
     const left = getOptimalLeft(layout.positionIndex, layout.actualColumns);
 
-    // デバッグログ
-    console.log(`[EventCard] ${event.f_event_name}:`, {
-        eventId: event.f_event_id,
-        startTime: event.f_start_time,
-        duration: event.f_duration,
-        actualColumns: layout.actualColumns,
-        positionIndex: layout.positionIndex,
-        width,
-        left,
-        top: layout.top,
-        height: layout.height,
-    });
-
     // 継続時間（実際の分数）
     const durationMinutes = parseInt(event.f_duration || "0", 10);
 

@@ -19,7 +19,11 @@ interface TimeSlotGridWithEventsProps {
 /**
  * タイムテーブル全体のコンテナコンポーネント
  */
-export default function TimeSlotGridWithEvents({ displayEvents, studentId }: TimeSlotGridWithEventsProps) {
+export default function TimeSlotGridWithEvents({
+    displayEvents,
+    studentId,
+    currentTime,
+}: TimeSlotGridWithEventsProps) {
     // タイムスロット生成
     const timeSlots = generateTimeSlots(START_HOUR, END_HOUR, SLOT_INTERVAL_MINUTES);
 
@@ -39,6 +43,7 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId }: Tim
                     displayEvents={displayEvents}
                     eventLayout={eventLayout}
                     studentId={studentId}
+                    currentTime={currentTime}
                 />
             </div>
         </div>

@@ -28,6 +28,14 @@ export default function DebugTimePicker({
         setDebugOffset(0);
     };
 
+    const jumpTo9AM = () => {
+        const now = new Date();
+        const target = new Date(now);
+        target.setHours(9, 0, 0, 0);
+        const offset = target.getTime() - now.getTime();
+        setDebugOffset(offset);
+    };
+
     const formatOffset = () => {
         const totalMinutes = Math.floor(debugOffset / 60000);
         const hours = Math.floor(Math.abs(totalMinutes) / 60);
@@ -74,7 +82,7 @@ export default function DebugTimePicker({
                     {showTimeIndicator && (
                         <>
                             <div className="mb-2 text-center text-xs text-gray-400">{formatOffset()}</div>
-                            <div className="flex gap-2">
+                            <div className="mb-2 flex gap-2">
                                 <button
                                     onClick={() => adjustTime(-1)}
                                     className="flex-1 rounded bg-red-500 px-2 py-1 text-xs hover:bg-red-600"
@@ -94,6 +102,12 @@ export default function DebugTimePicker({
                                     +1m
                                 </button>
                             </div>
+                            <button
+                                onClick={jumpTo9AM}
+                                className="w-full rounded bg-purple-600 px-2 py-1 text-xs hover:bg-purple-700"
+                            >
+                                9:00にジャンプ
+                            </button>
                         </>
                     )}
                 </div>

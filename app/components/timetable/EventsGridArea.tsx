@@ -5,25 +5,36 @@ import type { TimeSlot, EventLayout } from "~/types/timetable";
 import { TIMETABLE_CONSTANTS } from "~/types/timetable";
 import EventCard from "./EventCard";
 import { getOptimalWidth, getOptimalLeft } from "~/utils/timetable/eventPositioning";
+import CurrentTimeLine from "./CurrentTimeLine";
 
-const { MAX_VISIBLE_EVENTS } = TIMETABLE_CONSTANTS;
+const { MAX_VISIBLE_EVENTS, START_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface EventsGridAreaProps {
     timeSlots: TimeSlot[];
     displayEvents: EventRow[];
     eventLayout: Map<string, EventLayout>;
     studentId: string | null;
+    currentTime?: Date;
 }
 
 /**
  * 右側のイベント表示エリア（区切り線 + イベントカード）
  */
-export default function EventsGridArea({ timeSlots, displayEvents, eventLayout, studentId }: EventsGridAreaProps) {
+export default function EventsGridArea({
+    timeSlots,
+    displayEvents,
+    eventLayout,
+    studentId,
+    currentTime,
+}: EventsGridAreaProps) {
     // 参加者チェック
     const isParticipant = (event: EventRow): boolean => {
         if (!studentId) return false;
         return event.f_is_my_entry === true;
     };
+
+    // 1時間あたりの高さを計算（5分スロット × 12 = 1時間）
+    const hourHeight = (60 / SLOT_INTERVAL_MINUTES) * SLOT_HEIGHT_PX;
 
     return (
         <div className="relative flex-1">
@@ -37,8 +48,18 @@ export default function EventsGridArea({ timeSlots, displayEvents, eventLayout, 
                 );
             })}
 
+            {/* 現在時刻インジケーター */}
+            {currentTime && (
+                <CurrentTimeIndicator
+                    currentTime={currentTime}
+                    hourHeight={hourHeight}
+                    startHour={START_HOUR}
+                    endHour={END_HOUR}
+                />
+            )}
+
             {/* イベント表示エリア */}
-            <div className="absolute top-0 right-0 left-0 px-1" style={{ height: `${timeSlots.length * 8}px` }}>
+            <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * 8}px` }}>
                 {displayEvents.map((event) => {
                     const participant = isParticipant(event);
                     const layout = eventLayout.get(event.f_event_id);

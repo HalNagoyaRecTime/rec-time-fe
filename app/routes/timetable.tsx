@@ -26,9 +26,12 @@ export default function Timetable() {
     const [debugOffset, setDebugOffset] = useState(0);
     const [showTimeIndicator, setShowTimeIndicator] = useState(false);
     const currentTime = useCurrentTime(debugOffset);
-    // ===================
-    // ↓置き換える
-    // const currentTime = useCurrentTime(0);
+
+    // 開催日判定（2025-03-01）
+    const isEventDay = (() => {
+        const now = new Date(currentTime);
+        return now.getFullYear() === 2025 && now.getMonth() === 2 && now.getDate() === 1;
+    })();
     // ===================
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
@@ -106,7 +109,7 @@ export default function Timetable() {
                         displayEvents={events}
                         studentId={studentId}
                         loading={isLoading}
-                        currentTime={showTimeIndicator ? currentTime : undefined}
+                        currentTime={isEventDay || showTimeIndicator ? currentTime : undefined}
                     />
                 </div>
 
