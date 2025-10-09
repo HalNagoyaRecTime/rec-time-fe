@@ -35,7 +35,7 @@ export default function TimeSlotGridWithEvents({
             {/* タイムスロット背景 */}
             <div className="flex">
                 {/* 左側：時間ラベル列 */}
-                <TimeLabelsColumn timeSlots={timeSlots} />
+                <TimeLabelsColumn timeSlots={timeSlots} currentTime={currentTime} />
 
                 {/* 右側：イベント表示エリア */}
                 <EventsGridArea

@@ -6,6 +6,7 @@ import { TIMETABLE_CONSTANTS } from "~/types/timetable";
 import EventCard from "./EventCard";
 import { getOptimalWidth, getOptimalLeft } from "~/utils/timetable/eventPositioning";
 import CurrentTimeLine from "./CurrentTimeLine";
+import PastTimeOverlay from "./PastTimeOverlay";
 
 const { MAX_VISIBLE_EVENTS, START_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
@@ -48,18 +49,18 @@ export default function EventsGridArea({
                 );
             })}
 
-            {/* 現在時刻インジケーター */}
+            {/* 過去の時間帯の背景（グレーオーバーレイ） */}
+            {currentTime && <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />}
+
+            {/* 現在時刻ライン（右側カレンダーエリア） */}
             {currentTime && (
-                <CurrentTimeIndicator
-                    currentTime={currentTime}
-                    hourHeight={hourHeight}
-                    startHour={START_HOUR}
-                    endHour={END_HOUR}
-                />
+                <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}>
+                    <CurrentTimeLine currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />
+                </div>
             )}
 
             {/* イベント表示エリア */}
-            <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * 8}px` }}>
+            <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}>
                 {displayEvents.map((event) => {
                     const participant = isParticipant(event);
                     const layout = eventLayout.get(event.f_event_id);

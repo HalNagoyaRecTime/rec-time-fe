@@ -22,8 +22,8 @@ export default function CurrentTimeIndicator({
 
     // グリッド上での位置を計算
     let totalMinutesFromStart: number;
-    let displayHours = hours;
-    let displayMinutes = minutes;
+    let displayHours: number;
+    let displayMinutes: number;
 
     if (hours < startHour) {
         // 0:00〜8:59 → 9:00の位置に表示
@@ -32,8 +32,7 @@ export default function CurrentTimeIndicator({
         displayMinutes = 0;
     } else if (hours >= endHour) {
         // 18:00以降 → 18:00の位置に固定
-        const maxMinutesFromStart = (endHour - startHour) * 60;
-        totalMinutesFromStart = maxMinutesFromStart;
+        totalMinutesFromStart = (endHour - startHour) * 60;
         displayHours = endHour;
         displayMinutes = 0;
     } else {
@@ -43,15 +42,15 @@ export default function CurrentTimeIndicator({
         displayMinutes = minutes;
     }
 
-    // 現在時刻（HH:MM形式）- 固定された時刻を表示
-    const currentTimeStr = `${displayHours.toString().padStart(2, "0")}:${displayMinutes.toString().padStart(2, "0")}`;
+    // 現在時刻（H:MM形式）- 固定された時刻を表示
+    const currentTimeStr = `${displayHours}:${displayMinutes.toString().padStart(2, "0")}`;
 
     const topPosition = (totalMinutesFromStart / 60) * hourHeight - 9;
 
     return (
         <div className="absolute left-0 z-60 w-full" style={{ top: `${topPosition}px` }}>
             {/* 現在時刻バッジ（黄色背景） */}
-            <div className="flex h-[18px] w-full items-center justify-end rounded-r-full bg-[#FFB400] pr-2">
+            <div className="flex h-[18px] w-full items-center justify-end rounded-r-full bg-[#FFB400] pr-1">
                 <p className="text-sm font-medium text-blue-950">{currentTimeStr}</p>
             </div>
         </div>

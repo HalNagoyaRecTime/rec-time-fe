@@ -9,8 +9,7 @@ import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
-// === デバッグ用（本番環境では削除3/1） ===
-import DebugTimePicker from "~/components/timetable/DebugTimePicker";
+// === デバッグ用 ===
 import LoadMockDataButton from "~/components/debug/LoadMockDataButton";
 // ====
 
@@ -22,17 +21,14 @@ export default function Timetable() {
     const [showRegisteredMessage, setShowRegisteredMessage] = useState(false);
     const hasFetchedRef = useRef(false);
 
-    // === デバッグ用（本番環境では削除3/2） ===
-    const [debugOffset, setDebugOffset] = useState(0);
-    const [showTimeIndicator, setShowTimeIndicator] = useState(false);
-    const currentTime = useCurrentTime(debugOffset);
+    // === 現在時刻と開催日判定 ===
+    const currentTime = useCurrentTime();
 
     // 開催日判定（2025-03-01）
     const isEventDay = (() => {
         const now = new Date(currentTime);
         return now.getFullYear() === 2025 && now.getMonth() === 2 && now.getDate() === 1;
     })();
-    // ===================
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     const handleDataUpdate = async () => {
@@ -109,17 +105,10 @@ export default function Timetable() {
                         displayEvents={events}
                         studentId={studentId}
                         loading={isLoading}
-                        currentTime={isEventDay || showTimeIndicator ? currentTime : undefined}
+                        currentTime={isEventDay ? currentTime : undefined}
                     />
                 </div>
-
-                {/* デバック用 */}
-                <DebugTimePicker
-                    debugOffset={debugOffset}
-                    setDebugOffset={setDebugOffset}
-                    showTimeIndicator={showTimeIndicator}
-                    setShowTimeIndicator={setShowTimeIndicator}
-                />
+                
                 <LoadMockDataButton />
             </PullToRefresh>
         </RecTimeFlame>
