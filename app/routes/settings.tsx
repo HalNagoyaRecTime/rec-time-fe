@@ -72,16 +72,16 @@ export default function settings() {
                             {!successMessage && errorMessage && errorMessage}
                         </h4>
                     </div>
-                    <div className="flex bg-blue-600 px-6 py-4">
-                        <div className="pr-5 text-[#FFB400]">
+                    <div className="w-full flex bg-blue-600 px-6 py-4">
+                        <div className="w-fit flex-col shrink-0 pr-5 text-[#FFB400]">
                             <p>クラス</p>
                             <p>出席番号</p>
                             <p>氏名</p>
                         </div>
-                        <div className="text-white">
-                            <p className="">{studentData?.f_class || "---"}</p>
-                            <p>{studentData?.f_number || "---"}</p>
-                            <p>{studentData?.f_name || "---"}</p>
+                        <div className="w-full min-w-0 flex-1 flex flex-col text-white">
+                            <p className="whitespace-nowrap overflow-hidden text-ellipsis">{studentData?.f_class || "---"}</p>
+                            <p className="whitespace-nowrap overflow-hidden text-ellipsis">{studentData?.f_number || "---"}</p>
+                            <p className="whitespace-nowrap overflow-hidden text-ellipsis">{studentData?.f_name || "---"}</p>
                         </div>
                     </div>
                 </div>
