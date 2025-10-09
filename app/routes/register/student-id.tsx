@@ -10,7 +10,7 @@ export function meta() {
 export default function StudentId() {
     const navigate = useNavigate();
     const [studentId, setStudentId] = useState("");
-    const [status, setStatus] = useState<"idle" | "no-input" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "no-input">("idle");
 
     // 初期表示時にsessionStorageから学籍番号を復元
     React.useEffect(() => {
@@ -48,6 +48,9 @@ export default function StudentId() {
         // 誕生日入力ページへ遷移
         navigate("/register/birthday");
     };
+
+    // 入力チェック：数字のみで1文字以上
+    const isValidInput = studentId.length > 0 && /^\d+$/.test(studentId);
 
     // Ctrl+Enterで次へボタンを押す
     React.useEffect(() => {
@@ -96,7 +99,6 @@ export default function StudentId() {
 
                         <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
                             {status === "no-input" && "学籍番号を入力してください"}
-                            {status === "error" && "サーバーに接続出来ません"}
                         </h4>
                     </div>
 
@@ -138,6 +140,7 @@ export default function StudentId() {
                     </Link>
                     <button
                         onClick={handleNext}
+                        disabled={!isValidInput}
                         className="cursor-pointer rounded-lg bg-[#FFB400] px-6 py-2 font-medium shadow-sm transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-gray-400"
                     >
                         <span className="text-white">次へ</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
@@ -177,8 +177,8 @@ export default function Birthday() {
             // sessionStorageをクリア
             sessionStorage.removeItem("temp-student-id");
 
-            // 設定画面へ遷移（登録完了パラメータ付き）
-            navigate("/settings?registered=true");
+            // タイムテーブル画面へ遷移（登録完了パラメータ付き）
+            navigate("/timetable?registered=true");
         } catch (err) {
             console.error(err);
             setStatus("network-error");
@@ -257,9 +257,9 @@ export default function Birthday() {
 
                         <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
                             {status === "invalid-date" && "正しい日付を入力してください"}
-                            {status === "not-found" && "学籍番号または誕生日が一致しません"}
+                            {status === "not-found" && "学籍番号または誕生日が違う可能性があります"}
                             {status === "auth-failed" && "認証に失敗しました"}
-                            {status === "network-error" && "ネットワークエラーが発生しました"}
+                            {status === "network-error" && "サーバーに接続できませんでした"}
                             {status === "no-student-id" && "学籍番号が設定されていません"}
                         </h4>
                     </div>
