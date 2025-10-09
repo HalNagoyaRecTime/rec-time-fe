@@ -44,6 +44,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const studentData = await studentRes.json();
+        console.log("[DEBUG] studentData:", studentData);
+        console.log("[DEBUG] f_student_id:", studentData.f_student_id);
 
         // イベント情報を取得
         const eventsRes = await fetch(`${API_BASE}/events`, { cache: "no-store" });
@@ -55,15 +57,23 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const eventsArray: EventRow[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
 
         // 学生の出場情報を取得
-        const entriesRes = await fetch(`${API_BASE}/entries?f_student_id=${studentData.f_student_id}`, {
+        const entriesUrl = `${API_BASE}/entries?f_student_id=${studentData.f_student_id}`;
+        console.log("[DEBUG] entries URL:", entriesUrl);
+        const entriesRes = await fetch(entriesUrl, {
             cache: "no-store"
         });
 
         let myEventIds = new Set<string>();
         if (entriesRes.ok) {
             const entriesData = await entriesRes.json();
+            console.log("[DEBUG] entriesData:", entriesData);
             const entries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
+            console.log("[DEBUG] entries array:", entries);
+            console.log("[DEBUG] student_id:", studentData.f_student_id);
             myEventIds = new Set(entries.map((e: any) => String(e.f_event_id)));
+            console.log("[DEBUG] myEventIds:", myEventIds);
+        } else {
+            console.log("[DEBUG] entries fetch failed:", entriesRes.status);
         }
 
         const student: StudentRow = {

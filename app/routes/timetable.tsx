@@ -2,6 +2,7 @@ import RecTimeFlame from "../components/ui/recTimeFlame";
 import PullToRefresh from "../components/ui/PullToRefresh";
 import TimeSlotGridWithEvents from "../components/timetable/TimeSlotGridWithEvents";
 import StudentInfoBar from "../components/timetable/StudentInfoBar";
+import LoadMockDataButton from "../components/debug/LoadMockDataButton";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
@@ -90,6 +91,9 @@ export default function Timetable() {
 
                     <TimeSlotGridWithEvents displayEvents={events} studentId={studentId} loading={isLoading} />
                 </div>
+
+                {/* デバッグ用モックデータ読み込みボタン */}
+                <LoadMockDataButton />
             </RecTimeFlame>
         </PullToRefresh>
     );
