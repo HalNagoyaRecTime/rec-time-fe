@@ -49,8 +49,8 @@ export default function Timetable() {
     }, []);
 
     const handleRefresh = async () => {
-        // モックデータ更新処理（0.5秒）
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await handleDataUpdate();
     };
 
     return (
