@@ -10,7 +10,7 @@ export function meta() {
 export default function StudentId() {
     const navigate = useNavigate();
     const [studentId, setStudentId] = useState("");
-    const [status, setStatus] = useState<"idle" | "no-input" | "error">("idle");
+    const [status, setStatus] = useState<"idle" | "no-input">("idle");
 
     // 初期表示時にsessionStorageから学籍番号を復元
     React.useEffect(() => {
@@ -96,7 +96,6 @@ export default function StudentId() {
 
                         <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
                             {status === "no-input" && "学籍番号を入力してください"}
-                            {status === "error" && "サーバーに接続出来ません"}
                         </h4>
                     </div>
 

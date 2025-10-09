@@ -2,7 +2,6 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect, useState } from "react";
 import type { Route } from "./types/root";
-import DevNavigation from "./components/ui/devNavigation";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
@@ -73,12 +72,10 @@ export default function App() {
             <Header />
             <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <HamburgerMenuBtn onClick={() => setIsMenuOpen(!isMenuOpen)} isOpen={isMenuOpen} />
-            <main className="flex-1 overflow-y-auto flex flex-col">
+            <main className="flex flex-1 flex-col overflow-y-auto">
                 <Outlet />
                 <Footer />
             </main>
-            {/* ↓デバック用ナビゲーション↓ */}
-            <DevNavigation />
         </div>
     );
 }

@@ -1,3 +1,4 @@
+// === タイムテーブルメインコンポーネント（リファクタリング版） ===
 import React from "react";
 import type { EventRow } from "~/api/student";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
@@ -186,35 +187,8 @@ export default function TimeSlotGridWithEvents({
         return eventPositions;
     };
 
+    // イベントレイアウト計算
     const eventLayout = calculateEventLayout(displayEvents);
-
-    // === 設定 ===
-    const MAX_VISIBLE_EVENTS = 5; // 表示する最大個数
-    const MIN_WIDTH_PX = 60; // 最小幅（イベント名が読める）
-
-    // === 予定数に応じて動的に幅を調整（最小幅保証付き） ===
-    // === 예정 수에 따라 동적으로 너비 조정（최소 너비 보증） ===
-    const getOptimalWidth = (actualColumns: number) => {
-        if (actualColumns === 1) return "calc(100% - 8px)";
-
-        const visibleColumns = Math.min(actualColumns, MAX_VISIBLE_EVENTS);
-        const widthPercentage = 100 / visibleColumns - 0.5;
-
-        // 最小幅を保証
-        return `max(${MIN_WIDTH_PX}px, ${widthPercentage}%)`;
-    };
-
-    const getOptimalLeft = (positionIndex: number, actualColumns: number) => {
-        if (actualColumns === 1) return "4px";
-
-        const visibleColumns = Math.min(actualColumns, MAX_VISIBLE_EVENTS);
-
-        // 表示制限を超えた場合は0を返す（後でフィルタリング）
-        if (positionIndex >= MAX_VISIBLE_EVENTS) return "0";
-
-        const leftPercentage = (positionIndex * 100) / visibleColumns;
-        return `${leftPercentage + 0.3}%`;
-    };
 
     return (
         <div className="relative h-full w-full rounded-lg bg-blue-950 px-1">
@@ -364,10 +338,6 @@ export default function TimeSlotGridWithEvents({
                     </div>
                 </div>
             </div>
-
-            {displayEvents.length === 0 && !loading && (
-                <div className="py-8 text-center text-white/70">本日は予定されているイベントがありません</div>
-            )}
         </div>
     );
 }
