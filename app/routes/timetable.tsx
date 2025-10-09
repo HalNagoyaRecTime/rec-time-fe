@@ -12,17 +12,21 @@ export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const hasFetchedRef = useRef(false);
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     const handleDataUpdate = async () => {
         setIsLoading(true);
+        setErrorMessage("");
         const result = await downloadAndSaveEvents();
 
         if (result.success) {
             setEvents(result.events);
+            setErrorMessage("");
         } else {
             console.error("[Timetable] データ更新失敗");
+            setErrorMessage("データ更新失敗");
         }
         setIsLoading(false);
     };
@@ -39,7 +43,7 @@ export default function Timetable() {
         // LocalStorageが空の場合、初回のみAPIからデータを取得
         if (storedEvents.length === 0 && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
-            handleDataUpdate();
+            void handleDataUpdate();
         }
     }, []);
 
