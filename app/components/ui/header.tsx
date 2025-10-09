@@ -69,8 +69,6 @@ export default function header() {
                 <p className="pb-[2px] text-xs whitespace-nowrap text-white/80">
                     <span>最終更新：</span>
                     <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
-                    <br />
-                    <span>デバック：{lastUpdated}</span>
                 </p>
             </div>
         </header>
