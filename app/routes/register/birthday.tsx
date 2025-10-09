@@ -53,7 +53,7 @@ export default function Birthday() {
     const [day, setDay] = useState("");
     const [currentField, setCurrentField] = useState<"year" | "month" | "day">("year");
     const [status, setStatus] = useState<
-        "idle" | "invalid-date" | "auth-failed" | "network-error" | "no-student-id"
+        "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -151,7 +151,11 @@ export default function Birthday() {
             });
 
             if (!res.ok) {
-                setStatus("auth-failed");
+                if (res.status === 404) {
+                    setStatus("not-found");
+                } else {
+                    setStatus("auth-failed");
+                }
                 setIsLoading(false);
                 return;
             }
@@ -289,7 +293,6 @@ export default function Birthday() {
                 <NumberKeypad onNumberClick={handleNumberClick} onClear={handleClear} onBackspace={handleBackspace} />
 
                 {/* 登録ボタン */}
-                {/*Todo:登録した後の遷移方法を改善。*/}
                 <div className="flex w-57 items-center justify-between">
                     <button
                         onClick={handleBack}
