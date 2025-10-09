@@ -15,7 +15,7 @@ export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
+    const [showRegisteredMessage, setShowRegisteredMessage] = useState(false);
     const hasFetchedRef = useRef(false);
 
     // === デバッグ用（本番環境では削除3/2） ===
@@ -48,6 +48,17 @@ export default function Timetable() {
         const id = getStudentId();
         setStudentId(id);
 
+        // URLパラメータから登録状態を確認
+        const params = new URLSearchParams(window.location.search);
+        const registered = params.get("registered");
+
+        if (registered === "true") {
+            setShowRegisteredMessage(true);
+            // URLパラメータをクリア
+            window.history.replaceState({}, "", window.location.pathname);
+            // メッセージは遷移するまで表示し続ける（setTimeoutを削除）
+        }
+
         // LocalStorageからイベントデータを読み込む
         const storedEvents = loadEventsFromStorage(id);
         setEvents(storedEvents);
@@ -66,12 +77,16 @@ export default function Timetable() {
         // <PullToRefresh onRefresh={handleRefresh}>
         <RecTimeFlame>
             <div className="flex h-full flex-col">
-                <StudentInfoBar studentId={studentId} onUpdate={handleDataUpdate} isLoading={isLoading} />
+                <StudentInfoBar
+                    studentId={studentId}
+                    onUpdate={handleDataUpdate}
+                    isLoading={isLoading}
+                    showRegisteredMessage={showRegisteredMessage}
+                />
 
                 <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
                     <h3 className="font-title text-lg font-black text-white">四天王ドッジボール</h3>
                     <div className="flex w-full flex-1 justify-center">
-                        {/*Todo:横幅が大きくなった時に文字をどう表示するか*/}
                         <div className="flex w-7/10 gap-3 pl-3">
                             <div className="min-w-fit font-normal text-[#FFB400]">
                                 <p>集合時間</p>
@@ -93,22 +108,8 @@ export default function Timetable() {
                     </div>
                 </div>
 
-                <TimeSlotGridWithEvents
-                    displayEvents={events}
-                    studentId={studentId}
-                    loading={isLoading}
-                    currentTime={showTimeIndicator ? currentTime : undefined}
-                />
+                <TimeSlotGridWithEvents displayEvents={events} studentId={studentId} loading={isLoading} />
             </div>
-
-            {/* === デバッグ用（本番環境では削除3/3） */}
-            <DebugTimePicker
-                debugOffset={debugOffset}
-                setDebugOffset={setDebugOffset}
-                showTimeIndicator={showTimeIndicator}
-                setShowTimeIndicator={setShowTimeIndicator}
-            />
-            {/* ====   */}
         </RecTimeFlame>
         // </PullToRefresh>
     );

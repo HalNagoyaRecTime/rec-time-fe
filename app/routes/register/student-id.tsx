@@ -49,6 +49,9 @@ export default function StudentId() {
         navigate("/register/birthday");
     };
 
+    // 入力チェック：数字のみで1文字以上
+    const isValidInput = studentId.length > 0 && /^\d+$/.test(studentId);
+
     // Ctrl+Enterで次へボタンを押す
     React.useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -137,6 +140,7 @@ export default function StudentId() {
                     </Link>
                     <button
                         onClick={handleNext}
+                        disabled={!isValidInput}
                         className="cursor-pointer rounded-lg bg-[#FFB400] px-6 py-2 font-medium shadow-sm transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-gray-400"
                     >
                         <span className="text-white">次へ</span>

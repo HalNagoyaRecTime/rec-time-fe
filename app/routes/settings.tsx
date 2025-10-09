@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import settingsYellow from "/icons/app-icon/settings.svg";
@@ -12,17 +12,6 @@ export default function settings() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
-
-    // 初期化: URLパラメータから登録状態を確認
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const registered = params.get("registered");
-
-        if (registered === "true") {
-            setSuccessMessage("登録が完了しました");
-            window.history.replaceState({}, "", window.location.pathname);
-        }
-    }, []);
 
     // 通知設定が変更された時の処理
     const handleNotificationToggle = async (enabled: boolean) => {
