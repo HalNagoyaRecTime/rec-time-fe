@@ -6,14 +6,8 @@ const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
 // キャッシュするリソース
 const STATIC_FILES = [
-    // アプリケーションルート
+    // エントリーポイント
     "/",
-    "/home",
-    "/timetable",
-    "/map",
-    "/settings",
-    "/register/student-id",
-    "/register/birthday",
     // 静的アセット
     "/favicon.ico",
     "/manifest.webmanifest",
@@ -36,7 +30,6 @@ self.addEventListener("install", (event) => {
     console.log("[SW] install", APP_VERSION);
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("[SW] キャッシュを開く");
             return cache.addAll(STATIC_FILES);
         })
     );
@@ -65,7 +58,44 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
     const { request } = event;
-    const url = new URL(request.url);
+
+    // 不正なURLや空のURLをスキップ
+    if (!request.url) {
+        console.warn("[SW] 空のURLリクエストをスキップ");
+        return;
+    }
+
+    let url;
+    try {
+        url = new URL(request.url);
+    } catch (e) {
+        console.error("[SW] 無効なURL:", request.url, e);
+        return;
+    }
+
+    // 同一オリジンのリクエストのみ処理（外部リソースは除外）
+    if (url.origin !== location.origin) {
+        return;
+    }
+
+    // ナビゲーションリクエスト（ページ遷移）の場合、常にindex.htmlを返す（SPA対応）
+    if (request.mode === "navigate") {
+        event.respondWith(
+            caches.match("/").then((response) => {
+                if (response) {
+                    return response;
+                }
+                return fetch("/").catch((error) => {
+                    console.error("[SW] ナビゲーション失敗（オフライン）:", error);
+                    return new Response("Offline and index.html not cached", {
+                        status: 503,
+                        statusText: "Service Unavailable",
+                    });
+                });
+            })
+        );
+        return;
+    }
 
     // APIデータのキャッシュ戦略: Network First
     if (url.pathname.startsWith("/api/")) {
@@ -83,23 +113,7 @@ self.addEventListener("fetch", (event) => {
                 })
                 .catch(() => {
                     // ネットワークエラー時はキャッシュから返す
-                    console.log("[SW] ネットワークエラー、キャッシュから取得:", url.pathname);
-                    console.log("[SW] オフライン状態: キャッシュされたデータを表示中");
-                    return caches.match(request).then((cachedResponse) => {
-                        if (cachedResponse) {
-                            // キャッシュからの取得であることを示すヘッダーを追加
-                            const modifiedResponse = new Response(cachedResponse.body, {
-                                status: cachedResponse.status,
-                                statusText: cachedResponse.statusText,
-                                headers: {
-                                    ...Object.fromEntries(cachedResponse.headers.entries()),
-                                    "X-Cache-Source": "service-worker",
-                                },
-                            });
-                            return modifiedResponse;
-                        }
-                        return cachedResponse;
-                    });
+                    return caches.match(request);
                 })
         );
         return;
@@ -122,15 +136,24 @@ self.addEventListener("fetch", (event) => {
                     return cachedResponse;
                 }
                 // キャッシュにない場合はネットワークから取得してキャッシュに保存
-                return fetch(request).then((response) => {
-                    if (response.ok) {
-                        const responseClone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(request, responseClone);
+                return fetch(request)
+                    .then((response) => {
+                        if (response.ok) {
+                            const responseClone = response.clone();
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(request, responseClone);
+                            });
+                        }
+                        return response;
+                    })
+                    .catch((error) => {
+                        console.error("[SW] リソース取得失敗（オフライン）:", url.pathname, error);
+                        // オフライン時にキャッシュがない場合はエラーレスポンスを返す
+                        return new Response("Offline and resource not cached", {
+                            status: 503,
+                            statusText: "Service Unavailable",
                         });
-                    }
-                    return response;
-                });
+                    });
             })
         );
     }
