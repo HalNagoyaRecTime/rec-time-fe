@@ -9,9 +9,6 @@ import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
-// === デバッグ用 ===
-import LoadMockDataButton from "~/components/debug/LoadMockDataButton";
-// ====
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
@@ -145,8 +142,6 @@ export default function Timetable() {
                         <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
                     </div>
                 </div>
-
-                <LoadMockDataButton />
             </PullToRefresh>
         </RecTimeFlame>
     );
