@@ -4,7 +4,7 @@ import TimeSlotGridWithEvents from "~/components/timetable/TimeSlotGridWithEvent
 import StudentInfoBar from "~/components/timetable/StudentInfoBar";
 import NextEventCard from "~/components/timetable/NextEventCard";
 import React, { useState, useEffect, useRef } from "react";
-import { downloadAndSaveEvents, getStudentId } from "~/utils/dataFetcher";
+import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
@@ -19,6 +19,7 @@ export default function Timetable() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [showRegisteredMessage, setShowRegisteredMessage] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const hasFetchedRef = useRef(false);
 
     // === 現在時刻と開催日判定 ===
@@ -45,6 +46,28 @@ export default function Timetable() {
         }
         setIsLoading(false);
     };
+
+    // === 最終更新時間を取得 ===
+    useEffect(() => {
+        const updateLastUpdated = () => {
+            const lastUpdate = getLastUpdatedDisplay();
+            setLastUpdated(lastUpdate);
+        };
+
+        // 初回読み込み
+        updateLastUpdated();
+
+        // カスタムイベントリスナー：データ更新時に呼ばれる
+        const handleDataUpdated = () => {
+            updateLastUpdated();
+        };
+
+        window.addEventListener("data-updated", handleDataUpdated);
+
+        return () => {
+            window.removeEventListener("data-updated", handleDataUpdated);
+        };
+    }, []);
 
     // === 初期化：学籍番号とイベントデータを取得 ===
     useEffect(() => {
@@ -82,6 +105,14 @@ export default function Timetable() {
         await handleDataUpdate();
     };
 
+    // === 時刻フォーマット（HH:MM） ===
+    const formatTimeOnly = (dateString: string | null): string | null => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+    };
+
     return (
         <RecTimeFlame>
             <PullToRefresh onRefresh={handleRefresh}>
@@ -107,8 +138,14 @@ export default function Timetable() {
                         loading={isLoading}
                         currentTime={isEventDay ? currentTime : undefined}
                     />
+
+                    {/* 最終更新時間 */}
+                    <div className="mt-2 pb-4 text-center text-xs text-white/60">
+                        <span>最終更新：</span>
+                        <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
+                    </div>
                 </div>
-                
+
                 <LoadMockDataButton />
             </PullToRefresh>
         </RecTimeFlame>
