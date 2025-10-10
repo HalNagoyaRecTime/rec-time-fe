@@ -10,10 +10,10 @@ export default defineConfig(({ mode }) => {
 
     // 環境変数バリデーション関数
     const getApiUrl = () => {
-        const url = env.VITE_API_URL || "http://127.0.0.1:8787";
-        console.log(`[Vite Config] Validating VITE_API_URL: "${url}"`);
+        const url = env.VITE_API_BASE_URL || "http://127.0.0.1:8787";
+        console.log(`[Vite Config] Validating VITE_API_BASE_URL: "${url}"`);
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            throw new Error(`Invalid VITE_API_URL format: "${url}". Must start with http:// or https://`);
+            throw new Error(`Invalid VITE_API_BASE_URL format: "${url}". Must start with http:// or https://`);
         }
         return url;
     };
@@ -45,10 +45,6 @@ export default defineConfig(({ mode }) => {
             alias: {
                 "~": path.resolve(__dirname, "./app"),
             },
-        },
-        define: {
-            __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "2025-09-12-01"),
-            __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "RecTime PWA"),
         },
         plugins: [
             reactRouter(),
