@@ -4,3 +4,9 @@
 # React Router
 /.react-router/
 /build/
+
+# 環境変数ファイル
+.env.local
+.env.dev
+.env.staging
+# .env.production と .env.example はコミット対象（参照用テンプレート）
