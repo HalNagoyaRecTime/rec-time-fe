@@ -140,7 +140,7 @@ export default function Timetable() {
                     />
 
                     {/* 最終更新時間 */}
-                    <div className="mt-2 pb-4 text-center text-xs text-white/60">
+                    <div className="mt-2 text-center text-xs text-white/60">
                         <span>最終更新：</span>
                         <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
                     </div>
