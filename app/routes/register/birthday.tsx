@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
+import { getApiBaseUrl } from "~/utils/apiConfig";
 
 export function meta() {
     return [{ title: "生年月日入力 - RecTime" }];
@@ -144,7 +145,7 @@ export default function Birthday() {
 
         try {
             // API呼び出し: 学籍番号+誕生日で検証
-            const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+            const API_BASE = getApiBaseUrl();
             const res = await fetch(`${API_BASE}/students/by-student-num/${studentId}/birthday/${birthday}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },

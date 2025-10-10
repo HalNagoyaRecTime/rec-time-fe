@@ -24,8 +24,10 @@ export type EventRow = {
 export type ApiPayload = { m_students: StudentRow; t_events: EventRow[] };
 
 // === API呼び出し（データベース対応） ===
+import { getApiBaseUrl } from "~/utils/apiConfig";
+
 export async function fetchByGakuseki(id: string | null): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+    const API_BASE = getApiBaseUrl();
 
     if (id) {
         // 登録済み: localStorageから学生情報を取得し、学籍番号+生年月日で認証
