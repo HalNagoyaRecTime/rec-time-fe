@@ -46,10 +46,6 @@ export default defineConfig(({ mode }) => {
                 "~": path.resolve(__dirname, "./app"),
             },
         },
-        define: {
-            __VITE_APP_VERSION__: JSON.stringify(env.VITE_APP_VERSION || "2025-09-12-01"),
-            __VITE_APP_NAME__: JSON.stringify(env.VITE_APP_NAME || "RecTime PWA"),
-        },
         plugins: [
             reactRouter(),
             tailwindcss(),
