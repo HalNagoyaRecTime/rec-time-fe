@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { MdFileDownload } from "react-icons/md";
+import { FaXmark } from "react-icons/fa6";
 
 interface ImageData {
     src: string;
@@ -29,6 +31,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     const swipeStartY = useRef<number | null>(null);
     const lastTapTime = useRef<number>(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const swipeDirection = useRef<"horizontal" | "vertical" | null>(null);
 
     // 全ての画像を事前にプリロード
     useEffect(() => {
@@ -44,6 +47,24 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         setPosition({ x: 0, y: 0 });
     }, [currentIndex]);
 
+    // キーボード操作
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            } else if (e.key === "ArrowLeft") {
+                prevImage();
+            } else if (e.key === "ArrowRight") {
+                nextImage();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, currentIndex, images.length, onClose]);
+
     const nextImage = () => {
         if (currentIndex < images.length - 1 && !isTransitioning) {
             setIsTransitioning(true);
@@ -57,6 +78,41 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
             setIsTransitioning(true);
             setCurrentIndex((prev) => prev - 1);
             setTimeout(() => setIsTransitioning(false), 300);
+        }
+    };
+
+    const downloadImage = async () => {
+        const currentImage = images[currentIndex];
+
+        // ダウンロード確認ダイアログを表示
+        const fileName = `${currentImage.title.replace(/[/\\?%*:|"<>]/g, "-")}.jpg`;
+        const confirmed = window.confirm(`「${currentImage.title}」をダウンロードしますか？`);
+
+        if (!confirmed) {
+            return; // キャンセルされた場合は何もしない
+        }
+
+        try {
+            // 画像をfetchしてblobに変換
+            const response = await fetch(currentImage.src);
+            const blob = await response.blob();
+
+            // ダウンロード用のURLを生成
+            const url = window.URL.createObjectURL(blob);
+
+            // ダウンロード用のリンクを作成してクリック
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // URLを解放
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("画像のダウンロードに失敗しました:", error);
+            window.alert("画像のダウンロードに失敗しました。");
         }
     };
 
@@ -102,14 +158,27 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                     x: touch.clientX - dragStart.x,
                     y: touch.clientY - dragStart.y,
                 });
-            } else if (swipeStartY.current !== null && scale === 1) {
-                // 上から下へのスワイプ判定（閉じる動作）
-                const swipeY = touch.clientY - swipeStartY.current;
-                if (swipeY > 0) {
-                    setSwipeDownDistance(swipeY);
-                    // UI を非表示にする
-                    setShowUI(false);
+            } else if (swipeStartX.current !== null && swipeStartY.current !== null && scale === 1) {
+                const deltaX = Math.abs(touch.clientX - swipeStartX.current);
+                const deltaY = Math.abs(touch.clientY - swipeStartY.current);
+
+                // スワイプ方向がまだ確定していない場合
+                if (!swipeDirection.current && (deltaX > 15 || deltaY > 15)) {
+                    // 横方向と縦方向の移動量を比較して方向を確定
+                    swipeDirection.current = deltaX > deltaY ? "horizontal" : "vertical";
                 }
+
+                // 確定した方向に応じて処理
+                if (swipeDirection.current === "vertical") {
+                    // 縦方向のスワイプ（閉じる動作）
+                    const swipeY = touch.clientY - swipeStartY.current;
+                    if (swipeY > 0) {
+                        setSwipeDownDistance(swipeY);
+                        // UI を非表示にする
+                        setShowUI(false);
+                    }
+                }
+                // 横方向のスワイプは handleTouchEnd で処理
             }
         }
     };
@@ -173,8 +242,13 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
             }
         }
 
-        // 左右スワイプ判定（等倍時のみ）
-        if (swipeStartX.current !== null && scale === 1 && swipeDownDistance === 0) {
+        // 左右スワイプ判定（等倍時のみ、かつ横方向のスワイプのみ）
+        if (
+            swipeStartX.current !== null &&
+            scale === 1 &&
+            swipeDownDistance === 0 &&
+            swipeDirection.current === "horizontal"
+        ) {
             const swipeDistance = touch.clientX - swipeStartX.current;
             if (Math.abs(swipeDistance) > 50) {
                 if (swipeDistance < 0) {
@@ -192,6 +266,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         touchStartPos.current = null;
         swipeStartX.current = null;
         swipeStartY.current = null;
+        swipeDirection.current = null;
     };
 
     // PCのマウスクリック対応
@@ -220,11 +295,13 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         } else {
             // シングルクリック
             if (scale > 1) {
+                // ズーム中の場合はズーム解除
                 setScale(1);
                 setPosition({ x: 0, y: 0 });
                 setShowUI(true);
             } else {
-                setShowUI((prev) => !prev);
+                // 等倍の場合は閉じる
+                onClose();
             }
             lastTapTime.current = now;
         }
@@ -233,34 +310,68 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label="画像ビューア"
+        >
             {/* 背景オーバーレイ - スワイプでゆっくりフェードアウト */}
             <div
-                className="absolute inset-0 bg-black"
+                className="absolute inset-0 bg-black/90"
                 style={{
                     opacity: isClosing ? 0 : swipeDownDistance > 0 ? Math.max(0, 1 - swipeDownDistance / 600) : 1,
                     transition: isClosing ? "opacity 0.3s ease-out" : "none",
                 }}
             />
 
-            {/* 閉じるボタン - 上からスライドイン */}
-            <button
-                onClick={onClose}
-                className="absolute left-4 z-10 text-5xl text-white transition-all duration-300 hover:text-[#FFB400]"
+            {/* ヘッダー（閉じるボタン、タイトル、ダウンロードボタン） - 上からスライドイン */}
+            <div
+                className="absolute right-0 left-0 z-[1000] flex max-w-full items-center gap-4 px-4 transition-all duration-300"
                 style={{
                     top: showUI ? "1rem" : "-4rem",
                     opacity: showUI ? 1 : 0,
                     pointerEvents: showUI ? "auto" : "none",
                 }}
             >
-                ×
-            </button>
+                {/* 閉じるボタン */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClose();
+                    }}
+                    className="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-black transition-all duration-300 hover:bg-[#fff]/10"
+                    aria-label="閉じる"
+                >
+                    <FaXmark className="h-6 w-6 text-white" />
+                </button>
+
+                {/* タイトル */}
+                <div className="flex h-10 min-w-0 flex-1 items-center justify-center">
+                    <p className="truncate text-lg text-white">{images[currentIndex].title}</p>
+                </div>
+
+                {/* ダウンロードボタン */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        void downloadImage();
+                    }}
+                    className="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-black transition-all duration-300 hover:bg-[#fff]/10"
+                    aria-label="画像をダウンロード"
+                >
+                    <MdFileDownload className="h-6 w-6 text-white" />
+                </button>
+            </div>
 
             {/* 左ナビゲーション */}
             {currentIndex > 0 && (
                 <button
-                    onClick={prevImage}
-                    className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        prevImage();
+                    }}
+                    className="absolute top-1/2 left-4 z-[10001] -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
                     style={{ opacity: showUI ? 1 : 0, pointerEvents: showUI ? "auto" : "none" }}
                 >
                     ‹
@@ -270,24 +381,16 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
             {/* 右ナビゲーション */}
             {currentIndex < images.length - 1 && (
                 <button
-                    onClick={nextImage}
-                    className="absolute top-1/2 right-4 z-10 -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        nextImage();
+                    }}
+                    className="absolute top-1/2 right-4 z-[10001] -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
                     style={{ opacity: showUI ? 1 : 0, pointerEvents: showUI ? "auto" : "none" }}
                 >
                     ›
                 </button>
             )}
-
-            {/* 画像タイトル - 上からスライドイン */}
-            <div
-                className="absolute left-1/2 z-10 -translate-x-1/2 text-lg text-white transition-all duration-300"
-                style={{
-                    top: showUI ? "1rem" : "-4rem",
-                    opacity: showUI ? 1 : 0,
-                }}
-            >
-                {images[currentIndex].title}
-            </div>
 
             {/* 画像表示エリア - 横スクロールコンテナ、スワイプで移動 */}
             <div
@@ -349,7 +452,8 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                     {images.map((_, index) => (
                         <button
                             key={index}
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 if (!isTransitioning) {
                                     setIsTransitioning(true);
                                     setCurrentIndex(index);

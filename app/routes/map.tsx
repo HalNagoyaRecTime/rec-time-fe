@@ -7,15 +7,23 @@ import map3 from "/images/map-2f.jpg";
 
 export default function Map() {
     const [isOpen, setIsOpen] = useState(false);
+    const [currentImages, setCurrentImages] = useState<{ src: string; title: string }[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const maps = [
-        { src: map1, title: "各クラス集合場所" },
+    const classMap = [{ src: map1, title: "各クラス集合場所" }];
+    const facilityMaps = [
         { src: map2, title: "施設案内マップ 1F" },
         { src: map3, title: "施設案内マップ 2F" },
     ];
 
-    const openModal = (index: number) => {
+    const openClassMap = () => {
+        setCurrentImages(classMap);
+        setCurrentIndex(0);
+        setIsOpen(true);
+    };
+
+    const openFacilityMap = (index: number) => {
+        setCurrentImages(facilityMaps);
         setCurrentIndex(index);
         setIsOpen(true);
     };
@@ -23,21 +31,21 @@ export default function Map() {
     return (
         <RecTimeFlame>
             <div className="flex max-w-150 flex-col items-center gap-6 pb-8">
-                <h3 className="mb-2 text-base text-[#FFB400]">{maps[0].title}</h3>
-                <button onClick={() => openModal(0)} className="mb-4 overflow-hidden rounded-xs">
-                    <img src={map1} alt={maps[0].title} className="w-full" />
+                <h3 className="mb-2 text-base text-[#FFB400]">各クラス集合場所</h3>
+                <button onClick={openClassMap} className="mb-4 overflow-hidden rounded-xs">
+                    <img src={map1} alt="各クラス集合場所" className="w-full" />
                 </button>
 
                 <h3 className="mb-2 text-base text-[#FFB400]">施設案内マップ</h3>
-                <button onClick={() => openModal(1)} className="mb-4 overflow-hidden rounded-xs">
-                    <img src={map2} alt={maps[1].title} className="w-full" />
+                <button onClick={() => openFacilityMap(0)} className="mb-4 overflow-hidden rounded-xs">
+                    <img src={map2} alt="施設案内マップ 1F" className="w-full" />
                 </button>
-                <button onClick={() => openModal(2)} className="overflow-hidden rounded-xs">
-                    <img src={map3} alt={maps[2].title} className="w-full" />
+                <button onClick={() => openFacilityMap(1)} className="overflow-hidden rounded-xs">
+                    <img src={map3} alt="施設案内マップ 2F" className="w-full" />
                 </button>
 
                 <ZoomableImageModal
-                    images={maps}
+                    images={currentImages}
                     initialIndex={currentIndex}
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
