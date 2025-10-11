@@ -12,6 +12,10 @@ export default function header() {
                 return "マップ";
             case "/settings":
                 return "設定";
+            case "/register/student-id":
+                return "学籍番号入力";
+            case "/register/birthday":
+                return "生年月日入力";
             default:
                 return "Time Table";
         }
