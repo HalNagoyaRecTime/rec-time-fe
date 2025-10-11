@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import NumberKeypad from "../../components/ui/number-keypad";
 
@@ -47,6 +47,17 @@ export default function StudentId() {
 
         // 誕生日入力ページへ遷移
         navigate("/register/birthday");
+    };
+
+    const handleCancel = () => {
+        // sessionStorageから一時保存データを削除
+        sessionStorage.removeItem("temp-student-id");
+        sessionStorage.removeItem("temp-birthday-year");
+        sessionStorage.removeItem("temp-birthday-month");
+        sessionStorage.removeItem("temp-birthday-day");
+
+        // 設定画面へ遷移
+        navigate("/settings");
     };
 
     // 入力チェック：数字のみで1文字以上
@@ -135,9 +146,9 @@ export default function StudentId() {
                 {/* 登録ボタン */}
                 {/*Todo:登録した後の遷移方法を修正。*/}
                 <div className="flex w-57 items-center justify-between">
-                    <Link to="/settings" className="py-2 pr-6 text-white">
+                    <button onClick={handleCancel} className="cursor-pointer py-2 pr-6 text-white">
                         キャンセル
-                    </Link>
+                    </button>
                     <button
                         onClick={handleNext}
                         disabled={!isValidInput}

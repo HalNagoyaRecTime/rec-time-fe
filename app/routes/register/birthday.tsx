@@ -67,6 +67,52 @@ export default function Birthday() {
         }
     }, [navigate]);
 
+    // 初期表示時にsessionStorageから年月日を復元
+    useEffect(() => {
+        const savedYear = sessionStorage.getItem("temp-birthday-year");
+        const savedMonth = sessionStorage.getItem("temp-birthday-month");
+        const savedDay = sessionStorage.getItem("temp-birthday-day");
+
+        if (savedYear) setYear(savedYear);
+        if (savedMonth) {
+            setMonth(savedMonth);
+            if (savedYear && savedYear.length === 4) {
+                setCurrentField("month");
+            }
+        }
+        if (savedDay) {
+            setDay(savedDay);
+            if (savedMonth && savedMonth.length === 2) {
+                setCurrentField("day");
+            }
+        }
+    }, []);
+
+    // 入力内容をsessionStorageに自動保存
+    useEffect(() => {
+        if (year) {
+            sessionStorage.setItem("temp-birthday-year", year);
+        } else {
+            sessionStorage.removeItem("temp-birthday-year");
+        }
+    }, [year]);
+
+    useEffect(() => {
+        if (month) {
+            sessionStorage.setItem("temp-birthday-month", month);
+        } else {
+            sessionStorage.removeItem("temp-birthday-month");
+        }
+    }, [month]);
+
+    useEffect(() => {
+        if (day) {
+            sessionStorage.setItem("temp-birthday-day", day);
+        } else {
+            sessionStorage.removeItem("temp-birthday-day");
+        }
+    }, [day]);
+
     const handleNumberClick = (num: string) => {
         setStatus("idle");
         if (currentField === "year" && year.length < 4) {
@@ -173,8 +219,11 @@ export default function Birthday() {
             };
             registerStudent(studentId, birthday, studentData);
 
-            // sessionStorageをクリア
+            // sessionStorageをクリア（学籍番号と生年月日の入力データ）
             sessionStorage.removeItem("temp-student-id");
+            sessionStorage.removeItem("temp-birthday-year");
+            sessionStorage.removeItem("temp-birthday-month");
+            sessionStorage.removeItem("temp-birthday-day");
 
             // タイムテーブル画面へ遷移（登録完了パラメータ付き）
             navigate("/timetable?registered=true");
