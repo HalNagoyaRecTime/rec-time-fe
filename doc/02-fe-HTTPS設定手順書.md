@@ -5,16 +5,23 @@
 
 ## HTTPS化の必要性
 
-### PWAでHTTPSが必要な理由
-1. **Service Worker** - HTTPSまたはlocalhostでのみ動作
-2. **Web Push API** - HTTPS環境でのみ利用可能
-3. **Geolocation API** - 位置情報取得にHTTPS必須
-4. **Camera/Microphone API** - メディアアクセスにHTTPS必須
+### HTTPS化が必要なケース
+1. **本番環境** - すべてのPWA機能で必須
+2. **実機テスト** - スマホ・タブレットでのテスト
+3. **通知機能** - Web Push APIはHTTPSが必要
+4. **一部のAPI** - Geolocation、Camera/Microphone等
 
-### 開発環境での影響
-- オフライン機能のテスト
-- プッシュ通知のテスト
-- 実機でのPWA動作テスト
+### 開発環境（localhost）での動作
+✅ **HTTPでも動作する機能**:
+- Service Worker の基本機能
+- オフライン動作
+- キャッシュ機能
+- 基本的なPWAインストール
+
+⚠️ **HTTPSが必要な機能**:
+- Web Push API（通知機能）
+- 実機からのアクセス（localhost以外）
+- 一部のGeolocation API
 
 ## 証明書の準備
 
@@ -95,14 +102,17 @@ VITE_DEV_PORT=5173
 現在のプロジェクトでは自動的にHTTPS設定が読み込まれます：
 
 ```typescript
-server: {
-  host: getHost(),
-  port: getPort("VITE_DEV_PORT"),
-  https: env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH ? {
-    key: fs.readFileSync(env.HTTPS_KEY_PATH),
-    cert: fs.readFileSync(env.HTTPS_CERT_PATH),
-  } : undefined,
-}
+// vite.config.ts の server オブジェクトの設定例
+const config = {
+  server: {
+    host: getHost(),
+    port: getPort("VITE_DEV_PORT"),
+    https: env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH ? {
+      key: fs.readFileSync(env.HTTPS_KEY_PATH),
+      cert: fs.readFileSync(env.HTTPS_CERT_PATH),
+    } : undefined,
+  }
+};
 ```
 
 ## 起動方法
