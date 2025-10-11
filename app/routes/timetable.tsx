@@ -9,6 +9,7 @@ import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
+import { scheduleAllNotifications } from "~/utils/notifications";
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
@@ -19,14 +20,8 @@ export default function Timetable() {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const hasFetchedRef = useRef(false);
 
-    // === 現在時刻と開催日判定 ===
+    // === 現在時刻 ===
     const currentTime = useCurrentTime();
-
-    // 開催日判定（2025-03-01）
-    const isEventDay = (() => {
-        const now = new Date(currentTime);
-        return now.getFullYear() === 2025 && now.getMonth() === 2 && now.getDate() === 1;
-    })();
 
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     const handleDataUpdate = async () => {
@@ -93,6 +88,13 @@ export default function Timetable() {
         }
     }, []);
 
+    // === イベントデータが更新されたら通知をスケジュール ===
+    useEffect(() => {
+        if (events.length > 0) {
+            scheduleAllNotifications(events);
+        }
+    }, [events]);
+
     // === 次の予定を取得 ===
     const nextEvent = getNextParticipatingEvent(events);
 
@@ -133,7 +135,7 @@ export default function Timetable() {
                         displayEvents={events}
                         studentId={studentId}
                         loading={isLoading}
-                        currentTime={isEventDay ? currentTime : undefined}
+                        currentTime={currentTime}
                     />
 
                     {/* 最終更新時間 */}

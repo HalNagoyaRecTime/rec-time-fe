@@ -4,18 +4,31 @@ interface CurrentTimeLineProps {
     currentTime: Date;
     hourHeight: number; // 1時間あたりの高さ（px）
     startHour: number; // グリッドの開始時刻
+    endHour?: number; // グリッドの終了時刻（デフォルト: 18）
 }
 
 /**
  * 現在時刻を示す横棒ライン
  * 右側のカレンダーエリアに表示
  */
-export default function CurrentTimeLine({ currentTime, hourHeight, startHour }: CurrentTimeLineProps) {
+export default function CurrentTimeLine({ currentTime, hourHeight, startHour, endHour = 18 }: CurrentTimeLineProps) {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
 
-    // グリッド上での位置を計算
-    const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
+    // グリッド上での位置を計算（9:00〜18:00の範囲に制限）
+    let totalMinutesFromStart: number;
+
+    if (hours < startHour) {
+        // 0:00〜8:59 → 9:00の位置に固定
+        totalMinutesFromStart = 0;
+    } else if (hours >= endHour) {
+        // 18:00以降 → 18:00の位置に固定
+        totalMinutesFromStart = (endHour - startHour) * 60;
+    } else {
+        // 9:00〜17:59 → 実際の時刻を表示
+        totalMinutesFromStart = (hours - startHour) * 60 + minutes;
+    }
+
     const topPosition = (totalMinutesFromStart / 60) * hourHeight;
 
     return (
