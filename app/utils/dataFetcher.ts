@@ -33,6 +33,8 @@ export async function downloadAndSaveEvents(
         const result = await fetchByGakuseki(id);
         const payload = result.payload;
         const isFromCache = result.isFromCache;
+        
+        console.log(`[dataFetcher] 성공 - 이벤트 ${payload.t_events.length}개, 캐시: ${isFromCache}`);
 
         // LocalStorageに保存（idがある場合のみ）
         if (id) {
@@ -51,7 +53,7 @@ export async function downloadAndSaveEvents(
 
         return { success: true, events: payload.t_events, isFromCache };
     } catch (e) {
-        console.error("[dataFetcher] データ取得エラー:", e);
+        console.error("[dataFetcher] 실패:", e instanceof Error ? e.message : String(e));
         return { success: false, events: [], isFromCache: false };
     }
 }

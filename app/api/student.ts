@@ -43,6 +43,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         });
 
         if (!studentRes.ok) {
+            console.error(`[API] 学生情報取得失敗: ${studentRes.status}`);
             throw new Error(`学生情報の取得に失敗しました ${studentRes.status}`);
         }
 
@@ -50,7 +51,9 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         // イベント情報を取得
         const eventsRes = await fetch(`${API_BASE}/events`, { cache: "no-store" });
+        
         if (!eventsRes.ok) {
+            console.error(`[API] イベント情報取得失敗: ${eventsRes.status}`);
             throw new Error(`イベント情報の取得に失敗しました ${eventsRes.status}`);
         }
 
@@ -96,7 +99,10 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         // 未登録: イベント一覧のみ
         const res = await fetch(`${API_BASE}/events`, { cache: "no-store" });
 
-        if (!res.ok) throw new Error(`データ取得失敗 ${res.status}`);
+        if (!res.ok) {
+            console.error(`[API] イベント情報取得失敗: ${res.status}`);
+            throw new Error(`データ取得失敗 ${res.status}`);
+        }
 
         const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
         if (isFromCache) {
