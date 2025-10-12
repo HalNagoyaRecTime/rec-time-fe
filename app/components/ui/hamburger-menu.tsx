@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegStar } from "react-icons/fa";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -115,7 +116,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                     <div className="flex items-center gap-1">
                                         <p className="text-lg font-bold text-white">レクサイト</p>
                                         <div className="mr-5 h-5 w-5">
-                                            <img src="/icons/app-icon/link.svg" alt="" />
+                                            <FaArrowUpRightFromSquare className="mt-[2px] ml-[2px] text-white" />
                                         </div>
                                     </div>
                                 </div>
