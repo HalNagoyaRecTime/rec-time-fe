@@ -110,7 +110,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                             >
                                 <div className="flex items-center gap-3 pl-1">
                                     <div className="h-8 w-8">
-                                        <FaRegStar className="h-7 w-7" />
+                                        <FaRegStar className="h-7 w-7 text-white" />
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <p className="text-lg text-white">レクサイト</p>
@@ -129,7 +129,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         <div
                             className={`flex w-full justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
-                            <h2 className="w-full text-5xl tracking-[2px]">recTime</h2>
+                            <h2 className="w-full text-5xl tracking-[2px] text-white">recTime</h2>
                         </div>
                     </div>
                 </div>
