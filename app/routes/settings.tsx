@@ -87,7 +87,7 @@ export default function Settings() {
                         <div className="h-5">
                             {message?.type && message.content && (
                                 <h4
-                                    className={`h-full rounded-md px-2 text-xs font-normal text-white ${
+                                    className={`flex h-full items-center rounded-md px-2 text-xs font-normal text-white ${
                                         message.type === "success" ? "bg-green-600" : "bg-red-600"
                                     }`}
                                 >
