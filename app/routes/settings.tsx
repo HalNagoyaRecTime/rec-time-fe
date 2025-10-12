@@ -1,15 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import { FaAngleRight } from "react-icons/fa6";
 import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
+import { clearAllCache } from "~/utils/clearCache";
 import type { Message } from "~/types/timetable";
 
+type ModalType = "notification" | "clearCache" | null;
+
 export default function Settings() {
+    const navigate = useNavigate();
     const { studentData } = useStudentData();
     const { isEnabled: isPushEnabled, toggleNotification } = useNotificationSettings();
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [modalType, setModalType] = useState<ModalType>(null);
     const [message, setMessage] = useState<Message>({ type: null, content: "" });
 
     // 通知設定が変更された時の処理
@@ -24,20 +28,39 @@ export default function Settings() {
             }
         } else {
             // 通知をオフにする前に確認
-            setShowConfirmModal(true);
+            setModalType("notification");
         }
     };
 
     // 通知オフを確定
     const confirmTurnOffNotification = async () => {
         await toggleNotification(false);
-        setShowConfirmModal(false);
+        setModalType(null);
         setMessage({ type: "error", content: "通知を無効にしました" });
     };
 
-    // 通知オフをキャンセル
-    const cancelTurnOffNotification = () => {
-        setShowConfirmModal(false);
+    // キャッシュ削除ボタンクリック
+    const handleClearCache = () => {
+        setModalType("clearCache");
+    };
+
+    // キャッシュ削除を確定
+    const confirmClearCache = () => {
+        try {
+            clearAllCache();
+            setModalType(null);
+            // 登録ページにリダイレクト
+            navigate("/register/student-id");
+        } catch (error) {
+            console.error("[Settings] キャッシュ削除エラー:", error);
+            setMessage({ type: "error", content: "キャッシュの削除に失敗しました" });
+            setModalType(null);
+        }
+    };
+
+    // モーダルをキャンセル
+    const cancelModal = () => {
+        setModalType(null);
     };
 
     return (
@@ -94,7 +117,7 @@ export default function Settings() {
                 </div>
 
                 {/*設定*/}
-                <div className="px-2">
+                <div className="flex flex-col gap-4 px-2">
                     <div className="flex w-full items-center justify-end gap-3">
                         <div className="flex items-center gap-3">
                             <p className="text-sm font-bold text-[#000D91]">通知を許可</p>
@@ -110,10 +133,19 @@ export default function Settings() {
                             <div className="peer relative h-6 w-11 rounded-full bg-gray-600 transition-colors duration-200 ease-in-out peer-checked:bg-[#000D91] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:duration-200 after:content-[''] peer-checked:after:translate-x-full"></div>
                         </label>
                     </div>
+
+                    <div className="flex w-full justify-end">
+                        <button
+                            onClick={handleClearCache}
+                            className="cursor-pointer rounded-lg border-1 border-red-600 bg-transparent px-4 py-2 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
+                        >
+                            キャッシュを削除
+                        </button>
+                    </div>
                 </div>
 
-                {/* 確認モーダル */}
-                {showConfirmModal && (
+                {/* 確認モーダル - 通知オフ */}
+                {modalType === "notification" && (
                     <div className="fixed inset-0 z-100 flex h-screen w-full items-center justify-center bg-black/50">
                         <div className="w-80 rounded-lg border-1 border-black bg-white p-6 shadow-lg">
                             <h3 className="mb-4 text-center text-lg font-semibold text-black">
@@ -122,7 +154,7 @@ export default function Settings() {
                             <p className="mb-6 text-center text-sm text-black">イベントの通知が届かなくなります</p>
                             <div className="flex gap-4">
                                 <button
-                                    onClick={cancelTurnOffNotification}
+                                    onClick={cancelModal}
                                     className="flex-1 cursor-pointer rounded-lg border-1 border-black bg-transparent px-4 py-2 text-black transition-colors hover:bg-black/10"
                                 >
                                     キャンセル
@@ -132,6 +164,34 @@ export default function Settings() {
                                     className="flex-1 cursor-pointer rounded-lg bg-[#000D91] px-4 py-2 text-white transition-colors hover:bg-[#000D91]/80"
                                 >
                                     オフにする
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 確認モーダル - キャッシュ削除 */}
+                {modalType === "clearCache" && (
+                    <div className="fixed inset-0 z-100 flex h-screen w-full items-center justify-center bg-black/50">
+                        <div className="w-80 rounded-lg border-1 border-black bg-white p-6 shadow-lg">
+                            <h3 className="mb-4 text-center text-lg font-semibold text-black">
+                                キャッシュを削除しますか？
+                            </h3>
+                            <p className="mb-6 text-center text-sm text-black">
+                                すべてのユーザーデータが削除され、登録画面に戻ります
+                            </p>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={cancelModal}
+                                    className="flex-1 cursor-pointer rounded-lg border-1 border-black bg-transparent px-4 py-2 text-black transition-colors hover:bg-black/10"
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={confirmClearCache}
+                                    className="flex-1 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+                                >
+                                    削除する
                                 </button>
                             </div>
                         </div>
