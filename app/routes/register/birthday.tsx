@@ -347,16 +347,16 @@ export default function Birthday() {
                     <button
                         onClick={handleBack}
                         disabled={isLoading}
-                        className="box-border h-10 cursor-pointer rounded-lg border-1 bg-none px-6 py-2 font-medium text-white transition-colors"
+                        className="bottom-[#111646] box-border flex h-10 cursor-pointer items-center rounded-lg border-2 bg-none px-6 font-bold text-[#111646] transition-colors"
                     >
                         戻る
                     </button>
                     <button
-                        className="cursor-pointer rounded-lg bg-[#FFB400] px-6 py-2 font-medium shadow-sm transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-gray-400"
+                        className="h-10 cursor-pointer rounded-lg bg-[#FFB400] px-6 font-medium shadow-sm transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-gray-400"
                         onClick={handleRegister}
                         disabled={!isComplete || isLoading}
                     >
-                        <span className="text-white">{isLoading ? "取得中" : "登録"}</span>
+                        <span className="text-lg font-semibold text-white">{isLoading ? "取得中" : "登録"}</span>
                     </button>
                 </div>
             </div>

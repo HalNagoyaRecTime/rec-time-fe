@@ -27,7 +27,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
     if (!isLoggedIn) {
         return (
             <div
-                className="relative mt-4 mb-9 flex cursor-pointer flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-14 text-black"
+                className="relative mt-4 mb-9 flex cursor-pointer flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-14 text-black"
                 onClick={handleNavigateToRegister}
             >
                 <h3 className="font-title text-lg font-black text-white">ログインしてください。</h3>

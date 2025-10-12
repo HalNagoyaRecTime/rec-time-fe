@@ -23,7 +23,7 @@ export default function StudentInfoBar({
 
             {/* 右側：学籍番号と更新ボタン */}
             <div className="flex items-center gap-6">
-                <p className="text-sm text-white/70">
+                <p className="text-sm text-[#111646]">
                     学籍番号：<span>{studentId || "未設定"}</span>
                 </p>
                 <button
@@ -31,7 +31,7 @@ export default function StudentInfoBar({
                     onClick={onUpdate}
                     disabled={isLoading}
                 >
-                    <FaEject className="h-4 w-4 text-[#FFB400]" />
+                    <FaEject className="mb-[2px] h-4 w-4 text-[#111646]" />
                 </button>
             </div>
         </div>

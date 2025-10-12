@@ -20,7 +20,7 @@ export default function PastTimeOverlay({ currentTime, hourHeight, startHour }: 
 
     return (
         <div
-            className="absolute top-0 right-0 left-0 z-5 bg-gray-900/30"
+            className="absolute top-0 right-0 left-0 z-5 bg-[#020F95]/10"
             style={{
                 height: `${overlayHeight}px`,
             }}

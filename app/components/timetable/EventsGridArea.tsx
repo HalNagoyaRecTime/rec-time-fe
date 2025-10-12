@@ -44,18 +44,28 @@ export default function EventsGridArea({
                 const isHourStart = index % 12 === 0; // 5分 × 12 = 1時間
                 return (
                     <div key={index} className="relative" style={{ height: "8px" }}>
-                        {isHourStart && <div className="absolute top-0 right-0 left-0 h-px bg-[#FFB4004D]/60"></div>}
+                        {isHourStart && <div className="absolute top-0 right-0 left-0 h-px bg-[#020F95]/20"></div>}
                     </div>
                 );
             })}
 
             {/* 過去の時間帯の背景（グレーオーバーレイ） */}
-            {currentTime && <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />}
+            {currentTime && (
+                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />
+            )}
 
             {/* 現在時刻ライン（右側カレンダーエリア） */}
             {currentTime && (
-                <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}>
-                    <CurrentTimeLine currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={END_HOUR} />
+                <div
+                    className="absolute top-0 right-0 left-0"
+                    style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}
+                >
+                    <CurrentTimeLine
+                        currentTime={currentTime}
+                        hourHeight={hourHeight}
+                        startHour={START_HOUR}
+                        endHour={END_HOUR}
+                    />
                 </div>
             )}
 

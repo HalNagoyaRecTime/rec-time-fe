@@ -50,8 +50,8 @@ export default function CurrentTimeIndicator({
     return (
         <div className="absolute left-0 z-60 w-full" style={{ top: `${topPosition}px` }}>
             {/* 現在時刻バッジ（黄色背景） */}
-            <div className="flex h-[18px] w-full items-center justify-end rounded-r-full bg-[#FFB400] pr-1">
-                <p className="text-sm font-medium text-blue-950">{currentTimeStr}</p>
+            <div className="flex h-[18px] w-full items-center justify-end rounded-r-full bg-[#111646] pr-1">
+                <p className="text-sm font-medium text-white/90">{currentTimeStr}</p>
             </div>
         </div>
     );

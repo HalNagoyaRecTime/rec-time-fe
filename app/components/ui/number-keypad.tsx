@@ -42,7 +42,7 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
 
     // 共通のボタンスタイル
     const buttonClass =
-        "w-16 h-16 border-1 border-gray-400 bg-transparent text-white rounded transition-colors shadow-sm cursor-pointer hover:bg-[#FFB400] hover:border-transparent active:bg-[#FFB400] active:border-transparent flex items-center justify-center";
+        "w-16 h-16 border-1 border-gray-400 bg-[#000D91]/80 shadow-2xl text-white rounded transition-colors shadow-sm cursor-pointer hover:opacity-90 hover:border-transparent active:opasety active:border-transparent flex items-center justify-center";
     return (
         <div className="grid max-w-xs grid-cols-3 gap-4 rounded-lg">
             {/* 数字ボタン 1-9 */}
