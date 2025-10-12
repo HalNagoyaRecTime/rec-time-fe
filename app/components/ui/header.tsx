@@ -23,18 +23,8 @@ export default function header() {
 
     return (
         // 最大幅を取得するための要素
-        <header className="top-0 left-0 z-80 flex h-17 w-full shrink-0 items-center bg-blue-950/90 pl-16 drop-shadow-2xl md:pl-18">
-            <h1
-                className="text-[1.625rem]/7 font-extrabold whitespace-nowrap"
-                style={{
-                    backgroundImage: `linear-gradient(90deg, #fec42e, #fce6a0)`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                }}
-            >
-                {getPageTitle()}
-            </h1>
+        <header className="top-0 left-0 z-80 flex h-17 w-full shrink-0 items-center bg-white pl-16 drop-shadow-sm md:pl-18">
+            <h1 className="text-[1.625rem]/7 font-extrabold whitespace-nowrap text-[#111646]">{getPageTitle()}</h1>
         </header>
     );
 }

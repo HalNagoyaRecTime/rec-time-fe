@@ -68,7 +68,7 @@ export default function App() {
     }, []);
 
     return (
-        <div className="wrapper flex h-screen w-screen flex-col bg-blue-950">
+        <div className="wrapper flex h-screen w-screen flex-col bg-white">
             <Header />
             <HamburgerMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
             <HamburgerMenuBtn onClick={() => setIsMenuOpen(!isMenuOpen)} isOpen={isMenuOpen} />
