@@ -57,7 +57,10 @@ export default function Map() {
                     images={currentImages}
                     initialIndex={currentIndex}
                     isOpen={isOpen}
-                    onClose={() => setIsOpen(false)}
+                    onClose={() => {
+                        setIsOpen(false);
+                        setCurrentImages([]);
+                    }}
                 />
             </div>
         </RecTimeFlame>
