@@ -13,7 +13,7 @@
  * @returns API BaseURL（末尾スラッシュなし）
  */
 export function getApiBaseUrl(): string {
-    const base = import.meta.env.VITE_API_BASE_URL || "/api";
+    const base = import.meta.env.VITE_API_BASE_URL || "https://rec-time-be.ellan122316.workers.dev/";
     const cleanBase = base.replace(/\/$/, "");
 
     // フルURL（http:// または https:// で始まる）の場合、/api を追加
