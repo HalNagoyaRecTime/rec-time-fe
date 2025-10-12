@@ -58,7 +58,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
         >
             <div className="relative h-full w-full">
                 <div
-                    className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-fit" : "w-0"}`}
+                    className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-64" : "w-0"}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex h-full min-w-fit flex-col justify-between bg-[#040b1f] pt-24 pb-6 pl-11">
