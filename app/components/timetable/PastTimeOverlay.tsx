@@ -4,14 +4,14 @@ interface PastTimeOverlayProps {
     currentTime: Date;
     hourHeight: number; // 1時間あたりの高さ（px）
     startHour: number; // グリッドの開始時刻
-    endHour?: number; // グリッドの終了時刻（デフォルト: 18.5）
+    endHour?: number; // 停止時刻（デフォルト: 18）
 }
 
 /**
  * 過去の時間帯を示すグレーオーバーレイ
  * 右側のカレンダーエリアに表示
  */
-export default function PastTimeOverlay({ currentTime, hourHeight, startHour, endHour = 18.5 }: PastTimeOverlayProps) {
+export default function PastTimeOverlay({ currentTime, hourHeight, startHour, endHour = 18 }: PastTimeOverlayProps) {
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
 

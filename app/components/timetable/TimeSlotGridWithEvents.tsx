@@ -7,7 +7,7 @@ import { TIMETABLE_CONSTANTS } from "~/types/timetable";
 import TimeLabelsColumn from "./TimeLabelsColumn";
 import EventsGridArea from "./EventsGridArea";
 
-const { START_HOUR, END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface TimeSlotGridWithEventsProps {
     displayEvents: EventRow[];
@@ -21,7 +21,7 @@ interface TimeSlotGridWithEventsProps {
  */
 export default function TimeSlotGridWithEvents({ displayEvents, studentId, currentTime }: TimeSlotGridWithEventsProps) {
     // タイムスロット生成
-    const timeSlots = generateTimeSlots(START_HOUR, END_HOUR, SLOT_INTERVAL_MINUTES);
+    const timeSlots = generateTimeSlots(START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES);
 
     // イベントレイアウト計算
     const eventLayout = calculateEventLayout(displayEvents);

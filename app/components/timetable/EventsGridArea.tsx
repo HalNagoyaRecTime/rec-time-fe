@@ -8,7 +8,7 @@ import { getOptimalWidth, getOptimalLeft } from "~/utils/timetable/eventPosition
 import CurrentTimeLine from "./CurrentTimeLine";
 import PastTimeOverlay from "./PastTimeOverlay";
 
-const { MAX_VISIBLE_EVENTS, START_HOUR, END_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { MAX_VISIBLE_EVENTS, START_HOUR, STOP_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface EventsGridAreaProps {
     timeSlots: TimeSlot[];
@@ -51,7 +51,7 @@ export default function EventsGridArea({
 
             {/* 過去の時間帯の背景（グレーオーバーレイ） */}
             {currentTime && (
-                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={END_HOUR} />
+                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={STOP_HOUR} />
             )}
 
             {/* 現在時刻ライン（右側カレンダーエリア） */}
@@ -64,7 +64,7 @@ export default function EventsGridArea({
                         currentTime={currentTime}
                         hourHeight={hourHeight}
                         startHour={START_HOUR}
-                        endHour={END_HOUR}
+                        endHour={STOP_HOUR}
                     />
                 </div>
             )}
