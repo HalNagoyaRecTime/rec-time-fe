@@ -16,7 +16,7 @@ export default function StudentInfoBar({ studentId, onUpdate, isLoading, message
             <div className="flex h-full flex-1 pl-2">
                 {message?.type && message.content && (
                     <p
-                        className={`flex h-full w-fit items-center rounded-md px-6 text-center text-sm text-white ${
+                        className={`flex h-full w-fit items-center rounded-md px-5 text-center text-sm whitespace-nowrap text-white ${
                             message.type === "success" ? "bg-green-400" : "bg-red-600"
                         }`}
                     >
@@ -27,7 +27,7 @@ export default function StudentInfoBar({ studentId, onUpdate, isLoading, message
 
             {/* 右側：学籍番号と更新ボタン */}
             <div className="flex items-center gap-6">
-                <p className="text-sm text-[#111646]">
+                <p className="text-sm whitespace-nowrap text-[#111646]">
                     学籍番号：<span>{studentId || "未設定"}</span>
                 </p>
                 <button

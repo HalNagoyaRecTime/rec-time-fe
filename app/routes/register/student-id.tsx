@@ -88,8 +88,8 @@ export default function StudentId() {
 
     return (
         <RecTimeFlame>
-            <div className="flex h-full max-w-150 flex-col items-center justify-center gap-8">
-                <div className="flex flex-col items-center gap-2">
+            <div className="flex h-full max-w-150 flex-col items-center justify-center gap-8 [@media(max-height:680px)]:gap-3">
+                <div className="flex flex-col items-center gap-2 [@media(max-height:680px)]:gap-0">
                     <h2 className="text-xl font-semibold text-[#111646]">学籍番号入力</h2>
                     <p className="text-sm font-semibold text-[#111646]">学籍番号を入力してください</p>
                 </div>
