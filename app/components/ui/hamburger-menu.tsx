@@ -61,7 +61,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                     className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-fit" : "w-0"}`}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="flex h-full min-w-fit flex-col justify-between bg-[#111646] pt-24 pb-6 pl-11">
+                    <div className="flex h-full min-w-fit flex-col justify-between bg-[#040b1f] pt-24 pb-6 pl-11">
                         <div
                             className={`flex flex-col gap-6 pr-7 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >

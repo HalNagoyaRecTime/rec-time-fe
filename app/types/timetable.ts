@@ -47,7 +47,8 @@ export interface EventTimeRange {
 export const TIMETABLE_CONSTANTS = {
     // タイムスロット設定
     START_HOUR: 9,
-    END_HOUR: 18.5, // 18:30まで表示
+    DISPLAY_END_HOUR: 18.5, // 18:30まで表示（グリッド表示用）
+    STOP_HOUR: 18, // 18:00で時刻バー・膜を停止
     SLOT_INTERVAL_MINUTES: 5, // 5分間隔
     SLOT_HEIGHT_PX: 8, // 5分あたり8px (1時間 = 12スロット × 8px = 96px)
     HOUR_HEIGHT_PX: 96, // 1時間 = 12スロット × 8px

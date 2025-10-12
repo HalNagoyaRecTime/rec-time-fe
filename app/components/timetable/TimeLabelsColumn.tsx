@@ -4,7 +4,7 @@ import type { TimeSlot } from "~/types/timetable";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import { TIMETABLE_CONSTANTS } from "~/types/timetable";
 
-const { START_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { START_HOUR, STOP_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface TimeLabelsColumnProps {
     timeSlots: TimeSlot[];
@@ -39,7 +39,7 @@ export default function TimeLabelsColumn({ timeSlots, currentTime }: TimeLabelsC
                     className="absolute top-0 right-0 left-0"
                     style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}
                 >
-                    <CurrentTimeIndicator currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />
+                    <CurrentTimeIndicator currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={STOP_HOUR} />
                 </div>
             )}
         </div>

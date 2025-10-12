@@ -4,7 +4,7 @@ interface CurrentTimeLineProps {
     currentTime: Date;
     hourHeight: number; // 1時間あたりの高さ（px）
     startHour: number; // グリッドの開始時刻
-    endHour?: number; // グリッドの終了時刻（デフォルト: 18）
+    endHour?: number; // 停止時刻（デフォルト: 18）
 }
 
 /**
@@ -15,17 +15,20 @@ export default function CurrentTimeLine({ currentTime, hourHeight, startHour, en
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
 
-    // グリッド上での位置を計算（9:00〜18:00の範囲に制限）
+    // グリッド上での位置を計算
     let totalMinutesFromStart: number;
 
+    const endHourFloor = Math.floor(endHour);
+    const endMinutes = (endHour % 1) * 60;
+
     if (hours < startHour) {
-        // 0:00〜8:59 → 9:00の位置に固定
+        // 開始時刻より前 → 開始時刻の位置に固定
         totalMinutesFromStart = 0;
-    } else if (hours >= endHour) {
-        // 18:00以降 → 18:00の位置に固定
-        totalMinutesFromStart = (endHour - startHour) * 60;
+    } else if (hours > endHourFloor || (hours === endHourFloor && minutes >= endMinutes)) {
+        // 終了時刻以降 → 終了時刻の位置に固定
+        totalMinutesFromStart = (endHourFloor - startHour) * 60 + endMinutes;
     } else {
-        // 9:00〜17:59 → 実際の時刻を表示
+        // 開始時刻〜終了時刻の間 → 実際の時刻を表示
         totalMinutesFromStart = (hours - startHour) * 60 + minutes;
     }
 
