@@ -3,17 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build && node scripts/injectGitInfo.js",
+    "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "vite:dev": "vite",
     "vite:build": "vite build",
-    "build:staging": "cross-env VITE_API_BASE_URL=https://stg.example.com react-router build && node scripts/injectGitInfo.js",
+    "build:staging": "cross-env VITE_API_BASE_URL=https://stg.example.com react-router build",
     "add-event": "node scripts/addFutureEvent.js",
     "format": "prettier --write \"app/**/*.{ts,tsx,js,jsx}\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx,js,jsx}\"",
-    "inject-git": "node scripts/injectGitInfo.js"
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,js,jsx}\""
   },
   "dependencies": {
     "@react-router/node": "^7.7.1",
