@@ -51,7 +51,7 @@ export default function EventsGridArea({
 
             {/* 過去の時間帯の背景（グレーオーバーレイ） */}
             {currentTime && (
-                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />
+                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={END_HOUR} />
             )}
 
             {/* 現在時刻ライン（右側カレンダーエリア） */}

@@ -20,6 +20,14 @@ export default function StudentId() {
         }
     }, []);
 
+    // URLパラメータからエラー情報を読み取る
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("error") === "no-input") {
+            setStatus("no-input");
+        }
+    }, []);
+
     const handleNumberClick = (num: string) => {
         setStudentId((prev) => (prev.length < 5 ? prev + num : prev));
         setStatus("idle");
@@ -83,7 +91,7 @@ export default function StudentId() {
             <div className="flex h-full max-w-150 flex-col items-center justify-center gap-8">
                 <div className="flex flex-col items-center gap-2">
                     <h2 className="text-xl font-semibold text-[#111646]">学籍番号入力</h2>
-                    <p className="text-sm font-semibold text-[#111646]">5桁の学籍番号を入力してください</p>
+                    <p className="text-sm font-semibold text-[#111646]">学籍番号を入力してください</p>
                 </div>
 
                 {/* 入力表示エリア */}
@@ -106,10 +114,13 @@ export default function StudentId() {
                             )}
                         </div>
                     </div>
-
-                    <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
-                        {status === "no-input" && "学籍番号を入力してください"}
-                    </h4>
+                    {status === "no-input" && (
+                        <div className="absolute bottom-2 h-6">
+                            <h4 className="flex h-full items-center rounded-md bg-red-600 px-4 text-sm font-normal text-white">
+                                学籍番号を入力してください
+                            </h4>
+                        </div>
+                    )}
                 </div>
 
                 {/* キーパッド */}
@@ -118,7 +129,7 @@ export default function StudentId() {
                 {/* 登録ボタン */}
                 {/*Todo:登録した後の遷移方法を修正。*/}
                 <div className="flex w-57 items-center justify-between">
-                    <button onClick={handleCancel} className="h-10 cursor-pointer px-6 font-bold text-[#111646]">
+                    <button onClick={handleCancel} className="h-10 cursor-pointer px-3 font-bold text-[#111646]">
                         キャンセル
                     </button>
                     <button

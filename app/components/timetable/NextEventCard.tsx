@@ -27,7 +27,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
     if (!isLoggedIn) {
         return (
             <div
-                className="relative mt-4 mb-9 flex cursor-pointer flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-14 text-black"
+                className="relative mt-4 mb-9 flex cursor-pointer flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-14 text-black shadow-2xl"
                 onClick={handleNavigateToRegister}
             >
                 <h3 className="font-title text-lg font-black text-white">ログインしてください。</h3>
@@ -38,7 +38,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
     // 参加予定のイベントがない場合
     if (!event) {
         return (
-            <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-14 text-black">
+            <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-16 text-black shadow-2xl">
                 <h3 className="font-title text-lg font-black text-white">本日参加予定のイベントはありません</h3>
             </div>
         );
@@ -49,7 +49,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
 
     // 次の予定イベントがある場合
     return (
-        <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-blue-500 px-3 py-7 text-black">
+        <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-7 text-black drop-shadow-2xl">
             <h3 className="font-title w-full truncate px-2 text-center text-lg font-black text-white">
                 {event.f_event_name || "イベント"}
             </h3>
@@ -67,7 +67,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
                         {/* 集合時間 */}
                         {event.f_gather_time && !gatherTimePassed && (
                             <p className="flex min-w-0 gap-2">
-                                <span className="flex-shrink-0">{formatTime(event.f_gather_time)}</span>
+                                <span className="flex-shrink-0 text-red-600">{formatTime(event.f_gather_time)}</span>
                                 <span className="min-w-0 truncate">{getTimeUntilEvent(event.f_gather_time)}</span>
                             </p>
                         )}
@@ -87,12 +87,7 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
             </div>
 
             {/* 「次の予定」バッジ */}
-            <div
-                className="absolute -top-3 flex h-[25px] w-[60px] items-center justify-center bg-amber-500 text-sm font-black text-blue-950"
-                style={{ backgroundImage: "linear-gradient(133deg, #ffb402, #fbedbb)" }}
-            >
-                次の予定
-            </div>
+            <div className="absolute top-3 left-4 text-sm font-black text-white">次の予定</div>
         </div>
     );
 }

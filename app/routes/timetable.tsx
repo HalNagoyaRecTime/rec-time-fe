@@ -10,13 +10,13 @@ import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 import { scheduleAllNotifications } from "~/utils/notifications";
+import type { Message } from "~/types/timetable";
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
     const [studentId, setStudentId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [showRegisteredMessage, setShowRegisteredMessage] = useState(false);
+    const [message, setMessage] = useState<Message>({ type: null, content: "" });
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const hasFetchedRef = useRef(false);
 
@@ -26,15 +26,15 @@ export default function Timetable() {
     // === データ更新ハンドラー（スワイプでも再利用可能） ===
     const handleDataUpdate = async () => {
         setIsLoading(true);
-        setErrorMessage("");
+        setMessage({ type: null, content: "" });
         const result = await downloadAndSaveEvents();
 
         if (result.success) {
             setEvents(result.events);
-            setErrorMessage("");
+            setMessage({ type: null, content: "" });
         } else {
             console.error("[Timetable] データ更新失敗");
-            setErrorMessage("データ更新失敗");
+            setMessage({ type: "error", content: "データ更新失敗" });
         }
         setIsLoading(false);
     };
@@ -71,7 +71,7 @@ export default function Timetable() {
         const registered = params.get("registered");
 
         if (registered === "true") {
-            setShowRegisteredMessage(true);
+            setMessage({ type: "success", content: "登録しました" });
             // URLパラメータをクリア
             window.history.replaceState({}, "", window.location.pathname);
             // メッセージは遷移するまで表示し続ける（setTimeoutを削除）
@@ -116,16 +116,11 @@ export default function Timetable() {
         <RecTimeFlame>
             <PullToRefresh onRefresh={handleRefresh}>
                 <div className="flex h-full flex-col">
-                    {/* ネットワークエラー表示 */}
-                    {errorMessage && (
-                        <div className="w-fit rounded-md bg-red-600 px-2 py-2 text-sm text-white">{errorMessage}</div>
-                    )}
-
                     <StudentInfoBar
                         studentId={studentId}
                         onUpdate={handleDataUpdate}
                         isLoading={isLoading}
-                        showRegisteredMessage={showRegisteredMessage}
+                        message={message}
                     />
 
                     {/* 次の予定カード */}
@@ -139,7 +134,7 @@ export default function Timetable() {
                     />
 
                     {/* 最終更新時間 */}
-                    <div className="mt-2 text-center text-xs text-[#020F95]/50">
+                    <div className="text-center text-xs text-[#020F95]/50">
                         <span>最終更新：</span>
                         <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
                     </div>

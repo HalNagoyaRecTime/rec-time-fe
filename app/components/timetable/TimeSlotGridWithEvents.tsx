@@ -27,7 +27,7 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, curre
     const eventLayout = calculateEventLayout(displayEvents);
 
     return (
-        <div className="relative h-full w-full rounded-lg px-1">
+        <div className="relative mb-10 h-full w-full rounded-lg px-1">
             {/* タイムスロット背景 */}
             <div className="flex">
                 {/* 左側：時間ラベル列 */}

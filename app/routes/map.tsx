@@ -31,16 +31,25 @@ export default function Map() {
     return (
         <RecTimeFlame>
             <div className="flex max-w-150 flex-col items-center gap-6 pb-8">
-                <h3 className="mb-2 text-base font-bold text-black">各クラス集合場所</h3>
-                <button onClick={openClassMap} className="mb-4 overflow-hidden rounded-xs">
+                <h3 className="mb-2 text-lg font-bold text-black">各クラス集合場所</h3>
+                <button
+                    onClick={openClassMap}
+                    className="mb-4 cursor-pointer overflow-hidden rounded-md border-1 border-gray-200 shadow-lg"
+                >
                     <img src={map1} alt="各クラス集合場所" className="w-full" />
                 </button>
 
-                <h3 className="mb-2 text-base font-bold text-black">施設案内マップ</h3>
-                <button onClick={() => openFacilityMap(0)} className="mb-4 overflow-hidden rounded-xs">
+                <h3 className="mb-2 text-lg font-bold text-black">施設案内マップ</h3>
+                <button
+                    onClick={() => openFacilityMap(0)}
+                    className="mb-4 cursor-pointer overflow-hidden rounded-md border-1 border-gray-200 shadow-lg"
+                >
                     <img src={map2} alt="施設案内マップ 1F" className="w-full" />
                 </button>
-                <button onClick={() => openFacilityMap(1)} className="overflow-hidden rounded-xs">
+                <button
+                    onClick={() => openFacilityMap(1)}
+                    className="cursor-pointer overflow-hidden rounded-md border-1 border-gray-200 shadow-lg"
+                >
                     <img src={map3} alt="施設案内マップ 2F" className="w-full" />
                 </button>
 

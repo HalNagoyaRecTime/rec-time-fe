@@ -1,27 +1,26 @@
 import React, { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import RecTimeFlame from "../components/ui/recTimeFlame";
-import settingsYellow from "/icons/app-icon/settings.svg";
 import { FaAngleRight } from "react-icons/fa6";
 import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
+import type { Message } from "~/types/timetable";
 
-export default function settings() {
+export default function Settings() {
     const { studentData } = useStudentData();
     const { isEnabled: isPushEnabled, toggleNotification } = useNotificationSettings();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
+    const [message, setMessage] = useState<Message>({ type: null, content: "" });
 
     // 通知設定が変更された時の処理
     const handleNotificationToggle = async (enabled: boolean) => {
         if (enabled) {
+            setMessage({ type: null, content: "" });
             const success = await toggleNotification(true);
             if (success) {
-                setErrorMessage("");
-                setSuccessMessage("通知を有効にしました");
+                setMessage({ type: "success", content: "通知を有効にしました" });
             } else {
-                setErrorMessage("通知を有効にするには、ブラウザで通知許可が必要です");
+                setMessage({ type: "error", content: "通知を有効にするには、ブラウザで通知許可が必要です" });
             }
         } else {
             // 通知をオフにする前に確認
@@ -33,7 +32,7 @@ export default function settings() {
     const confirmTurnOffNotification = async () => {
         await toggleNotification(false);
         setShowConfirmModal(false);
-        setSuccessMessage("通知を無効にしました");
+        setMessage({ type: "error", content: "通知を無効にしました" });
     };
 
     // 通知オフをキャンセル
@@ -45,21 +44,34 @@ export default function settings() {
         <RecTimeFlame>
             <div className="flex w-full flex-col gap-6">
                 {/*ユーザーカード*/}
-                <div className="shadow- box-border overflow-hidden rounded-lg border-1 border-black/50">
-                    <div className="relative flex items-center justify-center bg-[#000D91]/70 p-4 pt-10 pb-5">
-                        <h2 className="cursor-pointer text-3xl font-medium text-white">
-                            {studentData?.f_student_num || "-----"}
-                        </h2>
-                        <h3 className="absolute top-3 left-4 font-medium text-white">学籍番号</h3>
-                        <Link to="/register/student-id" className="absolute right-2 h-10 w-10 cursor-pointer p-2">
-                            <FaAngleRight className="h-full w-full text-white" />
-                        </Link>
-                        <h4
-                            className={`absolute bottom-1.5 rounded-md bg-transparent px-2 py-0.5 text-xs font-normal ${successMessage ? "!bg-green-600" : "!bg-red-600"}`}
-                        >
-                            {successMessage && successMessage}
-                            {!successMessage && errorMessage && errorMessage}
-                        </h4>
+                <div className="box-border overflow-hidden rounded-lg border-1 border-black/50 shadow-2xl">
+                    <div className="flex flex-col items-center justify-center bg-[#000D91]/70 pt-4 pb-1">
+                        <div className="flex w-full justify-start pl-5">
+                            <h3 className="font-medium text-white">学籍番号</h3>
+                        </div>
+
+                        <div className="relative mb-1 flex w-full items-center justify-center">
+                            <h2 className="cursor-pointer text-3xl font-medium text-white">
+                                {studentData?.f_student_num || "-----"}
+                            </h2>
+                            <Link
+                                to="/register/student-id"
+                                className="absolute right-2 flex h-10 w-10 cursor-pointer p-2"
+                            >
+                                <FaAngleRight className="h-full w-full text-white" />
+                            </Link>
+                        </div>
+                        <div className="h-5">
+                            {message?.type && message.content && (
+                                <h4
+                                    className={`h-full rounded-md px-2 text-xs font-normal text-white ${
+                                        message.type === "success" ? "bg-green-600" : "bg-red-600"
+                                    }`}
+                                >
+                                    {message.content}
+                                </h4>
+                            )}
+                        </div>
                     </div>
                     <div className="flex w-full px-6 py-4 text-white">
                         <div className="w-fit shrink-0 flex-col pr-5 text-black">
@@ -83,12 +95,9 @@ export default function settings() {
 
                 {/*設定*/}
                 <div className="px-2">
-                    <div className="flex w-full items-center justify-between">
+                    <div className="flex w-full items-center justify-end gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="h-8 w-8">
-                                <img src={settingsYellow} alt="" />
-                            </div>
-                            <p className="text-white">プッシュ通知</p>
+                            <p className="text-sm font-bold text-[#000D91]">通知を許可</p>
                         </div>
 
                         <label className="relative inline-flex cursor-pointer items-center">

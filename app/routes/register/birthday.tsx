@@ -29,14 +29,14 @@ function DateInputField({
                             <p className="w-5 text-center leading-none">{value[i]}</p>
                         ) : i === value.length && isCurrentField ? (
                             <div className="flex h-9 w-5 items-center justify-start">
-                                <div className="h-6 w-0.5 animate-pulse bg-white"></div>
+                                <div className="h-6 w-0.5 animate-pulse bg-[#F5F5DC]"></div>
                             </div>
                         ) : (
                             <p className="w-5 text-center leading-none text-gray-400">{defaultValue[i]}</p>
                         )}
                         <div className="h-[3px] w-5 rounded-full bg-[#F5F5DC]">
                             {isCurrentField && i === value.length && (
-                                <div className="h-full w-full rounded-full bg-[#FFB400]"></div>
+                                <div className="h-full w-full rounded-full bg-[#F5F5DC]"></div>
                             )}
                         </div>
                     </div>
@@ -63,7 +63,7 @@ export default function Birthday() {
         const studentId = sessionStorage.getItem("temp-student-id");
         if (!studentId) {
             setStatus("no-student-id");
-            setTimeout(() => navigate("/register/student-id"), 2000);
+            setTimeout(() => navigate("/register/student-id?error=no-input"), 2000);
         }
     }, [navigate]);
 
@@ -174,7 +174,7 @@ export default function Birthday() {
         const studentId = sessionStorage.getItem("temp-student-id");
         if (!studentId) {
             setStatus("no-student-id");
-            setTimeout(() => navigate("/register/student-id"), 2000);
+            setTimeout(() => navigate("/register/student-id?error=no-input"), 2000);
             return;
         }
 
@@ -258,85 +258,61 @@ export default function Birthday() {
         <RecTimeFlame>
             <div className="flex h-full max-w-150 flex-col items-center justify-center gap-8">
                 <div className="flex flex-col items-center gap-2">
-                    <h2 className="text-xl font-semibold text-[#FFB400]">生年月日を入力</h2>
-                    <p className="text-sm font-light text-white">生年月日を入力してください</p>
+                    <h2 className="text-xl font-semibold text-[#111646]">生年月日を入力</h2>
+                    <p className="text-sm font-semibold text-[#111646]">8桁の生年月日を入力してください</p>
                 </div>
 
                 {/* 入力表示エリア */}
-                <div className="over relative rounded-lg border-none shadow-none outline-none">
-                    <div className="relative flex h-30 w-79 items-center justify-center rounded-sm border-1 border-[#FFB400] bg-blue-800 text-center shadow-lg">
-                        <div className="flex h-10 w-47 flex-col items-center justify-end font-mono text-4xl text-white">
-                            <div className="flex items-center gap-2">
-                                {/* Year */}
-                                <div className="flex flex-col items-start">
-                                    <DateInputField
-                                        value={year}
-                                        defaultValue="2001"
-                                        length={4}
-                                        isCurrentField={currentField === "year"}
-                                    />
-                                </div>
+                <div className="relative flex h-30 w-79 items-center justify-center rounded-md bg-[#000D91]/80 text-center shadow-lg">
+                    <div className="flex h-10 w-47 flex-col items-center justify-end font-mono text-4xl text-white">
+                        <div className="flex items-center gap-2">
+                            {/* Year */}
+                            <div className="flex flex-col items-start">
+                                <DateInputField
+                                    value={year}
+                                    defaultValue="2001"
+                                    length={4}
+                                    isCurrentField={currentField === "year"}
+                                />
+                            </div>
 
-                                <span>-</span>
+                            <span>-</span>
 
-                                {/* Month */}
-                                <div className="flex flex-col items-center">
-                                    <DateInputField
-                                        value={month}
-                                        defaultValue="01"
-                                        length={2}
-                                        isCurrentField={currentField === "month"}
-                                    />
-                                </div>
+                            {/* Month */}
+                            <div className="flex flex-col items-center">
+                                <DateInputField
+                                    value={month}
+                                    defaultValue="01"
+                                    length={2}
+                                    isCurrentField={currentField === "month"}
+                                />
+                            </div>
 
-                                <span>-</span>
+                            <span>-</span>
 
-                                {/* Day */}
-                                <div className="flex flex-col items-center">
-                                    <DateInputField
-                                        value={day}
-                                        defaultValue="01"
-                                        length={2}
-                                        isCurrentField={currentField === "day"}
-                                    />
-                                </div>
+                            {/* Day */}
+                            <div className="flex flex-col items-center">
+                                <DateInputField
+                                    value={day}
+                                    defaultValue="01"
+                                    length={2}
+                                    isCurrentField={currentField === "day"}
+                                />
                             </div>
                         </div>
-
-                        <h4 className="absolute bottom-3 text-sm font-normal text-red-600">
-                            {status === "invalid-date" && "正しい日付を入力してください"}
-                            {status === "not-found" && "学籍番号または誕生日が違う可能性があります"}
-                            {status === "auth-failed" && "認証に失敗しました"}
-                            {status === "network-error" && "サーバーに接続できませんでした"}
-                            {status === "no-student-id" && "学籍番号が設定されていません"}
-                        </h4>
                     </div>
 
-                    {/* 4つの角に配置される45度回転した正方形 */}
-                    <div className="absolute -top-[11px] -left-[11px] flex h-5 w-5 rotate-45 justify-center bg-transparent">
-                        {/* 左上の三角形 */}
-                        <div className="relative">
-                            <div className="absolute -right-3 bottom-[7px] h-0 w-0 rotate-45 border-r-6 border-b-6 border-r-transparent border-b-[#FFB400] border-l-transparent"></div>
+                    {status !== "idle" && (
+                        <div className="absolute bottom-2 h-6">
+                            <h4 className="flex h-full items-center rounded-md bg-red-600 px-4 text-sm font-normal text-white">
+                                {status === "invalid-date" && "正しい日付を入力してください"}
+                                {status === "not-found" && "学籍番号または誕生日が違う可能性があります"}
+                                {status === "auth-failed" && "認証に失敗しました"}
+                                {status === "network-error" && "サーバーに接続できませんでした"}
+                                {status === "no-student-id" && "学籍番号が設定されていません"}
+                            </h4>
                         </div>
-                    </div>
-                    <div className="absolute -top-[11px] -right-[11px] flex h-5 w-5 rotate-135 justify-center">
-                        {/* 右上の三角形 */}
-                        <div className="relative">
-                            <div className="absolute -right-3 bottom-[7px] h-0 w-0 rotate-45 border-r-6 border-b-6 border-r-transparent border-b-[#FFB400] border-l-transparent"></div>
-                        </div>
-                    </div>
-                    <div className="absolute -right-[11px] -bottom-[11px] flex h-5 w-5 rotate-225 justify-center">
-                        {/* 右下の三角形 */}
-                        <div className="relative">
-                            <div className="absolute -right-3 bottom-[7px] h-0 w-0 rotate-45 border-r-6 border-b-6 border-r-transparent border-b-[#FFB400] border-l-transparent"></div>
-                        </div>
-                    </div>
-                    <div className="absolute -bottom-[11px] -left-[11px] flex h-5 w-5 rotate-315 justify-center">
-                        {/* 右下の三角形 */}
-                        <div className="relative">
-                            <div className="absolute -right-3 bottom-[7px] h-0 w-0 rotate-45 border-r-6 border-b-6 border-r-transparent border-b-[#FFB400] border-l-transparent"></div>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* キーパッド */}

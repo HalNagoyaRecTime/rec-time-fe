@@ -58,12 +58,12 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
         >
             <div className="relative h-full w-full">
                 <div
-                    className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-64" : "w-0"}`}
+                    className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-fit" : "w-0"}`}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="h-full min-w-fit bg-blue-950 px-6 pt-24">
+                    <div className="flex h-full min-w-fit flex-col justify-between bg-[#111646] pt-24 pb-6 pl-11">
                         <div
-                            className={`flex flex-col gap-6 pr-7 pl-5 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex flex-col gap-6 pr-7 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             {menuItems.map((item) => {
                                 const isActive = location.pathname === item.to;
@@ -127,11 +127,9 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         </div>
 
                         <div
-                            className={`flex justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex w-full justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
-                            <div className="w-35 pt-5">
-                                <img src="/icons/app-icon/rec-time.png" alt="" />
-                            </div>
+                            <h2 className="w-full text-5xl tracking-[2px]">recTime</h2>
                         </div>
                     </div>
                 </div>

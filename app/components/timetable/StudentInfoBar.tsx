@@ -1,24 +1,28 @@
 import React from "react";
 import { FaEject } from "react-icons/fa6";
+import type { Message } from "~/types/timetable";
 
 interface StudentInfoBarProps {
     studentId: string | null;
     onUpdate: () => void;
     isLoading: boolean;
-    showRegisteredMessage?: boolean;
+    message?: Message;
 }
 
-export default function StudentInfoBar({
-    studentId,
-    onUpdate,
-    isLoading,
-    showRegisteredMessage = false,
-}: StudentInfoBarProps) {
+export default function StudentInfoBar({ studentId, onUpdate, isLoading, message }: StudentInfoBarProps) {
     return (
-        <div className="flex w-full items-center justify-between gap-6 pb-5">
-            {/* 左側：登録完了メッセージ */}
-            <div className="min-w-0 flex-1 pl-2">
-                {showRegisteredMessage && <p className="animate-fade-in text-sm text-green-400">登録しました</p>}
+        <div className="flex h-12 w-full items-center justify-between gap-6 pb-5">
+            {/* 左側：メッセージ表示 */}
+            <div className="flex h-full flex-1 pl-2">
+                {message?.type && message.content && (
+                    <p
+                        className={`flex h-full w-fit items-center rounded-md px-6 text-center text-sm text-white ${
+                            message.type === "success" ? "bg-green-400" : "bg-red-600"
+                        }`}
+                    >
+                        {message.content}
+                    </p>
+                )}
             </div>
 
             {/* 右側：学籍番号と更新ボタン */}
