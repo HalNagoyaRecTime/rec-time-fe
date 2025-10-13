@@ -63,7 +63,7 @@ npm run typecheck
 
 | 変数名 | デフォルト値 | 説明 |
 |--------|------------|------|
-| `VITE_API_BASE_URL` | `http://127.0.0.1:8787` | バックエンドAPIのベースURL |
+| `VITE_API_BASE_URL` | `https://rec-time-be.ellan122316.workers.dev/` | バックエンドAPIのベースURL |
 | `VITE_DEV_PORT` | `5173` | 開発サーバーのポート番号 |
 | `VITE_HOST` | `0.0.0.0` | サーバーのホスト（外部アクセス許可） |
 
@@ -72,7 +72,7 @@ npm run typecheck
 ```bash
 # .env.dev
 NODE_ENV=development
-VITE_API_BASE_URL=http://127.0.0.1:8787
+VITE_API_BASE_URL=https://rec-time-be.ellan122316.workers.dev/
 VITE_DEV_PORT=5173
 VITE_HOST=0.0.0.0
 ```
