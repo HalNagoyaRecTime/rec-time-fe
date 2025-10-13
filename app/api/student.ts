@@ -50,7 +50,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const studentData = await studentRes.json();
 
         // イベント情報を取得
-        const eventsRes = await fetch(`${API_BASE}/events`, { cache: "no-store" });
+        // イベント情報取得 (학번 파라미터 포함하여 다운로드 로그 기록)
+        const eventsRes = await fetch(`${API_BASE}/events?student_num=${id}`, { cache: "no-store" });
         
         if (!eventsRes.ok) {
             console.error(`[API] イベント情報取得失敗: ${eventsRes.status}`);
@@ -97,7 +98,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache: false };
     } else {
         // 未登録: イベント一覧のみ
-        const res = await fetch(`${API_BASE}/events`, { cache: "no-store" });
+        // 未登録 사용자도 다운로드 로그 기록을 위해 student_num 파라미터 추가
+        const res = await fetch(`${API_BASE}/events?student_num=`, { cache: "no-store" });
 
         if (!res.ok) {
             console.error(`[API] イベント情報取得失敗: ${res.status}`);
