@@ -103,7 +103,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 
                             {/* 外部リンク */}
                             <a
-                                href="https://www.hal.ac.jp/nagoya"
+                                href="https://rectime-web.pages.dev"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex cursor-pointer flex-col items-start gap-2"
