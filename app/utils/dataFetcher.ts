@@ -1,7 +1,7 @@
 // === データ取得・保存ユーティリティ ===
 // === 데이터 취득・보존 유틸리티 ===
-import { fetchByGakuseki } from "../api/student";
-import type { EventRow } from "../api/student";
+import { fetchByGakuseki } from "~/api/student";
+import type { EventRow } from "~/api/student";
 import { STORAGE_KEYS } from "~/constants/storage";
 
 // === 学籍番号取得 ===
@@ -33,13 +33,13 @@ export async function downloadAndSaveEvents(
         const result = await fetchByGakuseki(id);
         const payload = result.payload;
         const isFromCache = result.isFromCache;
-        
+
         console.log(`[dataFetcher] 성공 - 이벤트 ${payload.t_events.length}개, 캐시: ${isFromCache}`);
 
-        // LocalStorageに保存（idがある場合のみ）
-        if (id) {
-            localStorage.setItem(STORAGE_KEYS.EVENTS(id), JSON.stringify(payload.t_events));
-        }
+        // LocalStorageに保存（常に保存）
+        const storageKey = id ? STORAGE_KEYS.EVENTS(id) : STORAGE_KEYS.EVENTS("guest");
+        localStorage.setItem(storageKey, JSON.stringify(payload.t_events));
+        console.log(`[dataFetcher] LocalStorageに保存: ${storageKey}`);
 
         // オンライン取得時のみ最終更新時間を更新
         if (!isFromCache) {
@@ -54,6 +54,20 @@ export async function downloadAndSaveEvents(
         return { success: true, events: payload.t_events, isFromCache };
     } catch (e) {
         console.error("[dataFetcher] 실패:", e instanceof Error ? e.message : String(e));
+
+        // オフライン時はLocalStorageからフォールバック
+        const storageKey = id ? STORAGE_KEYS.EVENTS(id) : STORAGE_KEYS.EVENTS("guest");
+        const cachedData = localStorage.getItem(storageKey);
+        if (cachedData) {
+            try {
+                const events = JSON.parse(cachedData);
+                console.log(`[dataFetcher] LocalStorageからフォールバック: ${events.length}個`);
+                return { success: true, events, isFromCache: true };
+            } catch (parseError) {
+                console.error("[dataFetcher] キャッシュデータのパースエラー:", parseError);
+            }
+        }
+
         return { success: false, events: [], isFromCache: false };
     }
 }

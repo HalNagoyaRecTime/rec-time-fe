@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-10-01";
+const APP_VERSION = "2025-10-16-01";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -100,8 +100,16 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // APIデータのキャッシュ戦略: Network First
-    if (url.pathname.startsWith("/api/")) {
+    // APIリクエストかどうかを判定（同一オリジンの /api/ またはバックエンドのフルURL）
+    const isApiRequest =
+        url.pathname.startsWith("/api/") ||
+        (url.origin !== location.origin &&
+            (url.pathname.includes("/api/events") ||
+                url.pathname.includes("/api/students") ||
+                url.pathname.includes("/api/entries")));
+
+    // バックエンドAPIリクエストの場合、Network Firstでキャッシュ
+    if (isApiRequest) {
         event.respondWith(
             fetch(request)
                 .then((response) => {
@@ -110,13 +118,27 @@ self.addEventListener("fetch", (event) => {
                         const responseClone = response.clone();
                         caches.open(DATA_CACHE_NAME).then((cache) => {
                             cache.put(request, responseClone);
+                            console.log("[SW] APIレスポンスをキャッシュに保存:", url.pathname);
                         });
                     }
                     return response;
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.log("[SW] ネットワークエラー、キャッシュから取得:", url.pathname);
                     // ネットワークエラー時はキャッシュから返す
-                    return caches.match(request);
+                    return caches.match(request).then((cachedResponse) => {
+                        if (cachedResponse) {
+                            // キャッシュから取得したことを示すヘッダーを追加
+                            const headers = new Headers(cachedResponse.headers);
+                            headers.set("X-Cache-Source", "service-worker");
+                            return new Response(cachedResponse.body, {
+                                status: cachedResponse.status,
+                                statusText: cachedResponse.statusText,
+                                headers: headers,
+                            });
+                        }
+                        throw error;
+                    });
                 })
         );
         return;
