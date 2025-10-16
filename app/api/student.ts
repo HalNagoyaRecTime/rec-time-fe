@@ -111,10 +111,22 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 }
             }
 
+            const startTime = ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null;
+
+            // 集合時間がない場合、開始時間の10分前を設定（参加イベントのみ）
+            if (!gatherTime && isMyEntry && startTime && startTime.length === 4) {
+                const hour = parseInt(startTime.substring(0, 2), 10);
+                const minute = parseInt(startTime.substring(2, 4), 10);
+                const totalMinutes = hour * 60 + minute - 10;
+                const newHour = Math.floor(totalMinutes / 60);
+                const newMinute = totalMinutes % 60;
+                gatherTime = `${String(newHour).padStart(2, '0')}${String(newMinute).padStart(2, '0')}`;
+            }
+
             return {
                 f_event_id: eventId,
                 f_event_name: ev.f_event_name ?? null,
-                f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
+                f_start_time: startTime,
                 f_duration: ev.f_duration ? String(ev.f_duration) : null,
                 f_place: place,
                 f_gather_time: gatherTime ? String(gatherTime) : null,

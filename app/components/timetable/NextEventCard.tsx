@@ -67,8 +67,8 @@ export default function NextEventCard({ event, isLoggedIn }: NextEventCardProps)
                         {/* 集合時間 */}
                         {event.f_gather_time && !gatherTimePassed && (
                             <p className="flex min-w-0 gap-2">
-                                <span className="flex-shrink-0 text-red-600">{formatTime(event.f_gather_time)}</span>
-                                <span className="min-w-0 truncate">{getTimeUntilEvent(event.f_gather_time)}</span>
+                                <span className="flex-shrink-0">{formatTime(event.f_gather_time)}</span>
+                                <span className="min-w-0 truncate text-red-600">{getTimeUntilEvent(event.f_gather_time)}</span>
                             </p>
                         )}
 
