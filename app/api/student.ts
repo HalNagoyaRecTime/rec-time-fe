@@ -86,9 +86,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         // 学生の参加イベントIDのセットを作成
         const myEventIds = new Set(myEntries.map((e: any) => String(e.f_event_id)));
 
-        // 環境変数から集合時間のデフォルト値を取得（分単位）
-        const defaultGatherMinutes = parseInt(import.meta.env.VITE_DEFAULT_GATHER_MINUTES_BEFORE || '10', 10);
-
         // イベントデータとグループ情報を結合
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => {
             const eventId = String(ev.f_event_id ?? "");
@@ -111,20 +108,13 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 if (group) {
                     place = group.f_place ?? place;
                     gatherTime = group.f_gather_time ?? gatherTime;
+                    console.log(`[データ結合] ${ev.f_event_name} (seq: ${myEntry.f_seq}): グループ集合時間 = ${group.f_gather_time || 'なし'}, 場所 = ${group.f_place || 'なし'}`);
+                } else {
+                    console.warn(`[データ結合] ${ev.f_event_name} (seq: ${myEntry.f_seq}): グループ情報が見つかりません`);
                 }
             }
 
             const startTime = ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null;
-
-            // 集合時間がない場合、環境変数で設定された分数前を設定（参加イベントのみ）
-            if (!gatherTime && isMyEntry && startTime && startTime.length === 4) {
-                const hour = parseInt(startTime.substring(0, 2), 10);
-                const minute = parseInt(startTime.substring(2, 4), 10);
-                const totalMinutes = hour * 60 + minute - defaultGatherMinutes;
-                const newHour = Math.floor(totalMinutes / 60);
-                const newMinute = totalMinutes % 60;
-                gatherTime = `${String(newHour).padStart(2, '0')}${String(newMinute).padStart(2, '0')}`;
-            }
 
             return {
                 f_event_id: eventId,
