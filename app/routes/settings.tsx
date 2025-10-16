@@ -22,9 +22,9 @@ export default function Settings() {
             setMessage({ type: null, content: "" });
             const success = await toggleNotification(true);
             if (success) {
-                setMessage({ type: "success", content: "通知を有効にしました" });
+                setMessage({ type: "success", content: "通知をオンにしました" });
             } else {
-                setMessage({ type: "error", content: "通知を有効にするには、ブラウザで通知許可が必要です" });
+                setMessage({ type: "error", content: "通知をオンにするには、ブラウザで通知許可が必要です" });
             }
         } else {
             // 通知をオフにする前に確認
@@ -36,7 +36,7 @@ export default function Settings() {
     const confirmTurnOffNotification = async () => {
         await toggleNotification(false);
         setModalType(null);
-        setMessage({ type: "error", content: "通知を無効にしました" });
+        setMessage({ type: "success", content: "通知をオフにしました" });
     };
 
     // キャッシュ削除ボタンクリック
