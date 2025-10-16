@@ -59,20 +59,84 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const eventsData = await eventsRes.json();
-        const eventsArray: EventRow[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
+        const eventsArray: any[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
 
         // 学生の出場情報を取得
-        const entriesUrl = `${API_BASE}/entries?f_student_id=${studentData.f_student_id}`;
-        const entriesRes = await fetch(entriesUrl, {
+        const entriesRes = await fetch(`${API_BASE}/entries?f_student_id=${studentData.f_student_id}`, {
             cache: "no-store",
         });
 
-        let myEventIds = new Set<string>();
+        let myEntries: any[] = [];
         if (entriesRes.ok) {
             const entriesData = await entriesRes.json();
-            const entries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
-            myEventIds = new Set(entries.map((e: any) => String(e.f_event_id)));
+            myEntries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
         }
+
+        // エントリーグループ情報を取得（集合場所と時間が含まれる）
+        const entryGroupsRes = await fetch(`${API_BASE}/entry-groups`, {
+            cache: "no-store",
+        });
+
+        let entryGroups: any[] = [];
+        if (entryGroupsRes.ok) {
+            const groupsData = await entryGroupsRes.json();
+            entryGroups = Array.isArray(groupsData?.entryGroups) ? groupsData.entryGroups : [];
+        }
+
+        // 学生の参加イベントIDのセットを作成
+        const myEventIds = new Set(myEntries.map((e: any) => String(e.f_event_id)));
+
+        // 環境変数から集合時間のデフォルト値を取得（分単位）
+        const defaultGatherMinutes = parseInt(import.meta.env.VITE_DEFAULT_GATHER_MINUTES_BEFORE || '10', 10);
+
+        // イベントデータとグループ情報を結合
+        const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => {
+            const eventId = String(ev.f_event_id ?? "");
+            const isMyEntry = myEventIds.has(eventId);
+
+            // このイベントの自分のエントリーを見つける
+            const myEntry = myEntries.find((e: any) => String(e.f_event_id) === eventId);
+
+            let place = ev.f_place ?? null;
+            let gatherTime = ev.f_gather_time ?? null;
+
+            // 参加イベントの場合、グループ情報から正しい集合場所と時間を取得
+            if (myEntry) {
+                const group = entryGroups.find(
+                    (g: any) => 
+                        String(g.f_event_id) === eventId && 
+                        g.f_seq === myEntry.f_seq
+                );
+
+                if (group) {
+                    place = group.f_place ?? place;
+                    gatherTime = group.f_gather_time ?? gatherTime;
+                }
+            }
+
+            const startTime = ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null;
+
+            // 集合時間がない場合、環境変数で設定された分数前を設定（参加イベントのみ）
+            if (!gatherTime && isMyEntry && startTime && startTime.length === 4) {
+                const hour = parseInt(startTime.substring(0, 2), 10);
+                const minute = parseInt(startTime.substring(2, 4), 10);
+                const totalMinutes = hour * 60 + minute - defaultGatherMinutes;
+                const newHour = Math.floor(totalMinutes / 60);
+                const newMinute = totalMinutes % 60;
+                gatherTime = `${String(newHour).padStart(2, '0')}${String(newMinute).padStart(2, '0')}`;
+            }
+
+            return {
+                f_event_id: eventId,
+                f_event_name: ev.f_event_name ?? null,
+                f_start_time: startTime,
+                f_duration: ev.f_duration ? String(ev.f_duration) : null,
+                f_place: place,
+                f_gather_time: gatherTime ? String(gatherTime) : null,
+                f_summary: ev.f_summary ?? null,
+                f_is_my_entry: isMyEntry,
+            };
+        });
 
         const student: StudentRow = {
             f_student_id: String(studentData.f_student_id ?? ""),
@@ -83,17 +147,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_note: studentData.f_note ?? null,
             f_birthday: studentData.f_birthday ?? null,
         };
-
-        const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
-            f_event_id: String(ev.f_event_id ?? ""),
-            f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
-            f_duration: ev.f_duration ? String(ev.f_duration) : null,
-            f_place: ev.f_place ?? null,
-            f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
-            f_summary: ev.f_summary ?? null,
-            f_is_my_entry: myEventIds.has(String(ev.f_event_id)),
-        }));
 
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache: false };
     } else {

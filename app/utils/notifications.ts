@@ -1,6 +1,64 @@
 // === 通知システム ===
 import type { EventRow } from "~/api/student.js";
 
+// === 通知タイミングの設定 ===
+type NotificationTiming = {
+    type: 'gather' | 'start' | 'minutes_before';
+    minutes?: number; // minutes_beforeの場合の分数
+};
+
+/**
+ * 環境変数から通知タイミング設定を取得
+ * 例: "gather,30,15,start" → [集合時間, 30分前, 15分前, 開始時間]
+ */
+function getNotificationTimings(): NotificationTiming[] {
+    const timingsStr = import.meta.env.VITE_NOTIFICATION_TIMINGS || 'gather,start';
+    const parts = timingsStr.split(',').map(s => s.trim());
+    
+    const timings: NotificationTiming[] = [];
+    
+    for (const part of parts) {
+        if (part === 'gather') {
+            timings.push({ type: 'gather' });
+        } else if (part === 'start') {
+            timings.push({ type: 'start' });
+        } else {
+            const minutes = parseInt(part, 10);
+            if (!isNaN(minutes) && minutes > 0) {
+                timings.push({ type: 'minutes_before', minutes });
+            }
+        }
+    }
+    
+    return timings;
+}
+
+/**
+ * イベントの通知時刻リストを計算
+ * @returns { time: "HHmm", label: "集合時間" | "開始時間" | "30分前" }[]
+ */
+function calculateNotificationTimes(event: EventRow): Array<{ time: string; label: string }> {
+    const timings = getNotificationTimings();
+    const notifications: Array<{ time: string; label: string }> = [];
+    
+    for (const timing of timings) {
+        if (timing.type === 'gather' && event.f_gather_time) {
+            notifications.push({ time: event.f_gather_time, label: '集合時間' });
+        } else if (timing.type === 'start' && event.f_start_time) {
+            notifications.push({ time: event.f_start_time, label: '開始時間' });
+        } else if (timing.type === 'minutes_before' && event.f_start_time && timing.minutes) {
+            const startTime = parseHHMM(event.f_start_time);
+            if (startTime) {
+                const notifyTime = new Date(startTime.getTime() - timing.minutes * 60 * 1000);
+                const hhmm = `${String(notifyTime.getHours()).padStart(2, '0')}${String(notifyTime.getMinutes()).padStart(2, '0')}`;
+                notifications.push({ time: hhmm, label: `${timing.minutes}分前` });
+            }
+        }
+    }
+    
+    return notifications;
+}
+
 // === 通知設定の保存・取得 ===
 const NOTIFICATION_SETTING_KEY = "notification:enabled";
 const NOTIFIED_EVENTS_KEY = "notification:notified_events";
@@ -25,15 +83,15 @@ function getNotifiedEvents(): Set<string> {
     }
 }
 
-function markAsNotified(eventId: string, gatherTime: string): void {
-    const key = `${eventId}_${gatherTime}`;
+function markAsNotified(eventId: string, notificationTime: string, label: string): void {
+    const key = `${eventId}_${notificationTime}_${label}`;
     const notified = getNotifiedEvents();
     notified.add(key);
     localStorage.setItem(NOTIFIED_EVENTS_KEY, JSON.stringify(Array.from(notified)));
 }
 
-function isAlreadyNotified(eventId: string, gatherTime: string): boolean {
-    const key = `${eventId}_${gatherTime}`;
+function isAlreadyNotified(eventId: string, notificationTime: string, label: string): boolean {
+    const key = `${eventId}_${notificationTime}_${label}`;
     return getNotifiedEvents().has(key);
 }
 
@@ -130,17 +188,17 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 // === 알림 표시 ===
 // === 通知表示 ===
-export function showEventNotification(event: EventRow): void {
+export function showEventNotification(event: EventRow, label: string = '集合時間'): void {
     if (Notification.permission !== "granted") {
         console.warn("[通知] 権限が許可されていません");
         return;
     }
 
     const title = `イベント通知: ${event.f_event_name ?? "イベント"}`;
-    const body = `${event.f_place ?? "場所未定"}で間もなく始まります`;
+    const body = `${label} - ${event.f_place ?? "場所未定"}で間もなく始まります`;
 
     new Notification(title, { body });
-    console.log(`[通知] 表示: ${title}`);
+    console.log(`[通知] 表示: ${title} (${label})`);
 }
 
 // === 設定オンオフ時の通知を表示 ===
@@ -156,55 +214,58 @@ export function showSettingNotification(message: string): void {
 
 // === 時刻チェック（定期実行用） ===
 function checkAndNotifyEvent(event: EventRow): void {
-    if (!event.f_gather_time) return;
-
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
         return;
     }
 
-    // 既に通知済みならスキップ
-    if (isAlreadyNotified(event.f_event_id, event.f_gather_time)) {
-        return;
-    }
-
-    const targetTime = parseHHMM(event.f_gather_time);
-    if (!targetTime) return;
-
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
-    // 現在時刻が集合時刻と一致したら通知
-    if (currentTimeStr === event.f_gather_time) {
-        showEventNotification(event);
-        markAsNotified(event.f_event_id, event.f_gather_time);
+    // イベントの全通知タイミングを取得
+    const notificationTimes = calculateNotificationTimes(event);
+
+    // 各通知タイミングをチェック
+    for (const { time, label } of notificationTimes) {
+        // 既に通知済みならスキップ
+        if (isAlreadyNotified(event.f_event_id, time, label)) {
+            continue;
+        }
+
+        // 現在時刻が通知時刻と一致したら通知
+        if (currentTimeStr === time) {
+            showEventNotification(event, label);
+            markAsNotified(event.f_event_id, time, label);
+        }
     }
 }
 
 // === 個別イベント通知スケジュール（setTimeout用） ===
 function scheduleNotification(event: EventRow): void {
-    if (!event.f_gather_time) return;
-
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
         console.log(`[予約] ${event.f_event_name} → イベント日ではないためスキップ`);
         return;
     }
 
-    const time = parseHHMM(event.f_gather_time);
-    if (!time) return;
-
     const now = Date.now();
-    const diff = time.getTime() - now;
+    const notificationTimes = calculateNotificationTimes(event);
 
-    if (diff > 0 && diff < 24 * 60 * 60 * 1000) { // 24時間以内
-        setTimeout(() => {
-            if (!isAlreadyNotified(event.f_event_id, event.f_gather_time!)) {
-                showEventNotification(event);
-                markAsNotified(event.f_event_id, event.f_gather_time!);
-            }
-        }, diff);
-        console.log(`[予約] ${event.f_event_name} → ${event.f_gather_time} に通知予定（${Math.floor(diff / 1000 / 60)}分後）`);
+    for (const { time, label } of notificationTimes) {
+        const targetTime = parseHHMM(time);
+        if (!targetTime) continue;
+
+        const diff = targetTime.getTime() - now;
+
+        if (diff > 0 && diff < 24 * 60 * 60 * 1000) { // 24時間以内
+            setTimeout(() => {
+                if (!isAlreadyNotified(event.f_event_id, time, label)) {
+                    showEventNotification(event, label);
+                    markAsNotified(event.f_event_id, time, label);
+                }
+            }, diff);
+            console.log(`[予約] ${event.f_event_name} → ${label} (${time}) に通知予定（${Math.floor(diff / 1000 / 60)}分後）`);
+        }
     }
 }
 
@@ -218,20 +279,27 @@ function sendEventsToServiceWorker(events: EventRow[]): void {
         return;
     }
 
-    const myEvents = events.filter(e => e.f_is_my_entry && e.f_gather_time);
+    const myEvents = events.filter(e => e.f_is_my_entry);
+    
+    // 各イベントの通知タイミングを計算してService Workerに送信
+    const notificationData = myEvents.flatMap(event => {
+        const times = calculateNotificationTimes(event);
+        return times.map(({ time, label }) => ({
+            f_event_id: event.f_event_id,
+            f_event_name: event.f_event_name,
+            f_place: event.f_place,
+            notification_time: time,
+            notification_label: label,
+            notified: false,
+        }));
+    });
     
     navigator.serviceWorker.controller.postMessage({
         type: "SCHEDULE_NOTIFICATIONS",
-        events: myEvents.map(e => ({
-            f_event_id: e.f_event_id,
-            f_event_name: e.f_event_name,
-            f_place: e.f_place,
-            f_gather_time: e.f_gather_time,
-            notified: false,
-        })),
+        notifications: notificationData,
     });
     
-    console.log(`[通知] Service Workerに${myEvents.length}件のイベントを送信しました`);
+    console.log(`[通知] Service Workerに${notificationData.length}件の通知を送信しました`);
 }
 
 // === Service Workerの通知を停止 ===
@@ -272,7 +340,7 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     console.log("[通知] 通知スケジュールを開始します");
 
     // 参加予定のイベントのみフィルタリング
-    const myEvents = events.filter(e => e.f_is_my_entry && e.f_gather_time);
+    const myEvents = events.filter(e => e.f_is_my_entry);
 
     // Service Workerにイベントを送信（バックグラウンド通知用）
     sendEventsToServiceWorker(myEvents);
