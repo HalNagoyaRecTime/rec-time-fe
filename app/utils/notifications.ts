@@ -1,6 +1,22 @@
 // === 通知システム ===
 import type { EventRow } from "~/api/student.js";
 
+// === 파싱 함수: "0930" → Date ===
+// === 時刻パース：「0930」→ Date ===
+function parseHHMM(hhmm: string): Date | null {
+    const match = hhmm.match(/^(\d{2})(\d{2})$/);
+    if (!match) return null;
+    const now = new Date();
+    return new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        parseInt(match[1], 10),
+        parseInt(match[2], 10),
+        0
+    );
+}
+
 // === 通知タイミングの設定 ===
 type NotificationTiming = {
     type: 'gather' | 'start' | 'minutes_before';
@@ -30,6 +46,7 @@ function getNotificationTimings(): NotificationTiming[] {
         }
     }
     
+    console.log('[通知] タイミング設定:', timings);
     return timings;
 }
 
@@ -56,6 +73,7 @@ function calculateNotificationTimes(event: EventRow): Array<{ time: string; labe
         }
     }
     
+    console.log(`[通知] ${event.f_event_name} の通知タイミング:`, notifications);
     return notifications;
 }
 
@@ -135,22 +153,6 @@ function isTodayEventDate(): boolean {
         eventDate.getFullYear() === today.getFullYear() &&
         eventDate.getMonth() === today.getMonth() &&
         eventDate.getDate() === today.getDate()
-    );
-}
-
-// === 파싱 함수: "0930" → Date ===
-// === 時刻パース：「0930」→ Date ===
-function parseHHMM(hhmm: string): Date | null {
-    const match = hhmm.match(/^(\d{2})(\d{2})$/);
-    if (!match) return null;
-    const now = new Date();
-    return new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        parseInt(match[1], 10),
-        parseInt(match[2], 10),
-        0
     );
 }
 
