@@ -208,8 +208,44 @@ function scheduleNotification(event: EventRow): void {
     }
 }
 
-// グローバルに保存される定期チェック用タイマー
+// === グローバルに保存される定期チェック用タイマー ===
 let notificationCheckInterval: number | null = null;
+
+// === Service Workerにイベントを送信 ===
+function sendEventsToServiceWorker(events: EventRow[]): void {
+    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+        console.warn("[通知] Service Workerが利用できません");
+        return;
+    }
+
+    const myEvents = events.filter(e => e.f_is_my_entry && e.f_gather_time);
+    
+    navigator.serviceWorker.controller.postMessage({
+        type: "SCHEDULE_NOTIFICATIONS",
+        events: myEvents.map(e => ({
+            f_event_id: e.f_event_id,
+            f_event_name: e.f_event_name,
+            f_place: e.f_place,
+            f_gather_time: e.f_gather_time,
+            notified: false,
+        })),
+    });
+    
+    console.log(`[通知] Service Workerに${myEvents.length}件のイベントを送信しました`);
+}
+
+// === Service Workerの通知を停止 ===
+function stopServiceWorkerNotifications(): void {
+    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+        return;
+    }
+
+    navigator.serviceWorker.controller.postMessage({
+        type: "STOP_NOTIFICATIONS",
+    });
+    
+    console.log("[通知] Service Workerの通知を停止しました");
+}
 
 // === 全イベント通知スケジュール ===
 export function scheduleAllNotifications(events: EventRow[]): void {
@@ -220,6 +256,7 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     if (!getNotificationSetting()) {
         console.log("[通知] 通知設定が無効のため、スケジュールしません");
         stopNotificationCheck();
+        stopServiceWorkerNotifications();
         return;
     }
 
@@ -228,6 +265,7 @@ export function scheduleAllNotifications(events: EventRow[]): void {
         const eventDate = getEventDate();
         console.log(`[通知] 今日はイベント日ではありません（指定日: ${eventDate?.toLocaleDateString() ?? "毎日"}）`);
         stopNotificationCheck();
+        stopServiceWorkerNotifications();
         return;
     }
 
@@ -236,10 +274,13 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     // 参加予定のイベントのみフィルタリング
     const myEvents = events.filter(e => e.f_is_my_entry && e.f_gather_time);
 
-    // setTimeoutでスケジュール
+    // Service Workerにイベントを送信（バックグラウンド通知用）
+    sendEventsToServiceWorker(myEvents);
+
+    // setTimeoutでスケジュール（アプリが開いている場合の補助）
     myEvents.forEach(scheduleNotification);
 
-    // 定期チェックを開始（1分ごと）
+    // 定期チェックを開始（1分ごと、アプリが開いている場合の補助）
     startNotificationCheck(myEvents);
 }
 

@@ -52,6 +52,9 @@ export function useNotificationSettings() {
                 console.error("[useNotificationSettings] イベント再スケジュールエラー:", error);
             }
 
+            // 注意喚起を表示するフラグを設定
+            localStorage.setItem("notification:should_show_warning", "true");
+
             return true;
         } else {
             setIsEnabled(false);

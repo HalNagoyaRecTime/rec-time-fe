@@ -3,13 +3,14 @@ import PullToRefresh from "~/components/ui/PullToRefresh";
 import TimeSlotGridWithEvents from "~/components/timetable/TimeSlotGridWithEvents";
 import StudentInfoBar from "~/components/timetable/StudentInfoBar";
 import NextEventCard from "~/components/timetable/NextEventCard";
+import NotificationWarning from "~/components/ui/NotificationWarning";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
-import { scheduleAllNotifications } from "~/utils/notifications";
+import { scheduleAllNotifications, getNotificationSetting } from "~/utils/notifications";
 import type { Message } from "~/types/timetable";
 
 export default function Timetable() {
@@ -18,6 +19,7 @@ export default function Timetable() {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<Message>({ type: null, content: "" });
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+    const [showNotificationWarning, setShowNotificationWarning] = useState(false);
     const hasFetchedRef = useRef(false);
 
     // === 現在時刻 ===
@@ -93,6 +95,16 @@ export default function Timetable() {
     useEffect(() => {
         if (events.length > 0) {
             scheduleAllNotifications(events);
+            
+            // 通知が有効で、注意喚起を表示するフラグがある場合
+            const shouldShowWarning = localStorage.getItem("notification:should_show_warning");
+            const notificationEnabled = getNotificationSetting();
+            
+            if (notificationEnabled && shouldShowWarning === "true") {
+                setShowNotificationWarning(true);
+                // フラグをクリア
+                localStorage.removeItem("notification:should_show_warning");
+            }
         }
     }, [events]);
 
@@ -141,6 +153,12 @@ export default function Timetable() {
                     </div>
                 </div>
             </PullToRefresh>
+            
+            {/* 通知に関する注意喚起モーダル */}
+            <NotificationWarning
+                isVisible={showNotificationWarning}
+                onDismiss={() => setShowNotificationWarning(false)}
+            />
         </RecTimeFlame>
     );
 }
