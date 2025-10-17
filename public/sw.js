@@ -36,8 +36,9 @@ self.addEventListener("message", (event) => {
     
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
-        console.log("[SW] 通知スケジュール受信:", data.events);
-        scheduledNotifications = data.events || [];
+        console.log("[SW] 通知スケジュール受信:", data.notifications);
+        scheduledNotifications = data.notifications || [];
+        console.log(`[SW] ${scheduledNotifications.length}件の通知をスケジュールしました`);
         startNotificationCheck();
     }
     
@@ -79,36 +80,42 @@ async function checkAndSendNotifications() {
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
-    console.log(`[SW] 通知チェック実行: ${currentTimeStr}`);
+    console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${scheduledNotifications.length}`);
 
-    for (const event of scheduledNotifications) {
-        if (event.f_gather_time === currentTimeStr && !event.notified) {
-            await showNotification(event);
-            event.notified = true;
+    for (const notification of scheduledNotifications) {
+        if (notification.notification_time === currentTimeStr && !notification.notified) {
+            console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
+            await showNotification(notification);
+            notification.notified = true;
         }
     }
 }
 
 // === 通知を表示 ===
-async function showNotification(event) {
-    const title = `イベント通知: ${event.f_event_name || "イベント"}`;
+async function showNotification(notification) {
+    const title = `イベント通知: ${notification.f_event_name || "イベント"}`;
+    const body = notification.notification_label 
+        ? `${notification.notification_label} - ${notification.f_place || "場所未定"}で間もなく始まります`
+        : `${notification.f_place || "場所未定"}で間もなく始まります`;
+    
     const options = {
-        body: `${event.f_place || "場所未定"}で間もなく始まります`,
+        body: body,
         icon: "/icons/pwa-192.png",
         badge: "/icons/pwa-192.png",
-        tag: `event-${event.f_event_id}`,
+        tag: `event-${notification.f_event_id}-${notification.notification_time}`,
         requireInteraction: true,
         vibrate: [200, 100, 200],
         data: {
-            eventId: event.f_event_id,
-            eventName: event.f_event_name,
-            place: event.f_place,
-            gatherTime: event.f_gather_time,
+            eventId: notification.f_event_id,
+            eventName: notification.f_event_name,
+            place: notification.f_place,
+            notificationTime: notification.notification_time,
+            notificationLabel: notification.notification_label,
         }
     };
 
     await self.registration.showNotification(title, options);
-    console.log(`[SW] 通知表示: ${title}`);
+    console.log(`[SW] 通知表示: ${title} - ${notification.notification_label}`);
 }
 
 // === 通知クリック時の処理 ===
