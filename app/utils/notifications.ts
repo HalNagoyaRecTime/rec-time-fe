@@ -128,8 +128,8 @@ function resetNotificationHistoryIfNeeded(): void {
 // === 環境変数から指定日付を取得 ===
 function getEventDate(): Date | null {
     const dateStr = import.meta.env.VITE_EVENT_DATE;
-    if (!dateStr || dateStr.trim() === "") {
-        return null; // 未設定の場合は毎日
+    if (!dateStr || dateStr.trim() === "" || dateStr.toLowerCase() === "all") {
+        return null; // 未設定または "all" の場合は毎日
     }
     
     const parsed = new Date(dateStr);
@@ -145,15 +145,24 @@ function getEventDate(): Date | null {
 function isTodayEventDate(): boolean {
     const eventDate = getEventDate();
     if (!eventDate) {
+        console.log("[通知] イベント日: 毎日有効");
         return true; // 未設定なら毎日有効
     }
     
     const today = new Date();
-    return (
+    const isToday = (
         eventDate.getFullYear() === today.getFullYear() &&
         eventDate.getMonth() === today.getMonth() &&
         eventDate.getDate() === today.getDate()
     );
+    
+    if (isToday) {
+        console.log(`[通知] イベント日: 今日 (${eventDate.toLocaleDateString('ja-JP')})`);
+    } else {
+        console.log(`[通知] 今日はイベント日ではありません（指定日: ${eventDate.toLocaleDateString('ja-JP')}）`);
+    }
+    
+    return isToday;
 }
 
 // === 알림 권한 요청 ===
