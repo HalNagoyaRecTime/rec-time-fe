@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-16-02";
+const APP_VERSION = "2025-10-18-01";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -274,6 +274,7 @@ self.addEventListener("fetch", (event) => {
             url.pathname.endsWith(".css") ||
             url.pathname.endsWith(".png") ||
             url.pathname.endsWith(".jpg") ||
+            url.pathname.endsWith(".svg") ||
             url.pathname.endsWith(".ico"))
     ) {
         event.respondWith(
