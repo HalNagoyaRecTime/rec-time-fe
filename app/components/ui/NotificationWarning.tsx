@@ -24,16 +24,16 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
                         <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                         <p>
                             <strong>重要：</strong>
-                            確実に通知を受け取るには、イベント当日は
+                            通知を受け取るには、
                             <strong className="text-[#000D91]">アプリを開いたまま</strong>
                             にしておいてください。
                         </p>
                     </div>
 
                     <div className="ml-6 space-y-2 text-xs">
-                        <p>✅ アプリを最小化してもOK</p>
+                        <p>✅ アプリを最小化にしてもOK</p>
                         <p>✅ 画面をオフにしてもOK</p>
-                        <p>❌ ブラウザを完全に閉じると通知が届きません</p>
+                        <p>❌ アプリを完全に閉じると通知が届きません</p>
                     </div>
 
                     <div className="mt-4 rounded-md bg-blue-50 p-3 text-xs">
@@ -46,8 +46,7 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
 
                 <button
                     onClick={onDismiss}
-                    className="w-full rounded-lg bg-[#000D91] py-3 font-semibold text-white transition-colors hover:bg-[#000D91]/90"
-                >
+                    className="w-full cursor-pointer rounded-lg bg-[#000D91] py-3 font-semibold text-white transition-colors hover:bg-[#000D91]/90">
                     理解しました
                 </button>
             </div>
