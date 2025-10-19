@@ -42,6 +42,30 @@ function formatNotificationBody(label, place) {
 // イベント通知データを受け取る
 let scheduledNotifications = [];
 let checkLoopRunning = false;
+let keepAliveInterval = null;
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5分ごと
+
+// API Base URLを取得（環境変数から）
+// 本番環境では環境変数 VITE_API_BASE_URL から取得
+// 開発環境ではデフォルトURL
+function getApiBaseUrl() {
+    // Service Workerでは import.meta.env が使えないため、
+    // メインスレッドから受け取るか、デフォルト値を使用
+    // 本番: https://rec-time-be.ellan122316.workers.dev
+    // 開発: http://localhost:8787
+    
+    // 本番環境のデフォルトURL（Cloudflare Workers）
+    const defaultUrl = 'https://rec-time-be.ellan122316.workers.dev';
+    
+    // locationのhostnameで環境を判定
+    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8787/api';
+    }
+    
+    return `${defaultUrl}/api`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 self.addEventListener("message", (event) => {
     const data = event.data;
@@ -61,6 +85,9 @@ self.addEventListener("message", (event) => {
         if (!checkLoopRunning) {
             startNotificationCheckLoop();
         }
+        
+        // Keep-Alive開始
+        startKeepAlive();
     }
     
     // 通知を停止
@@ -68,8 +95,142 @@ self.addEventListener("message", (event) => {
         console.log("[SW] 通知停止");
         scheduledNotifications = [];
         checkLoopRunning = false;
+        stopKeepAlive();
     }
 });
+
+// === Keep-Alive機能（Service Workerを起こし続ける） ===
+let keepAliveFailCount = 0; // 連続失敗回数
+let currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 現在の間隔
+
+function startKeepAlive() {
+    if (keepAliveInterval) {
+        console.log("[SW] Keep-Aliveは既に実行中");
+        return;
+    }
+    
+    // イベントまでの時間で間隔を調整
+    adjustKeepAliveInterval();
+    
+    console.log(`[SW] Keep-Alive開始 (${currentKeepAliveInterval / 1000}秒ごと)`);
+    
+    // 即座に1回実行
+    performKeepAlive();
+    
+    // 定期的に実行
+    keepAliveInterval = setInterval(() => {
+        performKeepAlive();
+    }, currentKeepAliveInterval);
+}
+
+function stopKeepAlive() {
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+        keepAliveFailCount = 0;
+        currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
+        console.log("[SW] Keep-Alive停止");
+    }
+}
+
+// イベントまでの時間で間隔を調整
+function adjustKeepAliveInterval() {
+    try {
+        if (scheduledNotifications.length === 0) {
+            currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
+            return;
+        }
+        
+        const now = new Date();
+        
+        // 最も近い通知時刻を見つける
+        let nearestTime = null;
+        let minDiff = Infinity;
+        
+        for (const notification of scheduledNotifications) {
+            const notifTime = notification.notification_time;
+            if (!notifTime) continue;
+            
+            const notifHour = parseInt(notifTime.substring(0, 2), 10);
+            const notifMin = parseInt(notifTime.substring(2, 4), 10);
+            const notifDate = new Date();
+            notifDate.setHours(notifHour, notifMin, 0, 0);
+            
+            const diff = notifDate.getTime() - now.getTime();
+            
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nearestTime = notifDate;
+            }
+        }
+        
+        // 5分以内にイベントがある場合は1分ごと
+        if (minDiff <= 5 * 60 * 1000) {
+            currentKeepAliveInterval = 60 * 1000; // 1分
+            console.log("[SW] イベントまで5分以内 → Keep-Alive間隔を1分に短縮");
+        } else {
+            currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
+        }
+    } catch (error) {
+        console.error("[SW] Keep-Alive間隔調整エラー:", error);
+        currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
+    }
+}
+
+async function performKeepAlive() {
+    try {
+        console.log("[SW] Keep-Alive: サーバーに疎通チェック送信");
+        
+        // サーバーの軽量なエンドポイントにリクエスト
+        const response = await fetch(`${API_BASE_URL}/api/health`, {
+            method: 'GET',
+            cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log("[SW] Keep-Alive成功:", data);
+            
+            // 成功したら失敗カウントをリセット
+            if (keepAliveFailCount > 0) {
+                keepAliveFailCount = 0;
+                // 5分間隔に戻す（イベント直前でなければ）
+                adjustKeepAliveInterval();
+                restartKeepAlive();
+            }
+        } else {
+            console.warn("[SW] Keep-Alive失敗: HTTPステータス", response.status);
+            handleKeepAliveFailure();
+        }
+    } catch (error) {
+        console.error("[SW] Keep-Aliveエラー:", error);
+        handleKeepAliveFailure();
+    }
+}
+
+// Keep-Alive失敗時の処理
+function handleKeepAliveFailure() {
+    keepAliveFailCount++;
+    console.warn(`[SW] Keep-Alive連続失敗回数: ${keepAliveFailCount}`);
+    
+    // 3回連続失敗したら1分間隔に短縮
+    if (keepAliveFailCount >= 3 && currentKeepAliveInterval !== 60 * 1000) {
+        console.warn("[SW] Keep-Alive連続失敗 → 間隔を1分に短縮");
+        currentKeepAliveInterval = 60 * 1000;
+        restartKeepAlive();
+    }
+}
+
+// Keep-Aliveを再起動（間隔変更時）
+function restartKeepAlive() {
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = setInterval(() => {
+            performKeepAlive();
+        }, currentKeepAliveInterval);
+        console.log(`[SW] Keep-Alive間隔を${currentKeepAliveInterval / 1000}秒に変更`);
+    }
+}
 
 // === 継続的な通知チェックループ ===
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）

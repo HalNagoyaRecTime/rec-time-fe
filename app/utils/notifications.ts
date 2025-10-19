@@ -141,28 +141,29 @@ function getEventDate(): Date | null {
     return parsed;
 }
 
-// === 今日がイベント日かチェック ===
+// === 今日がイベント日までの期間内かチェック ===
 function isTodayEventDate(): boolean {
     const eventDate = getEventDate();
+    
     if (!eventDate) {
-        console.log("[通知] イベント日: 毎日有効");
-        return true; // 未設定なら毎日有効
+        // 未設定または "all" の場合は常に有効
+        return true;
     }
     
     const today = new Date();
-    const isToday = (
-        eventDate.getFullYear() === today.getFullYear() &&
-        eventDate.getMonth() === today.getMonth() &&
-        eventDate.getDate() === today.getDate()
-    );
+    today.setHours(0, 0, 0, 0); // 時刻をリセット
     
-    if (isToday) {
-        console.log(`[通知] イベント日: 今日 (${eventDate.toLocaleDateString('ja-JP')})`);
+    const targetDate = new Date(eventDate);
+    targetDate.setHours(0, 0, 0, 0); // 時刻をリセット
+    
+    // 今日がイベント日の当日または以前（イベント日まで）の場合に有効
+    if (today <= targetDate) {
+        console.log(`[通知] イベント日まで有効: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
+        return true;
     } else {
-        console.log(`[通知] 今日はイベント日ではありません（指定日: ${eventDate.toLocaleDateString('ja-JP')}）`);
+        console.log(`[通知] イベント日を過ぎています: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
+        return false;
     }
-    
-    return isToday;
 }
 
 // === 알림 권한 요청 ===
