@@ -21,10 +21,27 @@ const STATIC_FILES = [
     "/images/map-class-area.jpg",
 ];
 
+// === 通知フォーマット関数（共通化） ===
+function formatNotificationTitle(eventName) {
+    return `【予定】${eventName || "イベント"}`;
+}
+
+function formatNotificationBody(label, place) {
+    if (label === '開始時間') {
+        return 'まもなく開始します。';
+    } else if (label === '集合時間') {
+        return `集合場所「${place || "未定"}」に移動してください。`;
+    } else if (label && label.includes('分前')) {
+        return `開始「${label}」になりました。\n集合場所「${place || "未定"}」に移動してください。`;
+    } else {
+        return `${label || ''} - ${place || "場所未定"}で間もなく始まります`;
+    }
+}
+
 // === 通知管理 ===
 // イベント通知データを受け取る
 let scheduledNotifications = [];
-let notificationCheckInterval = null;
+let checkLoopRunning = false;
 
 self.addEventListener("message", (event) => {
     const data = event.data;
@@ -39,40 +56,50 @@ self.addEventListener("message", (event) => {
         console.log("[SW] 通知スケジュール受信:", data.notifications);
         scheduledNotifications = data.notifications || [];
         console.log(`[SW] ${scheduledNotifications.length}件の通知をスケジュールしました`);
-        startNotificationCheck();
+        
+        // ループがまだ開始されていなければ開始
+        if (!checkLoopRunning) {
+            startNotificationCheckLoop();
+        }
     }
     
     // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
         console.log("[SW] 通知停止");
-        stopNotificationCheck();
         scheduledNotifications = [];
+        checkLoopRunning = false;
     }
 });
 
-// === 通知チェック開始 ===
-function startNotificationCheck() {
-    // 既存のチェックを停止
-    stopNotificationCheck();
-    
-    console.log("[SW] 通知チェック開始");
-    
-    // 即座に1回チェック
-    checkAndSendNotifications();
-    
-    // 1分ごとにチェック
-    notificationCheckInterval = setInterval(() => {
-        checkAndSendNotifications();
-    }, 60000); // 60秒
-}
-
-// === 通知チェック停止 ===
-function stopNotificationCheck() {
-    if (notificationCheckInterval) {
-        clearInterval(notificationCheckInterval);
-        notificationCheckInterval = null;
-        console.log("[SW] 通知チェック停止");
+// === 継続的な通知チェックループ ===
+// setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
+async function startNotificationCheckLoop() {
+    if (checkLoopRunning) {
+        console.log("[SW] チェックループは既に実行中");
+        return;
     }
+    
+    checkLoopRunning = true;
+    console.log("[SW] 通知チェックループ開始");
+    
+    async function checkLoop() {
+        if (!checkLoopRunning) {
+            console.log("[SW] チェックループ停止");
+            return;
+        }
+        
+        try {
+            await checkAndSendNotifications();
+        } catch (error) {
+            console.error("[SW] 通知チェックエラー:", error);
+        }
+        
+        // 30秒後に再度チェック（setIntervalより確実）
+        setTimeout(checkLoop, 30000);
+    }
+    
+    // 最初のチェックを即座に実行
+    checkLoop();
 }
 
 // === 通知をチェックして送信 ===
@@ -84,6 +111,20 @@ async function checkAndSendNotifications() {
 
     for (const notification of scheduledNotifications) {
         if (notification.notification_time === currentTimeStr && !notification.notified) {
+            
+            // 既に送信済みかチェック（LocalStorageと連携）
+            try {
+                const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+                
+                // アクティブなクライアントがある場合は、アプリ側に任せる
+                if (clients && clients.length > 0) {
+                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
+                    continue;
+                }
+            } catch (error) {
+                console.error('[SW] クライアントチェックエラー:', error);
+            }
+            
             console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
             await showNotification(notification);
             notification.notified = true;
@@ -93,10 +134,11 @@ async function checkAndSendNotifications() {
 
 // === 通知を表示 ===
 async function showNotification(notification) {
-    const title = `イベント通知: ${notification.f_event_name || "イベント"}`;
-    const body = notification.notification_label 
-        ? `${notification.notification_label} - ${notification.f_place || "場所未定"}で間もなく始まります`
-        : `${notification.f_place || "場所未定"}で間もなく始まります`;
+    const title = formatNotificationTitle(notification.f_event_name);
+    const body = formatNotificationBody(
+        notification.notification_label,
+        notification.f_place
+    );
     
     const options = {
         body: body,
@@ -105,6 +147,7 @@ async function showNotification(notification) {
         tag: `event-${notification.f_event_id}-${notification.notification_time}`,
         requireInteraction: true,
         vibrate: [200, 100, 200],
+        timestamp: Date.now(),
         data: {
             eventId: notification.f_event_id,
             eventName: notification.f_event_name,
