@@ -197,6 +197,23 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     return Notification.permission;
 }
 
+// === 通知フォーマット関数（共通化） ===
+function formatNotificationTitle(eventName: string): string {
+    return `【予定】${eventName}`;
+}
+
+function formatNotificationBody(label: string, place: string): string {
+    if (label === '開始時間') {
+        return 'まもなく開始します。';
+    } else if (label === '集合時間') {
+        return `集合場所「${place}」に移動してください。`;
+    } else if (label.includes('分前')) {
+        return `開始「${label}」になりました。\n集合場所「${place}」に移動してください。`;
+    } else {
+        return `${label} - ${place}で間もなく始まります`;
+    }
+}
+
 // === 알림 표시 ===
 // === 通知表示 ===
 export function showEventNotification(event: EventRow, label: string = '集合時間'): void {
@@ -205,10 +222,13 @@ export function showEventNotification(event: EventRow, label: string = '集合�
         return;
     }
 
-    const title = `イベント通知: ${event.f_event_name ?? "イベント"}`;
-    const body = `${label} - ${event.f_place ?? "場所未定"}で間もなく始まります`;
+    const title = formatNotificationTitle(event.f_event_name ?? "イベント");
+    const body = formatNotificationBody(label, event.f_place ?? "未定");
+    
+    // 重複防止用のタグ（同じtagの通知は自動的に置き換えられる）
+    const tag = `event-${event.f_event_id}-${label}`;
 
-    new Notification(title, { body });
+    new Notification(title, { body, tag });
     console.log(`[通知] 表示: ${title} (${label})`);
 }
 
@@ -356,7 +376,8 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     sendEventsToServiceWorker(myEvents);
 
     // setTimeoutでスケジュール（アプリが開いている場合の補助）
-    myEvents.forEach(scheduleNotification);
+    // 注意: setIntervalと重複するため無効化を推奨
+    // myEvents.forEach(scheduleNotification);
 
     // 定期チェックを開始（1分ごと、アプリが開いている場合の補助）
     startNotificationCheck(myEvents);

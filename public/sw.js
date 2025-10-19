@@ -1,12 +1,14 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-19-01"; // ← 배포 때마다 증가
+const APP_VERSION = "2025-10-18-01";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
 // キャッシュするリソース
 const STATIC_FILES = [
+    // エントリーポイント
     "/",
+    // 静的アセット
     "/favicon.ico",
     "/manifest.webmanifest",
     "/icons/pwa-192.png",
@@ -19,58 +21,110 @@ const STATIC_FILES = [
     "/images/map-class-area.jpg",
 ];
 
+// === 通知フォーマット関数（共通化） ===
+function formatNotificationTitle(eventName) {
+    return `【予定】${eventName || "イベント"}`;
+}
+
+function formatNotificationBody(label, place) {
+    if (label === '開始時間') {
+        return 'まもなく開始します。';
+    } else if (label === '集合時間') {
+        return `集合場所「${place || "未定"}」に移動してください。`;
+    } else if (label && label.includes('分前')) {
+        return `開始「${label}」になりました。\n集合場所「${place || "未定"}」に移動してください。`;
+    } else {
+        return `${label || ''} - ${place || "場所未定"}で間もなく始まります`;
+    }
+}
+
 // === 通知管理 ===
+// イベント通知データを受け取る
 let scheduledNotifications = [];
-let notificationCheckInterval = null;
+let checkLoopRunning = false;
 
 self.addEventListener("message", (event) => {
     const data = event.data;
     if (!data) return;
-
+    
     if (data.type === "LOG_JSON") {
         console.log("[SW] 受け取ったJSON:", data.payload);
     }
-
+    
+    // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
         console.log("[SW] 通知スケジュール受信:", data.notifications);
         scheduledNotifications = data.notifications || [];
         console.log(`[SW] ${scheduledNotifications.length}件の通知をスケジュールしました`);
-        startNotificationCheck();
+        
+        // ループがまだ開始されていなければ開始
+        if (!checkLoopRunning) {
+            startNotificationCheckLoop();
+        }
     }
-
+    
+    // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
         console.log("[SW] 通知停止");
-        stopNotificationCheck();
         scheduledNotifications = [];
+        checkLoopRunning = false;
     }
 });
 
-function startNotificationCheck() {
-    stopNotificationCheck();
-    console.log("[SW] 通知チェック開始");
-    checkAndSendNotifications();
-    notificationCheckInterval = setInterval(checkAndSendNotifications, 60000);
-}
-
-function stopNotificationCheck() {
-    if (notificationCheckInterval) {
-        clearInterval(notificationCheckInterval);
-        notificationCheckInterval = null;
-        console.log("[SW] 通知チェック停止");
+// === 継続的な通知チェックループ ===
+// setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
+async function startNotificationCheckLoop() {
+    if (checkLoopRunning) {
+        console.log("[SW] チェックループは既に実行中");
+        return;
     }
+    
+    checkLoopRunning = true;
+    console.log("[SW] 通知チェックループ開始");
+    
+    async function checkLoop() {
+        if (!checkLoopRunning) {
+            console.log("[SW] チェックループ停止");
+            return;
+        }
+        
+        try {
+            await checkAndSendNotifications();
+        } catch (error) {
+            console.error("[SW] 通知チェックエラー:", error);
+        }
+        
+        // 30秒後に再度チェック（setIntervalより確実）
+        setTimeout(checkLoop, 30000);
+    }
+    
+    // 最初のチェックを即座に実行
+    checkLoop();
 }
 
+// === 通知をチェックして送信 ===
 async function checkAndSendNotifications() {
     const now = new Date();
-    const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
+    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
     console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${scheduledNotifications.length}`);
 
     for (const notification of scheduledNotifications) {
         if (notification.notification_time === currentTimeStr && !notification.notified) {
+            
+            // 既に送信済みかチェック（LocalStorageと連携）
+            try {
+                const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+                
+                // アクティブなクライアントがある場合は、アプリ側に任せる
+                if (clients && clients.length > 0) {
+                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
+                    continue;
+                }
+            } catch (error) {
+                console.error('[SW] クライアントチェックエラー:', error);
+            }
+            
             console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
             await showNotification(notification);
             notification.notified = true;
@@ -78,43 +132,51 @@ async function checkAndSendNotifications() {
     }
 }
 
+// === 通知を表示 ===
 async function showNotification(notification) {
-    const title = `イベント通知: ${notification.f_event_name || "イベント"}`;
-    const body = notification.notification_label
-        ? `${notification.notification_label} - ${notification.f_place || "場所未定"}で間もなく始まります`
-        : `${notification.f_place || "場所未定"}で間もなく始まります`;
-
+    const title = formatNotificationTitle(notification.f_event_name);
+    const body = formatNotificationBody(
+        notification.notification_label,
+        notification.f_place
+    );
+    
     const options = {
-        body,
+        body: body,
         icon: "/icons/pwa-192.png",
         badge: "/icons/pwa-192.png",
         tag: `event-${notification.f_event_id}-${notification.notification_time}`,
         requireInteraction: true,
         vibrate: [200, 100, 200],
+        timestamp: Date.now(),
         data: {
             eventId: notification.f_event_id,
             eventName: notification.f_event_name,
             place: notification.f_place,
             notificationTime: notification.notification_time,
             notificationLabel: notification.notification_label,
-        },
+        }
     };
 
     await self.registration.showNotification(title, options);
     console.log(`[SW] 通知表示: ${title} - ${notification.notification_label}`);
 }
 
+// === 通知クリック時の処理 ===
 self.addEventListener("notificationclick", (event) => {
     console.log("[SW] 通知がクリックされました:", event.notification.data);
+    
     event.notification.close();
-
+    
+    // アプリを開く
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            // 既に開いているウィンドウがあればフォーカス
             for (const client of clientList) {
                 if (client.url.includes(self.registration.scope) && "focus" in client) {
                     return client.focus();
                 }
             }
+            // なければ新しいウィンドウを開く
             if (clients.openWindow) {
                 return clients.openWindow("/");
             }
@@ -122,7 +184,8 @@ self.addEventListener("notificationclick", (event) => {
     );
 });
 
-// === Periodic Background Sync(将来用) ===
+// === Periodic Background Sync (将来的な拡張用) ===
+// 注意: Periodic Background Syncは一部のブラウザでのみサポート
 self.addEventListener("periodicsync", (event) => {
     if (event.tag === "check-notifications") {
         console.log("[SW] Periodic Sync: 通知チェック");
@@ -132,7 +195,11 @@ self.addEventListener("periodicsync", (event) => {
 
 self.addEventListener("install", (event) => {
     console.log("[SW] install", APP_VERSION);
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_FILES)));
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(STATIC_FILES);
+        })
+    );
     self.skipWaiting();
 });
 
@@ -141,16 +208,17 @@ self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches
             .keys()
-            .then((cacheNames) =>
-                Promise.all(
+            .then((cacheNames) => {
+                return Promise.all(
                     cacheNames.map((cacheName) => {
+                        // 古いキャッシュを削除
                         if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
                             console.log("[SW] 古いキャッシュを削除:", cacheName);
                             return caches.delete(cacheName);
                         }
                     })
-                )
-            )
+                );
+            })
             .then(() => self.clients.claim())
     );
 });
@@ -158,6 +226,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
     const { request } = event;
 
+    // 不正なURLや空のURLをスキップ
     if (!request.url) {
         console.warn("[SW] 空のURLリクエストをスキップ");
         return;
@@ -171,38 +240,44 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // ① ナビゲーションは Network First（最新HTML取得を最優先）
+    // 同一オリジンのリクエストのみ処理（外部リソースは除外）
+    if (url.origin !== location.origin) {
+        return;
+    }
+
+    // ナビゲーションリクエスト（ページ遷移）の場合、常にindex.htmlを返す（SPA対応）
     if (request.mode === "navigate") {
         event.respondWith(
-            (async () => {
-                try {
-                    const fresh = await fetch("/", { cache: "no-store" });
-                    const clone = fresh.clone();
-                    const cache = await caches.open(CACHE_NAME);
-                    await cache.put("/", clone);
-                    return fresh;
-                } catch (err) {
-                    const cached = await caches.match("/");
-                    if (cached) return cached;
-                    console.error("[SW] ナビゲーション失敗（オフライン）:", err);
+            caches.match("/").then((response) => {
+                if (response) {
+                    return response;
+                }
+                return fetch("/").catch((error) => {
+                    console.error("[SW] ナビゲーション失敗（オフライン）:", error);
                     return new Response("Offline and index.html not cached", {
                         status: 503,
                         statusText: "Service Unavailable",
                     });
-                }
-            })()
+                });
+            })
         );
         return;
     }
 
-    // ② APIリクエスト判定（同一オリジンの /api/*）
-    const isApiRequest = url.origin === location.origin && url.pathname.startsWith("/api/");
+    // APIリクエストかどうかを判定（同一オリジンの /api/ またはバックエンドのフルURL）
+    const isApiRequest =
+        url.pathname.startsWith("/api/") ||
+        (url.origin !== location.origin &&
+            (url.pathname.includes("/api/events") ||
+                url.pathname.includes("/api/students") ||
+                url.pathname.includes("/api/entries")));
 
-    // ③ API は Network First（成功時のみDATA_CACHEへ保存）
+    // バックエンドAPIリクエストの場合、Network Firstでキャッシュ
     if (isApiRequest) {
         event.respondWith(
             fetch(request)
                 .then((response) => {
+                    // ネットワークからの取得に成功した場合、キャッシュに保存
                     if (response.ok) {
                         const responseClone = response.clone();
                         caches.open(DATA_CACHE_NAME).then((cache) => {
@@ -212,25 +287,28 @@ self.addEventListener("fetch", (event) => {
                     }
                     return response;
                 })
-                .catch(async (error) => {
+                .catch((error) => {
                     console.log("[SW] ネットワークエラー、キャッシュから取得:", url.pathname);
-                    const cachedResponse = await caches.match(request);
-                    if (cachedResponse) {
-                        const headers = new Headers(cachedResponse.headers);
-                        headers.set("X-Cache-Source", "service-worker");
-                        return new Response(cachedResponse.body, {
-                            status: cachedResponse.status,
-                            statusText: cachedResponse.statusText,
-                            headers,
-                        });
-                    }
-                    throw error;
+                    // ネットワークエラー時はキャッシュから返す
+                    return caches.match(request).then((cachedResponse) => {
+                        if (cachedResponse) {
+                            // キャッシュから取得したことを示すヘッダーを追加
+                            const headers = new Headers(cachedResponse.headers);
+                            headers.set("X-Cache-Source", "service-worker");
+                            return new Response(cachedResponse.body, {
+                                status: cachedResponse.status,
+                                statusText: cachedResponse.statusText,
+                                headers: headers,
+                            });
+                        }
+                        throw error;
+                    });
                 })
         );
         return;
     }
 
-    // ④ 静的ファイルは Cache First（従来通り）
+    // 静的リソースのキャッシュ戦略: Cache First
     if (
         request.method === "GET" &&
         (url.pathname === "/" ||
@@ -244,17 +322,23 @@ self.addEventListener("fetch", (event) => {
     ) {
         event.respondWith(
             caches.match(request).then((cachedResponse) => {
-                if (cachedResponse) return cachedResponse;
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                // キャッシュにない場合はネットワークから取得してキャッシュに保存
                 return fetch(request)
                     .then((response) => {
                         if (response.ok) {
                             const responseClone = response.clone();
-                            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(request, responseClone);
+                            });
                         }
                         return response;
                     })
                     .catch((error) => {
                         console.error("[SW] リソース取得失敗（オフライン）:", url.pathname, error);
+                        // オフライン時にキャッシュがない場合はエラーレスポンスを返す
                         return new Response("Offline and resource not cached", {
                             status: 503,
                             statusText: "Service Unavailable",
