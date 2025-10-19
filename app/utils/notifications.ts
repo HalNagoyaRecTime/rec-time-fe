@@ -128,11 +128,11 @@ function resetNotificationHistoryIfNeeded(): void {
 // === 環境変数から指定日付を取得 ===
 function getEventDate(): Date | null {
     const dateStr = import.meta.env.VITE_EVENT_DATE;
-    if (!dateStr || dateStr.trim() === "" || dateStr.toLowerCase() === "all") {
+    if (!dateStr || dateStr.trim() === "" || dateStr.trim().toLowerCase() === "all") {
         return null; // 未設定または "all" の場合は毎日
     }
     
-    const parsed = new Date(dateStr);
+    const parsed = new Date(dateStr.trim());
     if (isNaN(parsed.getTime())) {
         console.warn(`[通知] 無効な日付フォーマット: ${dateStr}`);
         return null;
@@ -341,8 +341,7 @@ export function scheduleAllNotifications(events: EventRow[]): void {
 
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
-        const eventDate = getEventDate();
-        console.log(`[通知] 今日はイベント日ではありません（指定日: ${eventDate?.toLocaleDateString() ?? "毎日"}）`);
+        // isTodayEventDate() 内で既にログ出力済み
         stopNotificationCheck();
         stopServiceWorkerNotifications();
         return;
