@@ -12,6 +12,7 @@ import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 import { scheduleAllNotifications, getNotificationSetting } from "~/utils/notifications";
 import type { Message } from "~/types/timetable";
+import { FaBell } from "react-icons/fa";
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);
