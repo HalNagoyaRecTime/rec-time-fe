@@ -237,11 +237,7 @@ function restartKeepAlive() {
 }
 
 // === 継続的な通知チェックループ ===
-// setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
-let checkInterval = 30000; // デフォルト30秒
-const MIN_CHECK_INTERVAL = 15000; // 最小15秒
-const MAX_CHECK_INTERVAL = 60000; // 最大60秒
-
+// 即実行のみ（間隔調整なし）
 async function startNotificationCheckLoop() {
     if (checkLoopRunning) {
         console.log("[SW] チェックループは既に実行中");
@@ -249,80 +245,15 @@ async function startNotificationCheckLoop() {
     }
 
     checkLoopRunning = true;
-    console.log("[SW] 通知チェックループ開始");
+    console.log("[SW] 通知チェック即実行");
 
-    async function checkLoop() {
-        if (!checkLoopRunning) {
-            console.log("[SW] チェックループ停止");
-            return;
-        }
-
-        try {
-            await checkAndSendNotifications();
-
-            // 次の通知までの時間でチェック間隔を調整
-            adjustCheckInterval();
-        } catch (error) {
-            console.error("[SW] 通知チェックエラー:", error);
-        }
-
-        // 調整された間隔で再度チェック
-        setTimeout(checkLoop, checkInterval);
-    }
-
-    // 最初のチェックを即座に実行
-    checkLoop();
-}
-
-// 次の通知までの時間でチェック間隔を調整
-function adjustCheckInterval() {
     try {
-        if (scheduledNotifications.length === 0) {
-            checkInterval = MAX_CHECK_INTERVAL;
-            return;
-        }
-
-        const now = new Date();
-        let nearestTime = null;
-        let minDiff = Infinity;
-
-        for (const notification of scheduledNotifications) {
-            if (notification.notified) continue; // 既に通知済みはスキップ
-
-            const notifTime = notification.notification_time;
-            if (!notifTime) continue;
-
-            const notifHour = parseInt(notifTime.substring(0, 2), 10);
-            const notifMin = parseInt(notifTime.substring(2, 4), 10);
-            const notifDate = new Date();
-            notifDate.setHours(notifHour, notifMin, 0, 0);
-
-            const diff = notifDate.getTime() - now.getTime();
-
-            if (diff > 0 && diff < minDiff) {
-                minDiff = diff;
-                nearestTime = notifDate;
-            }
-        }
-
-        // 5分以内にイベントがある場合は15秒ごと（より頻繁に）
-        if (minDiff <= 5 * 60 * 1000) {
-            checkInterval = MIN_CHECK_INTERVAL;
-            console.log("[SW] イベントまで5分以内 → チェック間隔を15秒に短縮");
-        }
-        // 15分以内なら30秒ごと
-        else if (minDiff <= 15 * 60 * 1000) {
-            checkInterval = 30000;
-            console.log("[SW] イベントまで15分以内 → チェック間隔を30秒に設定");
-        }
-        // それ以外は60秒ごと
-        else {
-            checkInterval = MAX_CHECK_INTERVAL;
-        }
+        await checkAndSendNotifications();
     } catch (error) {
-        console.error("[SW] チェック間隔調整エラー:", error);
-        checkInterval = 30000; // エラー時はデフォルト値
+        console.error("[SW] 通知チェックエラー:", error);
     }
+
+    checkLoopRunning = false;
 }
 
 // === 通知をチェックして送信 ===
