@@ -1,22 +1,99 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+/* ===== フォント定義（セルフホスティング - オフライン対応） ===== */
 
-  --font-title:
-    "source-han-sans-cjk-japanese", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+/* Noto Sans JP */
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('../public/fonts/NotoSansJP-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('../public/fonts/NotoSansJP-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('../public/fonts/NotoSansJP-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Inter */
+@font-face {
+  font-family: 'Inter';
+  src: url('../public/fonts/Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../public/fonts/Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../public/fonts/Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../public/fonts/Inter-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('../public/fonts/Inter-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Tailwind CSS テーマ設定 ===== */
+
+/* 以前は @theme を使用していましたが、エディタ/パーサで解釈されない場合があるため標準の :root に移行します */
+:root {
+  /* 本文用フォント */
+  --font-sans: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* タイトル用フォント */
+  --font-title: "Noto Sans JP", sans-serif;
 }
 
 html,
 body {
+  /* デフォルトでセルフホストフォントを使用する */
+  font-family: var(--font-sans), sans-serif;
+
   @apply bg-white dark:bg-gray-950;
-  overscroll-behavior-y: contain; /* 추가하려던 줄 */
+  overscroll-behavior-y: contain;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
 }
 
-
+/* Interフォント専用クラス */
+.font-inter {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}

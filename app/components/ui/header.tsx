@@ -24,7 +24,7 @@ export default function header() {
     return (
         // 最大幅を取得するための要素
         <header className="top-0 left-0 z-80 flex h-17 w-full shrink-0 items-center bg-white pl-16 drop-shadow-sm md:pl-18">
-            <h1 className="text-[1.625rem]/7 font-extrabold whitespace-nowrap text-[#111646]">{getPageTitle()}</h1>
+            <h1 className="font-inter text-[1.625rem]/7 font-black whitespace-nowrap text-[#111646]">{getPageTitle()}</h1>
         </header>
     );
 }

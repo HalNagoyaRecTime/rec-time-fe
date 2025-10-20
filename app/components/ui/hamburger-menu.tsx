@@ -89,7 +89,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="pr-10 text-lg font-bold whitespace-nowrap" style={{ color }}>
+                                            <p className="pr-10 text-lg whitespace-nowrap font-inter font-black" style={{ color }}>
                                                 {item.label}
                                             </p>
                                         </div>
