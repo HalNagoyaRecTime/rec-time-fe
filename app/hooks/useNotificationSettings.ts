@@ -10,6 +10,7 @@ import {
     scheduleAllNotifications,
     showSettingNotification,
 } from "~/utils/notifications";
+import { initializeFCM } from "~/utils/firebaseConfig";
 import type { EventRow } from "~/api/student";
 
 export function useNotificationSettings() {
@@ -34,6 +35,20 @@ export function useNotificationSettings() {
         if (perm === "granted") {
             saveNotificationSetting(true);
             setIsEnabled(true);
+
+            // FCM 초기화 시도 (백그라운드에서 자동 실행)
+            // FCM初期化試行（バックグラウンドで自動実行）
+            // 역할: FCM이 성공하면 오프라인 알림 가능, 실패해도 사용자는 알아채지 못함
+            try {
+                const fcmInitialized = await initializeFCM();
+                if (fcmInitialized) {
+                    console.log("[useNotificationSettings] FCM 초기화 성공 - 오프라인 알림 활성화");
+                } else {
+                    console.log("[useNotificationSettings] FCM 초기화 실패 - 기존 Service Worker 방식 사용");
+                }
+            } catch (error) {
+                console.error("[useNotificationSettings] FCM 초기화 오류:", error);
+            }
 
             // 通知オン時のフィードバック
             showSettingNotification("通知をオンにしました");

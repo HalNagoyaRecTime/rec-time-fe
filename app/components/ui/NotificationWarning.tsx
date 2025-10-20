@@ -24,22 +24,25 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
                         <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                         <p>
                             <strong>重要：</strong>
-                            通知を受け取るには、
-                            <strong className="text-[#000D91]">アプリを開いたまま</strong>
-                            にしておいてください。
+                            FCM対応により、アプリを完全に閉じても通知を受け取れます。
+                            従来のService Worker方式も併用されます。
                         </p>
                     </div>
 
                     <div className="ml-6 space-y-2 text-xs">
                         <p>✅ アプリを最小化にしてもOK</p>
                         <p>✅ 画面をオフにしてもOK</p>
-                        <p>❌ アプリを完全に閉じると通知が届きません</p>
+                        <p>✅ アプリを完全に閉じてもOK（FCM対応）</p>
                     </div>
 
                     <div className="mt-4 rounded-md bg-blue-50 p-3 text-xs">
                         <p className="font-semibold text-[#000D91]">💡 ヒント</p>
                         <p className="mt-1 text-gray-600">
                             ホーム画面に追加してPWAとして使用すると、より確実に通知を受け取れます。
+                        </p>
+                        <p className="mt-2 text-gray-600">
+                            <strong>FCM対応:</strong> アプリを完全に閉じても通知を受け取れるようになりました！
+                            （従来のService Worker方式も併用されます）
                         </p>
                     </div>
                 </div>
