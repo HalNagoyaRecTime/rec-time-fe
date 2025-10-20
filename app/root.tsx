@@ -10,8 +10,6 @@ import Footer from "./components/ui/footer";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
-    // フォントはセルフホスティング版を使用（オフライン対応）
-    // Google Fonts CDNは削除
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
         rel: "icon",

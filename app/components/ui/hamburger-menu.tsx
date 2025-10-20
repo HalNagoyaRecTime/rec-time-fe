@@ -89,7 +89,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="pr-10 text-lg whitespace-nowrap font-inter font-black" style={{ color }}>
+                                            <p className="pr-10 text-lg whitespace-nowrap font-bold mb-1" style={{ color }}>
                                                 {item.label}
                                             </p>
                                         </div>
@@ -113,7 +113,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                     <div className="h-8 w-8">
                                         <FaRegStar className="h-7 w-7 text-white" />
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 pb-1">
                                         <p className="text-lg font-bold text-white">レクサイト</p>
                                         <div className="mr-5 h-5 w-5">
                                             <FaArrowUpRightFromSquare className="mt-[2px] ml-[2px] text-white" />
