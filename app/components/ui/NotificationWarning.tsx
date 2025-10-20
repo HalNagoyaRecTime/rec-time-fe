@@ -16,30 +16,30 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
             <div className="max-w-md rounded-lg bg-white p-6 shadow-xl">
                 <div className="mb-4 flex items-center gap-3">
                     <FaBell className="h-6 w-6 text-[#000D91]" />
-                    <h3 className="text-lg font-bold text-[#000D91]">通知を受け取るために</h3>
+                    <h3 className="text-lg font-bold text-[#000D91]">通知について</h3>
                 </div>
 
                 <div className="mb-4 space-y-3 text-sm text-gray-700">
                     <div className="flex gap-2">
                         <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                         <p>
-                            <strong>重要：</strong>
-                            通知を受け取るには、
-                            <strong className="text-[#000D91]">アプリを開いたまま</strong>
-                            にしておいてください。
+                            <strong>大切なお知らせ：</strong>
+                            授業開始の通知を受け取るには、
+                            <strong className="text-[#000D91]">このページを開いたまま</strong>
+                            にしてください。
                         </p>
                     </div>
 
                     <div className="ml-6 space-y-2 text-xs">
-                        <p>✅ アプリを最小化にしてもOK</p>
-                        <p>✅ 画面をオフにしてもOK</p>
-                        <p>❌ アプリを完全に閉じると通知が届きません</p>
+                        <p>✅ 他のアプリを開いてもOK</p>
+                        <p>✅ 画面をスリープにしてもOK</p>
+                        <p>❌ ブラウザやアプリを閉じると通知されません</p>
                     </div>
 
                     <div className="mt-4 rounded-md bg-blue-50 p-3 text-xs">
-                        <p className="font-semibold text-[#000D91]">💡 ヒント</p>
+                        <p className="font-semibold text-[#000D91]">💡 おすすめの使い方</p>
                         <p className="mt-1 text-gray-600">
-                            ホーム画面に追加してPWAとして使用すると、より確実に通知を受け取れます。
+                            スマホのホーム画面にアイコンを追加すると、より便利にご利用いただけます。
                         </p>
                     </div>
                 </div>
@@ -47,7 +47,7 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
                 <button
                     onClick={onDismiss}
                     className="w-full cursor-pointer rounded-lg bg-[#000D91] py-3 font-semibold text-white transition-colors hover:bg-[#000D91]/90">
-                    理解しました
+                    わかりました
                 </button>
             </div>
         </div>

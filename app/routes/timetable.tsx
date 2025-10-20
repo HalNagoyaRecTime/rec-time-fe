@@ -95,11 +95,11 @@ export default function Timetable() {
     useEffect(() => {
         if (events.length > 0) {
             scheduleAllNotifications(events);
-            
+
             // 通知が有効で、注意喚起を表示するフラグがある場合
             const shouldShowWarning = localStorage.getItem("notification:should_show_warning");
             const notificationEnabled = getNotificationSetting();
-            
+
             if (notificationEnabled && shouldShowWarning === "true") {
                 setShowNotificationWarning(true);
                 // フラグをクリア
@@ -151,9 +151,56 @@ export default function Timetable() {
                         <span>最終更新：</span>
                         <span>{formatTimeOnly(lastUpdated) || "未更新"}</span>
                     </div>
+
+                    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4">
+                        <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+                            <div className="mb-3 flex items-center gap-2">
+                                <FaBell className="h-5 w-5 text-[#000D91]" />
+                                <h3 className="text-base font-bold text-[#000D91]">プッシュ通知について</h3>
+                            </div>
+
+                            <div className="mb-4 space-y-3">
+                                <p className="text-sm leading-relaxed text-gray-700">
+                                    プッシュ通知を受け取るには、アプリを<br/>
+                                    <span className="font-bold text-[#000D91]">「ホーム画面に追加」</span>して
+                                    <span className="font-bold text-[#000D91]">「起動した状態」</span>にしてください。
+                                </p>
+
+                                <div className="space-y-1.5 rounded-lg bg-gray-50 p-3 text-sm">
+                                    <p className="flex items-center gap-2">
+                                        <span className="text-green-600">✓</span>
+                                        <span className="text-black">アプリをバックグラウンド状態にしても<span className="text-green-600 font-bold">OK</span></span>
+                                    </p>
+                                    <p className="flex items-center gap-2">
+                                        <span className="text-green-600">✓</span>
+                                        <span className="text-black">スリープ状態でも<span className="text-green-600 font-bold">OK</span></span>
+                                    </p>
+                                    <p className="flex items-center gap-1">
+                                        <span className="text-red-500">×</span>
+                                        <span className=" text-black ">アプリを閉じるのは<span className="text-red-500 font-bold">NG</span></span>
+                                    </p>
+                                </div>
+
+                                <div className="rounded-lg bg-orange-50 p-3">
+                                    <p className="mb-1 text-xs font-bold text-orange-600">
+                                        ※ホーム画面に追加する方法（PWA）
+                                    </p>
+                                    <p className="text-xs leading-relaxed text-gray-700">
+                                        ブラウザの「メニュー」から「ホーム画面に追加」することで、通知機能やオフライン起動が使えます。
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                className="cursor-pointer w-full rounded-lg bg-[#000D91] py-2.5 text-sm font-semibold text-white transition-colors active:bg-[#000D91]/90"
+                            >
+                                確認した
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </PullToRefresh>
-            
+
             {/* 通知に関する注意喚起モーダル */}
             <NotificationWarning
                 isVisible={showNotificationWarning}
