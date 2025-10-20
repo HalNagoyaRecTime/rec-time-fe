@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-18-01";
+const APP_VERSION = "2025-10-20-bg-notification";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -238,33 +238,91 @@ function restartKeepAlive() {
 
 // === 継続的な通知チェックループ ===
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
+let checkInterval = 30000; // デフォルト30秒
+const MIN_CHECK_INTERVAL = 15000; // 最小15秒
+const MAX_CHECK_INTERVAL = 60000; // 最大60秒
+
 async function startNotificationCheckLoop() {
     if (checkLoopRunning) {
         console.log("[SW] チェックループは既に実行中");
         return;
     }
-    
+
     checkLoopRunning = true;
     console.log("[SW] 通知チェックループ開始");
-    
+
     async function checkLoop() {
         if (!checkLoopRunning) {
             console.log("[SW] チェックループ停止");
             return;
         }
-        
+
         try {
             await checkAndSendNotifications();
+
+            // 次の通知までの時間でチェック間隔を調整
+            adjustCheckInterval();
         } catch (error) {
             console.error("[SW] 通知チェックエラー:", error);
         }
-        
-        // 30秒後に再度チェック（setIntervalより確実）
-        setTimeout(checkLoop, 30000);
+
+        // 調整された間隔で再度チェック
+        setTimeout(checkLoop, checkInterval);
     }
-    
+
     // 最初のチェックを即座に実行
     checkLoop();
+}
+
+// 次の通知までの時間でチェック間隔を調整
+function adjustCheckInterval() {
+    try {
+        if (scheduledNotifications.length === 0) {
+            checkInterval = MAX_CHECK_INTERVAL;
+            return;
+        }
+
+        const now = new Date();
+        let nearestTime = null;
+        let minDiff = Infinity;
+
+        for (const notification of scheduledNotifications) {
+            if (notification.notified) continue; // 既に通知済みはスキップ
+
+            const notifTime = notification.notification_time;
+            if (!notifTime) continue;
+
+            const notifHour = parseInt(notifTime.substring(0, 2), 10);
+            const notifMin = parseInt(notifTime.substring(2, 4), 10);
+            const notifDate = new Date();
+            notifDate.setHours(notifHour, notifMin, 0, 0);
+
+            const diff = notifDate.getTime() - now.getTime();
+
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nearestTime = notifDate;
+            }
+        }
+
+        // 5分以内にイベントがある場合は15秒ごと（より頻繁に）
+        if (minDiff <= 5 * 60 * 1000) {
+            checkInterval = MIN_CHECK_INTERVAL;
+            console.log("[SW] イベントまで5分以内 → チェック間隔を15秒に短縮");
+        }
+        // 15分以内なら30秒ごと
+        else if (minDiff <= 15 * 60 * 1000) {
+            checkInterval = 30000;
+            console.log("[SW] イベントまで15分以内 → チェック間隔を30秒に設定");
+        }
+        // それ以外は60秒ごと
+        else {
+            checkInterval = MAX_CHECK_INTERVAL;
+        }
+    } catch (error) {
+        console.error("[SW] チェック間隔調整エラー:", error);
+        checkInterval = 30000; // エラー時はデフォルト値
+    }
 }
 
 // === 通知をチェックして送信 ===
@@ -276,23 +334,47 @@ async function checkAndSendNotifications() {
 
     for (const notification of scheduledNotifications) {
         if (notification.notification_time === currentTimeStr && !notification.notified) {
-            
-            // 既に送信済みかチェック（LocalStorageと連携）
+
+            // クライアントの状態をチェック
+            let hasActiveClient = false;
+            let shouldSendNotification = true;
+
             try {
                 const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-                
-                // アクティブなクライアントがある場合は、アプリ側に任せる
+
                 if (clients && clients.length > 0) {
-                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
-                    continue;
+                    hasActiveClient = true;
+
+                    // クライアントに通知の確認を依頼
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: "NOTIFICATION_TIME_REACHED",
+                            notification: notification
+                        });
+                    });
+
+                    console.log(`[SW] アクティブなクライアント(${clients.length}個)に通知を通知しました`);
+
+                    // アクティブなクライアントがあっても、バックグラウンドの可能性があるので
+                    // 少し待ってから通知を送信（クライアント側で処理されなかった場合のフォールバック）
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // クライアント側で処理された場合はnotifiedフラグが立つので、それをチェック
+                    if (notification.notified) {
+                        console.log(`[SW] クライアント側で通知が処理されました`);
+                        shouldSendNotification = false;
+                    }
                 }
             } catch (error) {
                 console.error('[SW] クライアントチェックエラー:', error);
             }
-            
-            console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
-            await showNotification(notification);
-            notification.notified = true;
+
+            // バックグラウンドまたはクライアントが処理しなかった場合、Service Workerから通知
+            if (shouldSendNotification) {
+                console.log(`[SW] バックグラウンド通知送信: ${notification.f_event_name} (${notification.notification_label})`);
+                await showNotification(notification);
+                notification.notified = true;
+            }
         }
     }
 }
@@ -329,32 +411,178 @@ async function showNotification(notification) {
 // === 通知クリック時の処理 ===
 self.addEventListener("notificationclick", (event) => {
     console.log("[SW] 通知がクリックされました:", event.notification.data);
-    
+    console.log("[SW] クリックされたアクション:", event.action);
+
     event.notification.close();
-    
-    // アプリを開く
+
+    // アクションに応じた処理
+    if (event.action === "close") {
+        console.log("[SW] 通知を閉じるアクションが選択されました");
+        return;
+    }
+
+    // "open"アクションまたは通知本体をクリックした場合、アプリを開く
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            console.log(`[SW] アクティブなウィンドウ数: ${clientList.length}`);
+
             // 既に開いているウィンドウがあればフォーカス
             for (const client of clientList) {
                 if (client.url.includes(self.registration.scope) && "focus" in client) {
+                    console.log("[SW] 既存のウィンドウをフォーカス");
+
+                    // イベントIDがあれば、そのページに遷移させる
+                    if (event.notification.data && event.notification.data.eventId) {
+                        client.postMessage({
+                            type: "NAVIGATE_TO_EVENT",
+                            eventId: event.notification.data.eventId
+                        });
+                    }
+
                     return client.focus();
                 }
             }
+
             // なければ新しいウィンドウを開く
             if (clients.openWindow) {
-                return clients.openWindow("/");
+                console.log("[SW] 新しいウィンドウを開く");
+                const urlToOpen = event.notification.data && event.notification.data.eventId
+                    ? `/?eventId=${event.notification.data.eventId}`
+                    : "/";
+                return clients.openWindow(urlToOpen);
             }
         })
     );
 });
 
-// === Periodic Background Sync (将来的な拡張用) ===
-// 注意: Periodic Background Syncは一部のブラウザでのみサポート
-self.addEventListener("periodicsync", (event) => {
-    if (event.tag === "check-notifications") {
-        console.log("[SW] Periodic Sync: 通知チェック");
+// === Push通知イベント（バックグラウンドプッシュ対応） ===
+// サーバーからPush通知を受け取った場合の処理
+self.addEventListener("push", (event) => {
+    console.log("[SW] Push通知受信");
+
+    let notificationData = {
+        title: "【予定】イベント通知",
+        body: "新しい通知があります",
+        icon: "/icons/pwa-192.png",
+        badge: "/icons/pwa-192.png",
+    };
+
+    // Pushデータがある場合はパース
+    if (event.data) {
+        try {
+            const data = event.data.json();
+            console.log("[SW] Push通知データ:", data);
+
+            if (data.eventName) {
+                notificationData.title = formatNotificationTitle(data.eventName);
+            }
+            if (data.label && data.place) {
+                notificationData.body = formatNotificationBody(data.label, data.place);
+            }
+
+            notificationData.tag = `push-event-${data.eventId || Date.now()}`;
+            notificationData.data = data;
+        } catch (error) {
+            console.error("[SW] Pushデータのパースエラー:", error);
+        }
+    }
+
+    const options = {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        badge: notificationData.badge,
+        tag: notificationData.tag,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        timestamp: Date.now(),
+        data: notificationData.data || {},
+        actions: [
+            { action: "open", title: "開く" },
+            { action: "close", title: "閉じる" }
+        ]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(notificationData.title, options)
+    );
+});
+
+// === Push通知のアクション処理 ===
+self.addEventListener("notificationclose", (event) => {
+    console.log("[SW] 通知が閉じられました:", event.notification.tag);
+});
+
+// === Background Sync（より信頼性の高いバックグラウンド処理） ===
+// アプリがオフラインから復帰した際などに自動的に実行される
+self.addEventListener("sync", (event) => {
+    console.log("[SW] Background Sync イベント:", event.tag);
+
+    if (event.tag === "sync-notifications") {
+        event.waitUntil(
+            (async () => {
+                try {
+                    console.log("[SW] Background Sync: 通知データを同期");
+
+                    // アプリからスケジュールを再取得
+                    const clients = await self.clients.matchAll({
+                        type: 'window',
+                        includeUncontrolled: true
+                    });
+
+                    if (clients.length > 0) {
+                        // クライアントにスケジュール更新をリクエスト
+                        clients[0].postMessage({
+                            type: "REQUEST_NOTIFICATION_SCHEDULE"
+                        });
+                    }
+
+                    // 通知チェックも実行
+                    await checkAndSendNotifications();
+                } catch (error) {
+                    console.error("[SW] Background Sync エラー:", error);
+                    throw error; // 再試行のために例外を投げる
+                }
+            })()
+        );
+    }
+
+    if (event.tag === "check-notifications-now") {
         event.waitUntil(checkAndSendNotifications());
+    }
+});
+
+// === Periodic Background Sync (定期的なバックグラウンド処理) ===
+// 注意: Periodic Background Syncは一部のブラウザでのみサポート（Chrome/Edge）
+self.addEventListener("periodicsync", (event) => {
+    console.log("[SW] Periodic Sync イベント:", event.tag);
+
+    if (event.tag === "check-notifications") {
+        console.log("[SW] Periodic Sync: 定期通知チェック");
+        event.waitUntil(checkAndSendNotifications());
+    }
+
+    if (event.tag === "refresh-schedule") {
+        event.waitUntil(
+            (async () => {
+                try {
+                    console.log("[SW] Periodic Sync: スケジュール更新");
+
+                    // クライアントにスケジュール更新をリクエスト
+                    const clients = await self.clients.matchAll({
+                        type: 'window',
+                        includeUncontrolled: true
+                    });
+
+                    if (clients.length > 0) {
+                        clients[0].postMessage({
+                            type: "REQUEST_NOTIFICATION_SCHEDULE"
+                        });
+                    }
+                } catch (error) {
+                    console.error("[SW] Periodic Sync エラー:", error);
+                }
+            })()
+        );
     }
 });
 
