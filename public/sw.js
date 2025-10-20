@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-10-01";
+const APP_VERSION = "2025-10-20-01";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -24,6 +24,70 @@ self.addEventListener("message", (event) => {
     if (data.type === "LOG_JSON") {
         console.log("[SW] 受け取ったJSON:", data.payload);
     }
+    // 通知表示リクエストを処理
+    if (data.type === "SHOW_NOTIFICATION") {
+        const { title, options } = data.payload;
+        self.registration.showNotification(title, options)
+            .then(() => {
+                console.log("[SW] 通知を表示しました:", title);
+            })
+            .catch((error) => {
+                console.error("[SW] 通知表示エラー:", error);
+            });
+    }
+});
+
+// プッシュ通知の受信
+self.addEventListener("push", (event) => {
+    console.log("[SW] push event received");
+
+    let notificationData = {
+        title: "recTime",
+        body: "新しい通知があります",
+        icon: "/icons/pwa-192.png",
+        badge: "/icons/pwa-192.png",
+    };
+
+    if (event.data) {
+        try {
+            const data = event.data.json();
+            notificationData = { ...notificationData, ...data };
+        } catch (e) {
+            notificationData.body = event.data.text();
+        }
+    }
+
+    event.waitUntil(
+        self.registration.showNotification(notificationData.title, {
+            body: notificationData.body,
+            icon: notificationData.icon,
+            badge: notificationData.badge,
+            vibrate: [200, 100, 200],
+            tag: notificationData.tag || "rectime-notification",
+        })
+    );
+});
+
+// 通知クリック時の処理
+self.addEventListener("notificationclick", (event) => {
+    console.log("[SW] notification clicked:", event.notification.tag);
+    event.notification.close();
+
+    // アプリを開く
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            // 既に開いているウィンドウがあればフォーカス
+            for (const client of clientList) {
+                if ("focus" in client) {
+                    return client.focus();
+                }
+            }
+            // なければ新しいウィンドウを開く
+            if (clients.openWindow) {
+                return clients.openWindow("/");
+            }
+        })
+    );
 });
 
 self.addEventListener("install", (event) => {

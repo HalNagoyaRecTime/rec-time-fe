@@ -63,7 +63,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 // === 알림 표시 ===
 // === 通知表示 ===
-export function showEventNotification(event: EventRow): void {
+export async function showEventNotification(event: EventRow): Promise<void> {
     if (Notification.permission !== "granted") {
         console.warn("[通知] 権限が許可されていません");
         return;
@@ -72,8 +72,47 @@ export function showEventNotification(event: EventRow): void {
     const title = `イベント通知: ${event.f_event_name ?? "イベント"}`;
     const body = `${event.f_place ?? "場所未定"}で間もなく始まります`;
 
-    new Notification(title, { body });
-    console.log(`[通知] 表示: ${title}`);
+    // Service Worker経由で通知を表示
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+        try {
+            navigator.serviceWorker.controller.postMessage({
+                type: "SHOW_NOTIFICATION",
+                payload: {
+                    title,
+                    options: {
+                        body,
+                        icon: "/icons/pwa-192.png",
+                        badge: "/icons/pwa-192.png",
+                        vibrate: [200, 100, 200],
+                        tag: `event-${event.f_event_name}`,
+                        requireInteraction: false,
+                    },
+                },
+            });
+            console.log(`[通知] Service Worker経由で表示: ${title}`);
+        } catch (error) {
+            console.error("[通知] Service Worker通知エラー:", error);
+            // フォールバック: 直接通知を表示
+            fallbackNotification(title, body);
+        }
+    } else {
+        console.warn("[通知] Service Workerが利用できません。フォールバックします。");
+        // フォールバック: 直接通知を表示
+        fallbackNotification(title, body);
+    }
+}
+
+// フォールバック: 直接通知を表示
+function fallbackNotification(title: string, body: string): void {
+    try {
+        new Notification(title, {
+            body,
+            icon: "/icons/pwa-192.png",
+        });
+        console.log(`[通知] 直接表示（フォールバック）: ${title}`);
+    } catch (error) {
+        console.error("[通知] 直接通知エラー:", error);
+    }
 }
 
 // === 個別イベント通知スケジュール ===
