@@ -65,12 +65,12 @@ export async function testFCMPush(): Promise<void> {
     }
 }
 
-// 개발 환경에서만 전역 함수로 등록
-if (import.meta.env.DEV) {
-    (window as any).testFCMToken = testFCMToken;
-    (window as any).testFCMPush = testFCMPush;
-    
-    console.log("[FCM Test] 개발 모드에서 테스트 함수가 등록되었습니다:");
-    console.log("- testFCMToken(): FCM 토큰 발급 테스트");
-    console.log("- testFCMPush(): FCM 푸시 알림 테스트 (기존 알림과 동일한 형태)");
-}
+// 임시 테스트용: 프로덕션에서도 테스트 가능하도록 전역 등록
+// ⚠️ 실제 배포 후에는 이 부분을 제거해야 합니다 (보안상 이유)
+(window as any).testFCMToken = testFCMToken;
+(window as any).testFCMPush = testFCMPush;
+
+console.log("[FCM Test] 테스트 함수가 등록되었습니다:");
+console.log("- testFCMToken(): FCM 토큰 발급 테스트");
+console.log("- testFCMPush(): FCM 푸시 알림 테스트 (기존 알림과 동일한 형태)");
+console.log("⚠️ 이 함수들은 테스트용입니다. 실제 배포 시 제거 예정");
