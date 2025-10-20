@@ -6,6 +6,13 @@ import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
 import { clearAllCache } from "~/utils/clearCache";
 import type { Message } from "~/types/timetable";
+import type { Route } from "./+types/settings";
+
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "設定 - recTime" },
+    ];
+};
 
 type ModalType = "notification" | "clearCache" | null;
 

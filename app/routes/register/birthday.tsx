@@ -4,10 +4,13 @@ import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 import { getApiBaseUrl } from "~/utils/apiConfig";
+import type { Route } from "./+types/birthday";
 
-export function meta() {
-    return [{ title: "生年月日入力 - RecTime" }];
-}
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "生年月日入力 - recTime" },
+    ];
+};
 
 function DateInputField({
     value,
