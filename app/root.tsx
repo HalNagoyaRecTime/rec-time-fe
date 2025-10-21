@@ -1,7 +1,13 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect, useState } from "react";
-import type { Route } from "./+types/root";
+// import type { Route } from "./+types/root";
+
+// 임시 타입 정의
+namespace Route {
+    export type LinksFunction = () => Array<{ rel: string; href: string; type?: string; sizes?: string; crossOrigin?: string }>;
+    export type ErrorBoundaryProps = { error: any };
+}
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";

@@ -4,26 +4,34 @@
  */
 
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage, MessagePayload } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, type MessagePayload } from "firebase/messaging";
 
 // Firebase 설정 / Firebase設定
 const firebaseConfig = {
-    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // 실제 키로 교체 필요 / 実際のキーに置き換え必要
-    authDomain: "rec-time-593b0.firebaseapp.com",
-    projectId: "rec-time-593b0",
-    storageBucket: "rec-time-593b0.appspot.com",
-    messagingSenderId: "123456789012", // 실제 ID로 교체 필요 / 実際のIDに置き換え必要
-    appId: "1:123456789012:web:abcdef1234567890", // 실제 ID로 교체 필요 / 実際のIDに置き換え必要
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-key",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo-project.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-project",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo-project.appspot.com",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:demo",
 };
 
 // Firebase 앱 초기화 / Firebaseアプリ初期化
-const app = initializeApp(firebaseConfig);
+let app: any = null;
+let messaging: any = null;
 
-// FCM 메시징 인스턴스 / FCMメッセージングインスタンス
-export const messaging = getMessaging(app);
+try {
+    app = initializeApp(firebaseConfig);
+    messaging = getMessaging(app);
+    console.log("✅ Firebase 초기화 성공 / Firebase初期化成功");
+} catch (error) {
+    console.warn("⚠️ Firebase 초기화 실패 - FCM 기능 비활성화 / Firebase初期化失敗 - FCM機能無効化:", error);
+}
+
+export { messaging };
 
 // VAPID 키 (Firebase Console에서 생성) / VAPIDキー（Firebase Consoleで生成）
-const VAPID_KEY = "BXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // 실제 키로 교체 필요 / 実際のキーに置き換え必要
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "demo-vapid-key";
 
 /**
  * FCM 토큰 가져오기 / FCMトークン取得
@@ -31,6 +39,11 @@ const VAPID_KEY = "BXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  */
 export async function getFCMToken(): Promise<string | null> {
     try {
+        if (!messaging) {
+            console.warn("⚠️ Firebase가 초기화되지 않았습니다 / Firebaseが初期化されていません");
+            return null;
+        }
+
         if (!("Notification" in window)) {
             console.warn("⚠️ 이 브라우저는 알림을 지원하지 않습니다 / このブラウザは通知をサポートしていません");
             return null;
@@ -67,6 +80,11 @@ export async function getFCMToken(): Promise<string | null> {
  */
 export function setupFCMListener(onMessageCallback?: (payload: MessagePayload) => void) {
     try {
+        if (!messaging) {
+            console.warn("⚠️ Firebase가 초기화되지 않았습니다 / Firebaseが初期化されていません");
+            return;
+        }
+
         onMessage(messaging, (payload) => {
             console.log("🔔 FCM 메시지 수신 / FCMメッセージ受信:", payload);
             
@@ -104,5 +122,27 @@ export async function refreshFCMToken(): Promise<string | null> {
     } catch (error) {
         console.error("❌ FCM 토큰 새로고침 실패 / FCMトークンリフレッシュ失敗:", error);
         return null;
+    }
+}
+
+/**
+ * FCM 초기화 함수 / FCM初期化関数
+ * @returns Promise<boolean> 초기화 성공 여부 / 初期化成功可否
+ */
+export async function initializeFCM(): Promise<boolean> {
+    try {
+        if (!("Notification" in window)) {
+            console.warn("⚠️ 이 브라우저는 알림을 지원하지 않습니다 / このブラウザは通知をサポートしていません");
+            return false;
+        }
+
+        // FCM 메시지 리스너 설정 / FCMメッセージリスナー設定
+        setupFCMListener();
+        
+        console.log("✅ FCM 초기화 완료 / FCM初期化完了");
+        return true;
+    } catch (error) {
+        console.error("❌ FCM 초기화 실패 / FCM初期化失敗:", error);
+        return false;
     }
 }
