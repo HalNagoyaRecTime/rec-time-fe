@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { STORAGE_KEYS } from "~/constants/storage";
+import { useFCM } from "~/hooks/useFCM";
 
 export type StudentData = {
     f_student_id: string;
@@ -16,6 +17,9 @@ export function useStudentData() {
     const [studentId, setStudentIdState] = useState<string | null>(null);
     const [studentData, setStudentDataState] = useState<StudentData | null>(null);
     const [birthday, setBirthdayState] = useState<string | null>(null);
+    
+    // FCM 훅 사용 / FCMフック使用
+    const fcm = useFCM();
 
     // 初期化: LocalStorageから読み込み
     useEffect(() => {
@@ -70,7 +74,7 @@ export function useStudentData() {
     };
 
     // 登録処理: 学籍番号 + 誕生日 + 学生データを一括保存
-    const registerStudent = (id: string, bday: string, data: StudentData) => {
+    const registerStudent = async (id: string, bday: string, data: StudentData) => {
         setStudentId(id);
         setBirthday(bday);
         saveStudentData(data);
@@ -78,10 +82,22 @@ export function useStudentData() {
         // 登録成功時刻を保存
         const now = new Date().toISOString();
         localStorage.setItem(STORAGE_KEYS.LAST_UPDATED, now);
+        
+        // FCM 토큰 자동 등록 / FCMトークン自動登録
+        if (fcm.status.isSupported && !fcm.status.isRegistered) {
+            console.log("🔔 FCM 토큰 자동 등록 시작 / FCMトークン自動登録開始:", id);
+            await fcm.registerToken(id);
+        }
     };
 
     // 全学生データをクリア
-    const clearStudentData = () => {
+    const clearStudentData = async () => {
+        // FCM 토큰 등록 해제 / FCMトークン登録解除
+        if (studentId && fcm.status.isRegistered) {
+            console.log("🗑️ FCM 토큰 등록 해제 / FCMトークン登録解除:", studentId);
+            await fcm.unregisterToken(studentId);
+        }
+        
         localStorage.removeItem(STORAGE_KEYS.STUDENT_ID);
         localStorage.removeItem(STORAGE_KEYS.STUDENT_DATA);
         localStorage.removeItem(STORAGE_KEYS.STUDENT_BIRTHDAY);
@@ -97,6 +113,9 @@ export function useStudentData() {
         studentId,
         studentData,
         birthday,
+        
+        // FCM 상태 / FCM状態
+        fcmStatus: fcm.status,
 
         // メソッド
         setStudentId,
@@ -105,5 +124,13 @@ export function useStudentData() {
         registerStudent,
         clearStudentData,
         loadStudentData,
+        
+        // FCM 메서드 / FCMメソッド
+        registerFCMToken: fcm.registerToken,
+        unregisterFCMToken: fcm.unregisterToken,
+        testFCMPush: fcm.testPush,
+        refreshFCMToken: fcm.refreshToken,
+        checkFCMStatus: fcm.checkStatus,
+        clearFCMError: fcm.clearError,
     };
 }
