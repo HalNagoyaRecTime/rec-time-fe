@@ -20,12 +20,15 @@ const firebaseConfig = {
 let app: any = null;
 let messaging: any = null;
 
-try {
-    app = initializeApp(firebaseConfig);
-    messaging = getMessaging(app);
-    console.log("✅ Firebase 초기화 성공 / Firebase初期化成功");
-} catch (error) {
-    console.warn("⚠️ Firebase 초기화 실패 - FCM 기능 비활성화 / Firebase初期化失敗 - FCM機能無効化:", error);
+// 브라우저 환경에서만 Firebase 초기화
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    try {
+        app = initializeApp(firebaseConfig);
+        messaging = getMessaging(app);
+        console.log("✅ Firebase 초기화 성공 / Firebase初期化成功");
+    } catch (error) {
+        console.warn("⚠️ Firebase 초기화 실패 - FCM 기능 비활성화 / Firebase初期化失敗 - FCM機能無効化:", error);
+    }
 }
 
 export { messaging };

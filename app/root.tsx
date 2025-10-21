@@ -80,15 +80,17 @@ export default function App() {
                 .then((reg) => {
                     console.log("[FCM SW] registered:", reg.scope);
                     
-                    // FCM 초기화 시도 (알림 권한이 있는 경우에만)
+                    // FCM 초기화 시도 (브라우저 환경에서만)
                     // 역할: 앱 시작 시 FCM을 백그라운드에서 초기화하여 오프라인 알림 준비
-                    if (Notification.permission === "granted") {
+                    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
                         initializeFCM().then((success) => {
                             if (success) {
                                 console.log("[FCM] 앱 시작 시 초기화 성공 - 오프라인 알림 준비 완료");
                             } else {
                                 console.log("[FCM] 앱 시작 시 초기화 실패 - 기존 Service Worker 방식 사용");
                             }
+                        }).catch((error) => {
+                            console.warn("[FCM] 초기화 중 에러 발생:", error);
                         });
                     }
                 })
