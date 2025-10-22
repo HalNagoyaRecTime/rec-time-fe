@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-22-03-ios-15sec";
+const APP_VERSION = "2025-10-22-04-simplified-logs";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -99,17 +99,14 @@ async function saveNotificationsToIndexedDB(notifications) {
                 ...notification,
             };
 
-            await new Promise((resolve) => {
+            await new Promise((resolve, reject) => {
                 const addRequest = store.add(record);
                 addRequest.onsuccess = () => resolve();
-                addRequest.onerror = () => {
-                    console.warn("[SW] 通知保存エラー:", addRequest.error);
-                    resolve(); // エラーでも続行
-                };
+                addRequest.onerror = () => resolve(); // エラーでも続行
             });
         }
 
-        console.log(`[SW] ${notifications.length}件の通知をIndexedDBに保存しました`);
+        console.log(`[SW] 💾 ${notifications.length}件をIndexedDBに保存`);
     } catch (error) {
         console.error("[SW] IndexedDB保存エラー:", error);
     }
@@ -308,19 +305,16 @@ async function adjustKeepAliveInterval() {
 
 async function performKeepAlive() {
     try {
-        console.log("[SW] Keep-Alive: バックエンドに疎通チェック送信");
-
         // バックエンドの軽量なヘルスチェックエンドポイントにリクエスト
-        // タイムアウトを短く設定（回線不安定対応）
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒タイムアウト
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const response = await fetch(`${API_BASE_URL}/api/health`, {
             method: "GET",
             cache: "no-cache",
             signal: controller.signal,
             headers: {
-                "X-SW-Keep-Alive": "true", // Service Workerからのリクエストと識別
+                "X-SW-Keep-Alive": "true",
             },
         });
 
@@ -328,7 +322,7 @@ async function performKeepAlive() {
 
         if (response.ok) {
             const data = await response.json();
-            console.log("[SW] Keep-Alive成功:", data);
+            console.log(`[SW] ✓ バックエンド接続成功 (${currentKeepAliveInterval / 1000}秒間隔)`);
 
             // 成功したら失敗カウントをリセット
             keepAliveFailCount = 0;
@@ -347,17 +341,9 @@ async function performKeepAlive() {
                 }, currentKeepAliveInterval);
             }
         } else {
-            console.warn("[SW] Keep-Alive失敗: HTTPステータス", response.status);
             handleKeepAliveFailure();
         }
     } catch (error) {
-        // ネットワークエラー時の処理
-        if (error.name === "AbortError") {
-            console.warn("[SW] Keep-Aliveタイムアウト（5秒）");
-        } else {
-            console.warn("[SW] Keep-Aliveエラー:", error.message);
-        }
-
         handleKeepAliveFailure();
     }
 }
@@ -431,7 +417,6 @@ async function checkAndSendNotifications() {
 
     try {
         const notifications = await getNotificationsFromIndexedDB();
-        console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
         for (const notification of notifications) {
             if (notification.notification_time === currentTimeStr && !notification.notified) {
@@ -440,14 +425,13 @@ async function checkAndSendNotifications() {
                     const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
 
                     if (clients && clients.length > 0) {
-                        console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
                         continue;
                     }
                 } catch (error) {
                     console.error("[SW] クライアントチェックエラー:", error);
                 }
 
-                console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
+                console.log(`[SW] 🔔 通知: ${notification.f_event_name} (${notification.notification_label})`);
                 await showNotification(notification);
 
                 // 通知済みフラグを更新
@@ -524,26 +508,32 @@ self.addEventListener("push", (event) => {
 });
 
 self.addEventListener("install", (event) => {
-    console.log("[SW] install", APP_VERSION);
+    console.log(`[SW] インストール: ${APP_VERSION}`);
+
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_FILES);
-        })
+        caches
+            .open(CACHE_NAME)
+            .then((cache) => {
+                return cache.addAll(STATIC_FILES);
+            })
+            .then(() => {
+                console.log("[SW] 静的ファイルをキャッシュ完了");
+            })
     );
     self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-    console.log("[SW] activate", APP_VERSION);
+    console.log(`[SW] アクティベート: ${APP_VERSION} (iOS最適化: 15秒間隔)`);
+
     event.waitUntil(
         caches
             .keys()
             .then((cacheNames) => {
                 return Promise.all(
                     cacheNames.map((cacheName) => {
-                        // 古いキャッシュを削除
                         if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
-                            console.log("[SW] 古いキャッシュを削除:", cacheName);
+                            console.log(`[SW] 🗑️  古いキャッシュを削除: ${cacheName}`);
                             return caches.delete(cacheName);
                         }
                     })
@@ -556,12 +546,25 @@ self.addEventListener("activate", (event) => {
                 // 通知チェックループを開始（既存の通知がある場合）
                 const notifications = await getNotificationsFromIndexedDB();
                 if (notifications.length > 0) {
-                    console.log(`[SW] ${notifications.length}件の通知スケジュールを復元`);
+                    console.log(`[SW] 📬 ${notifications.length}件の通知を復元`);
                     startNotificationCheckLoop();
                     startKeepAlive();
                 }
 
-                return self.clients.claim();
+                // クライアントを制御
+                await self.clients.claim();
+
+                // クライアントにメッセージを送信
+                const clients = await self.clients.matchAll({ type: "window" });
+                clients.forEach((client) => {
+                    client.postMessage({
+                        type: "SW_UPDATED",
+                        version: APP_VERSION,
+                        message: "Service Worker更新完了",
+                    });
+                });
+
+                console.log("[SW] ✅ Service Worker起動完了");
             })
     );
 });

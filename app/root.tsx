@@ -60,6 +60,36 @@ export default function App() {
                 .then(async (reg) => {
                     console.log("[SW] registered:", reg.scope);
                     
+                    // Service Worker更新検知
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        console.log("[SW] 🔄 新しいService Workerを検出しました");
+                        
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log("[SW] ✅ 新しいService Workerがインストールされました");
+                                    console.log("[SW] 📢 ページをリロードすると新しいバージョンが適用されます");
+                                    
+                                    // オプション: 自動リロードを促す通知を表示
+                                    if ('Notification' in window && Notification.permission === 'granted') {
+                                        new Notification('RecTime更新', {
+                                            body: '新しいバージョンが利用可能です。ページをリロードしてください。',
+                                            tag: 'sw-update'
+                                        });
+                                    }
+                                } else if (newWorker.state === 'activated') {
+                                    console.log("[SW] 🚀 新しいService Workerが有効になりました");
+                                }
+                            });
+                        }
+                    });
+                    
+                    // 既存のService Worker情報をログ出力
+                    if (reg.active) {
+                        console.log("[SW] 📦 現在のService Workerバージョン: 2025-10-22-03-ios-15sec");
+                    }
+                    
                     // Periodic Background Syncを登録（サポートされている場合）
                     if ('periodicSync' in reg) {
                         try {
@@ -73,6 +103,13 @@ export default function App() {
                     }
                 })
                 .catch((err) => console.error("[SW] register failed:", err));
+            
+            // Service Workerからのメッセージを受信
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SW_UPDATED') {
+                    console.log("[SW] 💬 Service Workerからメッセージ:", event.data.message);
+                }
+            });
         }
     }, []);
 
