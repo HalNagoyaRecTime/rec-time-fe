@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-18-01";
+const APP_VERSION = "2025-10-22-03-ios-15sec";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -27,96 +27,214 @@ function formatNotificationTitle(eventName) {
 }
 
 function formatNotificationBody(label, place) {
-    if (label === '開始時間') {
-        return 'まもなく開始します。';
-    } else if (label === '集合時間') {
+    if (label === "開始時間") {
+        return "まもなく開始します。";
+    } else if (label === "集合時間") {
         return `集合場所「${place || "未定"}」に移動してください。`;
-    } else if (label && label.includes('分前')) {
+    } else if (label && label.includes("分前")) {
         return `開始「${label}」になりました。\n集合場所「${place || "未定"}」に移動してください。`;
     } else {
-        return `${label || ''} - ${place || "場所未定"}で間もなく始まります`;
+        return `${label || ""} - ${place || "場所未定"}で間もなく始まります`;
     }
 }
 
 // === 通知管理 ===
-// イベント通知データを受け取る
-let scheduledNotifications = [];
+// IndexedDBでの永続化
+const DB_NAME = "RecTimeNotificationsDB";
+const DB_VERSION = 1;
+const STORE_NAME = "scheduledNotifications";
+
 let checkLoopRunning = false;
 let keepAliveInterval = null;
 const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5分ごと
 
-// API Base URLを取得（環境変数から）
-// 本番環境では環境変数 VITE_API_BASE_URL から取得
-// 開発環境ではデフォルトURL
-function getApiBaseUrl() {
-    // Service Workerでは import.meta.env が使えないため、
-    // メインスレッドから受け取るか、デフォルト値を使用
-    // 本番: https://rec-time-be.ellan122316.workers.dev
-    // 開発: http://localhost:8787
-    
-    // 本番環境のデフォルトURL（Cloudflare Workers）
-    const defaultUrl = 'https://rec-time-be.ellan122316.workers.dev';
-    
-    // locationのhostnameで環境を判定
-    if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
-        return 'http://localhost:8787/api';
-    }
-    
-    return `${defaultUrl}/api`;
+// === IndexedDB初期化 ===
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => {
+            console.error("[SW] IndexedDB open error:", request.error);
+            reject(request.error);
+        };
+
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                store.createIndex("notification_time", "notification_time", { unique: false });
+                store.createIndex("notified", "notified", { unique: false });
+                console.log("[SW] IndexedDB初期化完了");
+            }
+        };
+    });
 }
 
-const API_BASE_URL = getApiBaseUrl();
+// === 通知スケジュールをIndexedDBに保存 ===
+async function saveNotificationsToIndexedDB(notifications) {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
 
-self.addEventListener("message", (event) => {
+        // 既存データをクリア
+        await new Promise((resolve, reject) => {
+            const clearRequest = store.clear();
+            clearRequest.onsuccess = () => resolve();
+            clearRequest.onerror = () => reject(clearRequest.error);
+        });
+
+        // 新しい通知を保存
+        for (const notification of notifications) {
+            const record = {
+                id: `${notification.f_event_id}_${notification.notification_time}_${notification.notification_label}`,
+                ...notification,
+            };
+
+            await new Promise((resolve) => {
+                const addRequest = store.add(record);
+                addRequest.onsuccess = () => resolve();
+                addRequest.onerror = () => {
+                    console.warn("[SW] 通知保存エラー:", addRequest.error);
+                    resolve(); // エラーでも続行
+                };
+            });
+        }
+
+        console.log(`[SW] ${notifications.length}件の通知をIndexedDBに保存しました`);
+    } catch (error) {
+        console.error("[SW] IndexedDB保存エラー:", error);
+    }
+}
+
+// === IndexedDBから通知スケジュールを取得 ===
+async function getNotificationsFromIndexedDB() {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => {
+                console.error("[SW] IndexedDB取得エラー:", request.error);
+                reject(request.error);
+            };
+        });
+    } catch (error) {
+        console.error("[SW] IndexedDB取得エラー:", error);
+        return [];
+    }
+}
+
+// === 通知済みフラグを更新 ===
+async function markAsNotifiedInIndexedDB(notificationId) {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+
+        const notification = await new Promise((resolve, reject) => {
+            const getRequest = store.get(notificationId);
+            getRequest.onsuccess = () => resolve(getRequest.result);
+            getRequest.onerror = () => reject(getRequest.error);
+        });
+
+        if (notification) {
+            notification.notified = true;
+            await new Promise((resolve, reject) => {
+                const putRequest = store.put(notification);
+                putRequest.onsuccess = () => resolve();
+                putRequest.onerror = () => reject(putRequest.error);
+            });
+            console.log(`[SW] 通知済みマーク: ${notificationId}`);
+        }
+    } catch (error) {
+        console.error("[SW] 通知済みマーク失敗:", error);
+    }
+}
+
+self.addEventListener("message", async (event) => {
     const data = event.data;
     if (!data) return;
-    
+
     if (data.type === "LOG_JSON") {
         console.log("[SW] 受け取ったJSON:", data.payload);
     }
-    
+
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
         console.log("[SW] 通知スケジュール受信:", data.notifications);
-        scheduledNotifications = data.notifications || [];
-        console.log(`[SW] ${scheduledNotifications.length}件の通知をスケジュールしました`);
-        
+
+        // IndexedDBに保存
+        await saveNotificationsToIndexedDB(data.notifications || []);
+
         // ループがまだ開始されていなければ開始
         if (!checkLoopRunning) {
             startNotificationCheckLoop();
         }
-        
-        // Keep-Alive開始
+
+        // オフライン対応のKeep-Alive開始
         startKeepAlive();
     }
-    
+
     // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
         console.log("[SW] 通知停止");
-        scheduledNotifications = [];
+
+        // IndexedDBをクリア
+        try {
+            const db = await openDatabase();
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            store.clear();
+        } catch (error) {
+            console.error("[SW] IndexedDBクリアエラー:", error);
+        }
+
         checkLoopRunning = false;
         stopKeepAlive();
     }
 });
 
-// === Keep-Alive機能（Service Workerを起こし続ける） ===
-let keepAliveFailCount = 0; // 連続失敗回数
-let currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 現在の間隔
+// === Keep-Alive機能（iOS PWA向け強化版） ===
+let keepAliveFailCount = 0;
+let currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
+
+// API Base URLを取得
+function getApiBaseUrl() {
+    // 本番環境のデフォルトURL（Cloudflare Workers）
+    const defaultUrl = "https://rec-time-be.ellan122316.workers.dev";
+
+    // locationのhostnameで環境を判定
+    if (self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1") {
+        return "http://localhost:8787";
+    }
+
+    return defaultUrl;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 function startKeepAlive() {
     if (keepAliveInterval) {
         console.log("[SW] Keep-Aliveは既に実行中");
         return;
     }
-    
+
     // イベントまでの時間で間隔を調整
     adjustKeepAliveInterval();
-    
+
     console.log(`[SW] Keep-Alive開始 (${currentKeepAliveInterval / 1000}秒ごと)`);
-    
+
     // 即座に1回実行
     performKeepAlive();
-    
+
     // 定期的に実行
     keepAliveInterval = setInterval(() => {
         performKeepAlive();
@@ -133,41 +251,48 @@ function stopKeepAlive() {
     }
 }
 
-// イベントまでの時間で間隔を調整
-function adjustKeepAliveInterval() {
+// イベントまでの時間で間隔を調整（iOS PWA向けに短縮）
+async function adjustKeepAliveInterval() {
     try {
-        if (scheduledNotifications.length === 0) {
+        const notifications = await getNotificationsFromIndexedDB();
+
+        if (notifications.length === 0) {
             currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
             return;
         }
-        
+
         const now = new Date();
-        
+        const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}`;
+
         // 最も近い通知時刻を見つける
-        let nearestTime = null;
         let minDiff = Infinity;
-        
-        for (const notification of scheduledNotifications) {
+
+        for (const notification of notifications) {
             const notifTime = notification.notification_time;
-            if (!notifTime) continue;
-            
+            if (!notifTime || notification.notified) continue;
+
+            // 時刻差を分単位で計算
             const notifHour = parseInt(notifTime.substring(0, 2), 10);
             const notifMin = parseInt(notifTime.substring(2, 4), 10);
-            const notifDate = new Date();
-            notifDate.setHours(notifHour, notifMin, 0, 0);
-            
-            const diff = notifDate.getTime() - now.getTime();
-            
+            const currentHour = parseInt(currentTimeStr.substring(0, 2), 10);
+            const currentMin = parseInt(currentTimeStr.substring(2, 4), 10);
+
+            const notifTotalMin = notifHour * 60 + notifMin;
+            const currentTotalMin = currentHour * 60 + currentMin;
+            const diff = notifTotalMin - currentTotalMin;
+
             if (diff > 0 && diff < minDiff) {
                 minDiff = diff;
-                nearestTime = notifDate;
             }
         }
-        
-        // 5分以内にイベントがある場合は1分ごと
-        if (minDiff <= 5 * 60 * 1000) {
+
+        // iOS PWA対応: イベント30分前から15秒ごとにチェック（実験的）
+        if (minDiff <= 30) {
+            currentKeepAliveInterval = 15 * 1000; // 15秒
+            console.log("[SW] イベントまで30分以内 → Keep-Alive間隔を15秒に短縮（iOS PWA実験的）");
+        } else if (minDiff <= 60) {
             currentKeepAliveInterval = 60 * 1000; // 1分
-            console.log("[SW] イベントまで5分以内 → Keep-Alive間隔を1分に短縮");
+            console.log("[SW] イベントまで1時間以内 → Keep-Alive間隔を1分に短縮");
         } else {
             currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
         }
@@ -179,44 +304,76 @@ function adjustKeepAliveInterval() {
 
 async function performKeepAlive() {
     try {
-        console.log("[SW] Keep-Alive: サーバーに疎通チェック送信");
-        
-        // サーバーの軽量なエンドポイントにリクエスト
+        console.log("[SW] Keep-Alive: バックエンドに疎通チェック送信");
+
+        // バックエンドの軽量なヘルスチェックエンドポイントにリクエスト
+        // タイムアウトを短く設定（回線不安定対応）
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒タイムアウト
+
         const response = await fetch(`${API_BASE_URL}/api/health`, {
-            method: 'GET',
-            cache: 'no-cache'
+            method: "GET",
+            cache: "no-cache",
+            signal: controller.signal,
+            headers: {
+                "X-SW-Keep-Alive": "true", // Service Workerからのリクエストと識別
+            },
         });
-        
+
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const data = await response.json();
             console.log("[SW] Keep-Alive成功:", data);
-            
+
             // 成功したら失敗カウントをリセット
-            if (keepAliveFailCount > 0) {
-                keepAliveFailCount = 0;
-                // 5分間隔に戻す（イベント直前でなければ）
-                adjustKeepAliveInterval();
-                restartKeepAlive();
+            keepAliveFailCount = 0;
+
+            // 通知チェックも実行
+            await checkAndSendNotifications();
+
+            // 間隔を再調整
+            await adjustKeepAliveInterval();
+
+            // 間隔が変わった場合は再起動
+            if (keepAliveInterval) {
+                clearInterval(keepAliveInterval);
+                keepAliveInterval = setInterval(() => {
+                    performKeepAlive();
+                }, currentKeepAliveInterval);
             }
         } else {
             console.warn("[SW] Keep-Alive失敗: HTTPステータス", response.status);
             handleKeepAliveFailure();
         }
     } catch (error) {
-        console.error("[SW] Keep-Aliveエラー:", error);
+        // ネットワークエラー時の処理
+        if (error.name === "AbortError") {
+            console.warn("[SW] Keep-Aliveタイムアウト（5秒）");
+        } else {
+            console.warn("[SW] Keep-Aliveエラー:", error.message);
+        }
+
         handleKeepAliveFailure();
     }
 }
 
-// Keep-Alive失敗時の処理
-function handleKeepAliveFailure() {
+// Keep-Alive失敗時の処理（オフライン時も動作を継続）
+async function handleKeepAliveFailure() {
     keepAliveFailCount++;
     console.warn(`[SW] Keep-Alive連続失敗回数: ${keepAliveFailCount}`);
-    
-    // 3回連続失敗したら1分間隔に短縮
-    if (keepAliveFailCount >= 3 && currentKeepAliveInterval !== 60 * 1000) {
-        console.warn("[SW] Keep-Alive連続失敗 → 間隔を1分に短縮");
-        currentKeepAliveInterval = 60 * 1000;
+
+    // ネットワークが不安定でも通知チェックは継続
+    try {
+        await checkAndSendNotifications();
+    } catch (error) {
+        console.error("[SW] オフライン通知チェックエラー:", error);
+    }
+
+    // 3回連続失敗したら15秒間隔に短縮（iOS PWA向け実験的）
+    if (keepAliveFailCount >= 3 && currentKeepAliveInterval > 15 * 1000) {
+        console.warn("[SW] Keep-Alive連続失敗 → 間隔を15秒に短縮（iOS PWA実験的）");
+        currentKeepAliveInterval = 15 * 1000;
         restartKeepAlive();
     }
 }
@@ -239,26 +396,26 @@ async function startNotificationCheckLoop() {
         console.log("[SW] チェックループは既に実行中");
         return;
     }
-    
+
     checkLoopRunning = true;
     console.log("[SW] 通知チェックループ開始");
-    
+
     async function checkLoop() {
         if (!checkLoopRunning) {
             console.log("[SW] チェックループ停止");
             return;
         }
-        
+
         try {
             await checkAndSendNotifications();
         } catch (error) {
             console.error("[SW] 通知チェックエラー:", error);
         }
-        
+
         // 30秒後に再度チェック（setIntervalより確実）
         setTimeout(checkLoop, 30000);
     }
-    
+
     // 最初のチェックを即座に実行
     checkLoop();
 }
@@ -266,41 +423,43 @@ async function startNotificationCheckLoop() {
 // === 通知をチェックして送信 ===
 async function checkAndSendNotifications() {
     const now = new Date();
-    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}`;
 
-    console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${scheduledNotifications.length}`);
+    try {
+        const notifications = await getNotificationsFromIndexedDB();
+        console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
-    for (const notification of scheduledNotifications) {
-        if (notification.notification_time === currentTimeStr && !notification.notified) {
-            
-            // 既に送信済みかチェック（LocalStorageと連携）
-            try {
-                const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-                
+        for (const notification of notifications) {
+            if (notification.notification_time === currentTimeStr && !notification.notified) {
                 // アクティブなクライアントがある場合は、アプリ側に任せる
-                if (clients && clients.length > 0) {
-                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
-                    continue;
+                try {
+                    const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+
+                    if (clients && clients.length > 0) {
+                        console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
+                        continue;
+                    }
+                } catch (error) {
+                    console.error("[SW] クライアントチェックエラー:", error);
                 }
-            } catch (error) {
-                console.error('[SW] クライアントチェックエラー:', error);
+
+                console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
+                await showNotification(notification);
+
+                // 通知済みフラグを更新
+                await markAsNotifiedInIndexedDB(notification.id);
             }
-            
-            console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
-            await showNotification(notification);
-            notification.notified = true;
         }
+    } catch (error) {
+        console.error("[SW] 通知チェックエラー:", error);
     }
 }
 
 // === 通知を表示 ===
 async function showNotification(notification) {
     const title = formatNotificationTitle(notification.f_event_name);
-    const body = formatNotificationBody(
-        notification.notification_label,
-        notification.f_place
-    );
-    
+    const body = formatNotificationBody(notification.notification_label, notification.f_place);
+
     const options = {
         body: body,
         icon: "/icons/pwa-192.png",
@@ -315,7 +474,7 @@ async function showNotification(notification) {
             place: notification.f_place,
             notificationTime: notification.notification_time,
             notificationLabel: notification.notification_label,
-        }
+        },
     };
 
     await self.registration.showNotification(title, options);
@@ -325,9 +484,9 @@ async function showNotification(notification) {
 // === 通知クリック時の処理 ===
 self.addEventListener("notificationclick", (event) => {
     console.log("[SW] 通知がクリックされました:", event.notification.data);
-    
+
     event.notification.close();
-    
+
     // アプリを開く
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
@@ -345,13 +504,19 @@ self.addEventListener("notificationclick", (event) => {
     );
 });
 
-// === Periodic Background Sync (将来的な拡張用) ===
+// === Periodic Background Sync (Chrome/Edgeでサポート) ===
 // 注意: Periodic Background Syncは一部のブラウザでのみサポート
-self.addEventListener("periodicsync", (event) => {
+self.addEventListener("periodicsync", async (event) => {
     if (event.tag === "check-notifications") {
         console.log("[SW] Periodic Sync: 通知チェック");
         event.waitUntil(checkAndSendNotifications());
     }
+});
+
+// === Push通知（将来的な拡張用） ===
+self.addEventListener("push", (event) => {
+    console.log("[SW] Push通知受信:", event);
+    // 将来的にバックエンドからのプッシュ通知をサポートする場合
 });
 
 self.addEventListener("install", (event) => {
@@ -380,7 +545,20 @@ self.addEventListener("activate", (event) => {
                     })
                 );
             })
-            .then(() => self.clients.claim())
+            .then(async () => {
+                // IndexedDBを初期化
+                await openDatabase();
+
+                // 通知チェックループを開始（既存の通知がある場合）
+                const notifications = await getNotificationsFromIndexedDB();
+                if (notifications.length > 0) {
+                    console.log(`[SW] ${notifications.length}件の通知スケジュールを復元`);
+                    startNotificationCheckLoop();
+                    startKeepAlive();
+                }
+
+                return self.clients.claim();
+            })
     );
 });
 

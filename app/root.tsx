@@ -62,7 +62,21 @@ export default function App() {
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
-                .then((reg) => console.log("[SW] registered:", reg.scope))
+                .then(async (reg) => {
+                    console.log("[SW] registered:", reg.scope);
+                    
+                    // Periodic Background Syncを登録（サポートされている場合）
+                    if ('periodicSync' in reg) {
+                        try {
+                            await (reg as any).periodicSync.register('check-notifications', {
+                                minInterval: 60 * 1000, // 1分（ブラウザが実際の間隔を決定）
+                            });
+                            console.log("[SW] Periodic Background Sync登録成功");
+                        } catch (error) {
+                            console.warn("[SW] Periodic Background Sync登録失敗:", error);
+                        }
+                    }
+                })
                 .catch((err) => console.error("[SW] register failed:", err));
         }
     }, []);
