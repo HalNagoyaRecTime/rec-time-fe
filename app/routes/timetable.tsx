@@ -12,6 +12,13 @@ import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 import { scheduleAllNotifications, getNotificationSetting } from "~/utils/notifications";
 import type { Message } from "~/types/timetable";
+import type { Route } from "./+types/timetable";
+
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "TimeTable - recTime" },
+    ];
+};
 
 export default function Timetable() {
     const [events, setEvents] = useState<EventRow[]>([]);

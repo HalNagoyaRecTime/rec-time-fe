@@ -9,22 +9,17 @@ import Footer from "./components/ui/footer";
 
 import "./app.css";
 
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "recTime - レクリエーション呼び出しアプリ" },
+        { name: "author", content: "recTime" },
+        { property: "og:title", content: "recTime - 授業時間割アプリ" },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "recTime" },
+    ];
+};
+
 export const links: Route.LinksFunction = () => [
-    { rel: "preconnect", href: "https://fonts.googleapis.com" },
-    {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-    },
-    {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-    },
-    // Adobe Fonts - 源ノ角ゴシック Heavy for titles
-    {
-        rel: "stylesheet",
-        href: "https://use.typekit.net/kux1ncf.css",
-    },
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
         rel: "icon",
@@ -37,11 +32,11 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang="ja">
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <meta name="theme-color" content="#ffffff" />
+                <meta name="theme-color" content="#000D91" />
                 <title>recTime</title>
                 <Meta />
                 <Links />

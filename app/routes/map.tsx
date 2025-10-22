@@ -4,6 +4,13 @@ import ZoomableImageModal from "../components/modal/ZoomableImageModal";
 import map1 from "/images/map-class-area.jpg";
 import map2 from "/images/map-1f.jpg";
 import map3 from "/images/map-2f.jpg";
+import type { Route } from "./+types/map";
+
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "マップ - recTime" },
+    ];
+};
 
 export default function Map() {
     const [isOpen, setIsOpen] = useState(false);

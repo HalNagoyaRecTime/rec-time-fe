@@ -19,6 +19,10 @@ const STATIC_FILES = [
     "/images/map-1f.jpg",
     "/images/map-2f.jpg",
     "/images/map-class-area.jpg",
+    // フォントファイル（オフライン対応）
+    "/fonts/NotoSansJP-Regular.ttf",
+    "/fonts/NotoSansJP-Bold.ttf",
+    "/fonts/NotoSansJP-Black.ttf",
 ];
 
 // === 通知フォーマット関数（共通化） ===

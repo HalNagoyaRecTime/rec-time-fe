@@ -6,6 +6,13 @@ import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
 import { clearAllCache } from "~/utils/clearCache";
 import type { Message } from "~/types/timetable";
+import type { Route } from "./+types/settings";
+
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "設定 - recTime" },
+    ];
+};
 
 type ModalType = "notification" | "clearCache" | null;
 
@@ -15,6 +22,7 @@ export default function Settings() {
     const { isEnabled: isPushEnabled, toggleNotification } = useNotificationSettings();
     const [modalType, setModalType] = useState<ModalType>(null);
     const [message, setMessage] = useState<Message>({ type: null, content: "" });
+    const [isErrorPulse, setIsErrorPulse] = useState(false);
 
     // 通知設定が変更された時の処理
     const handleNotificationToggle = async (enabled: boolean) => {
@@ -23,8 +31,12 @@ export default function Settings() {
             const success = await toggleNotification(true);
             if (success) {
                 setMessage({ type: "success", content: "通知をオンにしました" });
+                setIsErrorPulse(false);
             } else {
-                setMessage({ type: "error", content: "通知をオンにするには、ブラウザで通知許可が必要です" });
+                setMessage({ type: "error", content: "端末の設定から通知を許可してください" });
+                // パルスアニメーションをトリガー
+                setIsErrorPulse(true);
+                setTimeout(() => setIsErrorPulse(false), 500);
             }
         } else {
             // 通知をオフにする前に確認
@@ -87,8 +99,12 @@ export default function Settings() {
                         <div className="h-5">
                             {message?.type && message.content && (
                                 <h4
-                                    className={`flex h-full items-center rounded-md px-2 text-xs font-normal text-white ${
+                                    className={`flex h-full items-center rounded-md px-2 pb-[2px] text-xs font-normal text-white whitespace-nowrap ${
                                         message.type === "success" ? "bg-green-600" : "bg-red-600"
+                                    } ${
+                                        isErrorPulse && message.type === "error"
+                                            ? "animate-error-pulse"
+                                            : ""
                                     }`}
                                 >
                                     {message.content}

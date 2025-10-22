@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import type { Route } from "./+types/_index";
 
-// トップページにアクセスしたら /timetable にリダイレクトする
+export const meta: Route.MetaFunction = () => {
+    return [
+        { title: "recTime - レクリエーション呼び出しアプリ" },
+    ];
+};
+
 export default function Index() {
     const navigate = useNavigate();
 

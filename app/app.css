@@ -1,22 +1,63 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+/* ===== フォント定義（セルフホスティング - オフライン対応） ===== */
 
-  --font-title:
-    "source-han-sans-cjk-japanese", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Meiryo", sans-serif;
+/* Noto Sans JP */
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===== Tailwind CSS テーマ設定 ===== */
+
+@theme {
+  --font-family-sans: 'Noto Sans JP', ui-sans-serif, system-ui, sans-serif;
 }
 
 html,
 body {
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
   @apply bg-white dark:bg-gray-950;
-  overscroll-behavior-y: contain; /* 추가하려던 줄 */
+  overscroll-behavior-y: contain;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
 }
 
+/* ===== カスタムアニメーション ===== */
 
+@keyframes error-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-error-pulse {
+  animation: error-pulse 0.5s ease-in-out;
+}
