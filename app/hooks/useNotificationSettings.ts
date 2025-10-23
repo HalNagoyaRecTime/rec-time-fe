@@ -67,6 +67,14 @@ export function useNotificationSettings() {
         saveNotificationSetting(false);
         setIsEnabled(false);
         
+        // Service Workerに通知停止を送信
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: "STOP_NOTIFICATIONS",
+            });
+            console.log("[通知] Service Workerに通知停止を送信");
+        }
+        
         // 通知オフ時のフィードバック（権限がある場合のみ）
         if (Notification.permission === "granted") {
             showSettingNotification("通知をオフにしました");

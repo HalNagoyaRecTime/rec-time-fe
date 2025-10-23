@@ -79,6 +79,25 @@ export default function App() {
                 })
                 .catch((err) => console.error("[SW] register failed:", err));
         }
+
+        // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().then((isPersisted) => {
+                if (isPersisted) {
+                    console.log("[Storage] ✅ 永続ストレージが許可されました");
+                } else {
+                    console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
+                    console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
+                }
+            }).catch((error) => {
+                console.error("[Storage] 永続ストレージ要求エラー:", error);
+            });
+
+            // 現在の状態を確認
+            navigator.storage.persisted().then((isPersisted) => {
+                console.log(`[Storage] 現在の永続化状態: ${isPersisted ? '永続' : '非永続'}`);
+            });
+        }
     }, []);
 
     return (

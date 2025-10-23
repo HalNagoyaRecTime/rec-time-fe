@@ -45,9 +45,9 @@ export default function Settings() {
     };
 
     // キャッシュ削除を確定
-    const confirmClearCache = () => {
+    const confirmClearCache = async () => {
         try {
-            clearAllCache();
+            await clearAllCache();
             setModalType(null);
             // 登録ページにリダイレクト
             navigate("/register/student-id");
