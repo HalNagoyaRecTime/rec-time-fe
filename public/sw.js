@@ -1,6 +1,6 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-23-01-critical-fixes";
+const APP_VERSION = "2025-10-23-02-optimize-keepalive";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -286,15 +286,14 @@ async function adjustKeepAliveInterval() {
             }
         }
 
-        // iOS PWA対応: イベント30分前から15秒ごとにチェック（実験的）
+        // イベントが近づいても5分間隔を維持（バッテリー/回線節約）
+        // iOS PWAではSWが早期終了するため、Keep-Aliveの効果は限定的
+        currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
+        
         if (minDiff <= 30) {
-            currentKeepAliveInterval = 15 * 1000; // 15秒
-            console.log("[SW] イベントまで30分以内 → Keep-Alive間隔を15秒に短縮（iOS PWA実験的）");
+            console.log("[SW] イベントまで30分以内ですが、Keep-Alive間隔は5分を維持");
         } else if (minDiff <= 60) {
-            currentKeepAliveInterval = 60 * 1000; // 1分
-            console.log("[SW] イベントまで1時間以内 → Keep-Alive間隔を1分に短縮");
-        } else {
-            currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
+            console.log("[SW] イベントまで1時間以内ですが、Keep-Alive間隔は5分を維持");
         }
     } catch (error) {
         console.error("[SW] Keep-Alive間隔調整エラー:", error);
@@ -370,11 +369,11 @@ async function handleKeepAliveFailure() {
         console.error("[SW] オフライン通知チェックエラー:", error);
     }
 
-    // 3回連続失敗したら15秒間隔に短縮（iOS PWA向け実験的）
-    if (keepAliveFailCount >= 3 && currentKeepAliveInterval > 15 * 1000) {
-        console.warn("[SW] Keep-Alive連続失敗 → 間隔を15秒に短縮（iOS PWA実験的）");
-        currentKeepAliveInterval = 15 * 1000;
-        restartKeepAlive();
+    // 連続失敗時も5分間隔を維持（バッテリー/回線節約）
+    // オフライン時は通知チェックのみ継続
+    if (keepAliveFailCount >= 3) {
+        console.warn("[SW] Keep-Alive連続失敗（オフライン可能性）→ 通知チェックは継続");
+        // 間隔変更なし（5分維持）
     }
 }
 
@@ -412,8 +411,8 @@ async function startNotificationCheckLoop() {
             console.error("[SW] 通知チェックエラー:", error);
         }
 
-        // 30秒後に再度チェック（setIntervalより確実）
-        setTimeout(checkLoop, 30000);
+        // 60秒後に再度チェック（setIntervalより確実）
+        setTimeout(checkLoop, 60000);
     }
 
     // 最初のチェックを即座に実行
