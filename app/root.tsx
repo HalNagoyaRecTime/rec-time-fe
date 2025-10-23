@@ -23,11 +23,11 @@ export const links: Route.LinksFunction = () => [
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
         rel: "icon",
-        href: "/icons/pwa-192.png",
+        href: "/icons/pwa-192.png?v=2",
         type: "image/png",
         sizes: "192x192",
     },
-    { rel: "apple-touch-icon", href: "/icons/pwa-192.png" },
+    { rel: "apple-touch-icon", href: "/icons/pwa-192.png?v=2" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
