@@ -74,3 +74,81 @@ export async function clearAllCache(): Promise<void> {
         throw error;
     }
 }
+
+/**
+ * PWAを完全に再インストール（疑似的）
+ * - Service Workerのすべてのキャッシュを削除
+ * - Service Workerをアンインストール
+ * - ページをリロードして自動再登録
+ */
+export async function reinstallPWA(): Promise<void> {
+    try {
+        console.log("[reinstallPWA] 🔄 PWA再インストール開始...");
+
+        // 1. Service Workerのすべてのキャッシュを削除
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            console.log(`[reinstallPWA] 🗑️  ${cacheNames.length}個のキャッシュを削除中...`);
+            
+            await Promise.all(
+                cacheNames.map(async (cacheName) => {
+                    const deleted = await caches.delete(cacheName);
+                    if (deleted) {
+                        console.log(`[reinstallPWA] ✅ キャッシュ削除: ${cacheName}`);
+                    }
+                })
+            );
+            console.log("[reinstallPWA] ✅ すべてのService Workerキャッシュを削除しました");
+        }
+
+        // 2. Service Workerをアンインストール
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            console.log(`[reinstallPWA] 🗑️  ${registrations.length}個のService Workerをアンインストール中...`);
+            
+            await Promise.all(
+                registrations.map(async (registration) => {
+                    const unregistered = await registration.unregister();
+                    if (unregistered) {
+                        console.log(`[reinstallPWA] ✅ Service Workerアンインストール: ${registration.scope}`);
+                    }
+                })
+            );
+            console.log("[reinstallPWA] ✅ すべてのService Workerをアンインストールしました");
+        }
+
+        // 3. IndexedDBも念のため削除
+        try {
+            const DB_NAME = "RecTimeNotificationsDB";
+            await new Promise<void>((resolve) => {
+                const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                deleteRequest.onsuccess = () => {
+                    console.log("[reinstallPWA] ✅ IndexedDBを削除しました");
+                    resolve();
+                };
+                deleteRequest.onerror = () => {
+                    console.warn("[reinstallPWA] ⚠️  IndexedDB削除エラー");
+                    resolve();
+                };
+                deleteRequest.onblocked = () => {
+                    console.warn("[reinstallPWA] ⚠️  IndexedDB削除がブロックされました");
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.warn("[reinstallPWA] IndexedDB削除エラー:", error);
+        }
+
+        console.log("[reinstallPWA] ✅ PWA再インストール完了！ページをリロードします...");
+        
+        // 4. 少し待ってからリロード（確実にアンインストールが完了するのを待つ）
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 5. ページをリロード（Service Workerが自動で再登録される）
+        window.location.reload();
+        
+    } catch (error) {
+        console.error("[reinstallPWA] ❌ PWA再インストールエラー:", error);
+        throw error;
+    }
+}
