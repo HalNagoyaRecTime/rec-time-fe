@@ -36,7 +36,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <meta name="theme-color" content="#000D91" />
+                <meta name="theme-color" content="#ffffff" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="default" />
                 <title>recTime</title>
                 <Meta />
                 <Links />
