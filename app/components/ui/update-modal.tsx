@@ -1,14 +1,14 @@
 // 更新モーダルコンポーネント
 import { useState } from "react";
-import { getCurrentReleaseNotes } from "~/constants/version";
 
 interface UpdateModalProps {
     onUpdate: () => Promise<void>;
+    version: string;
+    message: string;
 }
 
-export default function UpdateModal({ onUpdate }: UpdateModalProps) {
+export default function UpdateModal({ onUpdate, version, message }: UpdateModalProps) {
     const [isUpdating, setIsUpdating] = useState(false);
-    const releaseNotes = getCurrentReleaseNotes();
 
     const handleUpdate = async () => {
         setIsUpdating(true);
@@ -20,6 +20,9 @@ export default function UpdateModal({ onUpdate }: UpdateModalProps) {
             setIsUpdating(false);
         }
     };
+
+    // メッセージを改行で分割
+    const messageLines = message.split('、').filter(line => line.trim());
 
     return (
         <div 
@@ -43,22 +46,22 @@ export default function UpdateModal({ onUpdate }: UpdateModalProps) {
                                 新しいバージョンがあります
                             </h2>
                             <p className="mt-2 text-sm text-gray-600">
-                                アプリを最新版に更新してください
+                                バージョン {version}
                             </p>
                         </div>
 
-                        {releaseNotes.length > 0 && (
+                        {messageLines.length > 0 && (
                             <div className="mb-6 rounded-lg bg-blue-50 p-4">
                                 <h3 className="mb-2 text-sm font-semibold text-blue-900">
                                     📝 更新内容
                                 </h3>
                                 <ul className="space-y-1">
-                                    {releaseNotes.map((note, index) => (
+                                    {messageLines.map((line, index) => (
                                         <li
                                             key={index}
                                             className="text-sm text-blue-800"
                                         >
-                                            • {note}
+                                            • {line.trim()}
                                         </li>
                                     ))}
                                 </ul>

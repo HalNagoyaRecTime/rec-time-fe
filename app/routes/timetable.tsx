@@ -11,6 +11,7 @@ import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 import { scheduleAllNotifications, getNotificationSetting } from "~/utils/notifications";
+import { forceCheckVersion } from "~/utils/versionCheckBackend";
 import type { Message } from "~/types/timetable";
 import type { Route } from "./+types/timetable";
 
@@ -42,6 +43,16 @@ export default function Timetable() {
             console.log(`[Timetable] 성공 - 이벤트 ${result.events.length}개 로드`);
             setEvents(result.events);
             setMessage({ type: null, content: "" });
+            
+            // データ更新時にバージョンチェック（強制・5分制限無視）
+            const { hasUpdate, latestVersion, message } = await forceCheckVersion();
+            if (hasUpdate) {
+                console.log(`[Timetable] 🆕 新バージョン検出: ${latestVersion}`);
+                // 更新モーダルはroot.tsxで表示されるので、ここでは通知イベント発火
+                window.dispatchEvent(new CustomEvent('version-update-detected', {
+                    detail: { version: latestVersion, message }
+                }));
+            }
         } else {
             console.error("[Timetable] データ更新失敗");
             setMessage({ type: "error", content: "データ更新失敗" });

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegStar } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
-import { APP_VERSION } from "~/constants/version";
+import { getCurrentVersion } from "~/utils/versionCheckBackend";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -12,7 +12,13 @@ interface HamburgerMenuProps {
 export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [appVersion, setAppVersion] = useState("...");
     const location = useLocation();
+
+    useEffect(() => {
+        // バージョンを取得
+        getCurrentVersion().then(version => setAppVersion(version));
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -132,7 +138,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                             className={`flex w-full flex-col items-start transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             <h2 className="w-full text-5xl tracking-[2px] text-white">recTime</h2>
-                            <p className="mt-1 text-xs text-white/70">v{APP_VERSION}</p>
+                            <p className="mt-1 text-xs text-white/70">v{appVersion}</p>
                         </div>
                     </div>
                 </div>
