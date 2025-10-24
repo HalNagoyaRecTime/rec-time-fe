@@ -1,7 +1,7 @@
 // アプリケーションバージョン管理
 // ※ このバージョンを変更すると自動更新が発火します
 
-export const APP_VERSION = "25.1.1";
+export const APP_VERSION = "25.1.2";
 
 // リリースノート（バージョンごとの変更内容）
 export const RELEASE_NOTES: Record<string, string[]> = {
