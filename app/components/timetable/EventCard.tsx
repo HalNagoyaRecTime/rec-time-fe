@@ -44,8 +44,8 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
                 isCompact ? "py-0.5" : "py-2"
             } ${
                 isParticipant
-                    ? "bg-[#000D91]/80 text-white hover:bg-[#000D91]/60"
-                    : "bg-[#F0B208]/80 text-[#111646] hover:bg-[#F0B208]/60"
+                    ? "bg-[#F0B208]/80 text-[#111646] hover:bg-[#F0B208]/60"
+                    : "bg-[#000D91]/80 text-white hover:bg-[#000D91]/60"
             }`}
             style={{
                 top: `${layout.top}px`,
