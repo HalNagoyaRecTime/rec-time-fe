@@ -9,7 +9,7 @@ const VERSION_STORAGE_KEY = "app:version";
  * @returns newVersion > oldVersion の場合 true
  */
 export function isNewerVersion(oldVersion: string | null, newVersion: string): boolean {
-    if (!oldVersion) return true; // 初回起動時は更新不要
+    if (!oldVersion) return false; // 初回起動時は更新不要
 
     const oldParts = oldVersion.split('.').map(Number);
     const newParts = newVersion.split('.').map(Number);
