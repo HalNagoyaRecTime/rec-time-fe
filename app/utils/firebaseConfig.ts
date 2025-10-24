@@ -8,12 +8,12 @@ import { getMessaging, getToken, onMessage, type MessagePayload } from "firebase
 
 // Firebase 설정 / Firebase設定
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-key",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo-project.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-project",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo-project.appspot.com",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:demo",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAUDY7ty75NHqwfmT4xGiTeJj3f5VT0Duc",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "rec-time-593b0.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "rec-time-593b0",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "rec-time-593b0.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "885151050655",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:885151050655:web:873c0e58da98316a4fabaa",
 };
 
 // Firebase 앱 초기화 / Firebaseアプリ初期化
@@ -43,7 +43,7 @@ function ensureFirebaseInitialized() {
 export { messaging };
 
 // VAPID 키 (Firebase Console에서 생성) / VAPIDキー（Firebase Consoleで生成）
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "demo-vapid-key";
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "BDsQckrzvpH4ugFGqmP3Ossqg8CMldK86GdhQ4M1KCugkDzEe0SS7xFftinDSt4GYYKqxGkOakEsKD5p2GlaBgs";
 
 /**
  * FCM 토큰 가져오기 / FCMトークン取得

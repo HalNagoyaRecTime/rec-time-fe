@@ -5,18 +5,19 @@
 
 import { useState } from "react";
 import { useStudentData } from "~/hooks/useStudentData";
+import { useFCM } from "~/hooks/useFCM";
 
 export default function FCMTestPanel() {
+    const { studentId } = useStudentData();
     const { 
-        studentId, 
-        fcmStatus, 
-        registerFCMToken, 
-        unregisterFCMToken, 
-        testFCMPush, 
-        refreshFCMToken,
-        checkFCMStatus,
-        clearFCMError 
-    } = useStudentData();
+        status: fcmStatus, 
+        registerToken, 
+        unregisterToken, 
+        testPush, 
+        refreshToken,
+        checkStatus,
+        clearError 
+    } = useFCM();
     
     const [isLoading, setIsLoading] = useState(false);
     const [testResult, setTestResult] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function FCMTestPanel() {
         setTestResult(null);
         
         try {
-            const success = await registerFCMToken(studentId);
+            const success = await registerToken(studentId);
             setTestResult(success ? 
                 "✅ FCM 토큰 등록 성공 / FCMトークン登録成功" : 
                 "❌ FCM 토큰 등록 실패 / FCMトークン登録失敗"
@@ -53,7 +54,7 @@ export default function FCMTestPanel() {
         setTestResult(null);
         
         try {
-            const success = await unregisterFCMToken(studentId);
+            const success = await unregisterToken(studentId);
             setTestResult(success ? 
                 "✅ FCM 토큰 등록 해제 성공 / FCMトークン登録解除成功" : 
                 "❌ FCM 토큰 등록 해제 실패 / FCMトークン登録解除失敗"
@@ -75,7 +76,7 @@ export default function FCMTestPanel() {
         setTestResult(null);
         
         try {
-            const success = await testFCMPush(studentId);
+            const success = await testPush(studentId);
             setTestResult(success ? 
                 "✅ FCM 테스트 푸시 전송 성공 / FCMテストプッシュ送信成功" : 
                 "❌ FCM 테스트 푸시 전송 실패 / FCMテストプッシュ送信失敗"
@@ -92,7 +93,7 @@ export default function FCMTestPanel() {
         setTestResult(null);
         
         try {
-            const newToken = await refreshFCMToken();
+            const newToken = await refreshToken();
             setTestResult(newToken ? 
                 `✅ FCM 토큰 새로고침 성공 / FCMトークンリフレッシュ成功: ${newToken.substring(0, 20)}...` : 
                 "❌ FCM 토큰 새로고침 실패 / FCMトークンリフレッシュ失敗"
@@ -114,7 +115,7 @@ export default function FCMTestPanel() {
         setTestResult(null);
         
         try {
-            const isRegistered = await checkFCMStatus(studentId);
+            const isRegistered = await checkStatus(studentId);
             setTestResult(isRegistered ? 
                 "✅ FCM 토큰이 등록되어 있습니다 / FCMトークンが登録されています" : 
                 "❌ FCM 토큰이 등록되어 있지 않습니다 / FCMトークンが登録されていません"
@@ -205,7 +206,7 @@ export default function FCMTestPanel() {
                 </button>
                 
                 <button
-                    onClick={clearFCMError}
+                    onClick={clearError}
                     disabled={!fcmStatus.error}
                     className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-400"
                 >
