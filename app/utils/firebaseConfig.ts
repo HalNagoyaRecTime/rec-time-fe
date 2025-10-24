@@ -19,15 +19,24 @@ const firebaseConfig = {
 // Firebase 앱 초기화 / Firebaseアプリ初期化
 let app: any = null;
 let messaging: any = null;
+let isInitialized = false;
 
-// 브라우저 환경에서만 Firebase 초기화
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-    try {
-        app = initializeApp(firebaseConfig);
-        messaging = getMessaging(app);
-        console.log("✅ Firebase 초기화 성공 / Firebase初期化成功");
-    } catch (error) {
-        console.warn("⚠️ Firebase 초기화 실패 - FCM 기능 비활성화 / Firebase初期化失敗 - FCM機能無効化:", error);
+/**
+ * Firebase 초기화 (遅延初期化)
+ */
+function ensureFirebaseInitialized() {
+    if (isInitialized) return;
+    
+    // 브라우저 환境에서만 Firebase 초기化
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        try {
+            app = initializeApp(firebaseConfig);
+            messaging = getMessaging(app);
+            isInitialized = true;
+            console.log("✅ Firebase 초기화 성공 / Firebase初期化成功");
+        } catch (error) {
+            console.warn("⚠️ Firebase 초기화 실패 - FCM 기능 비활성화 / Firebase初期化失敗 - FCM機能無効化:", error);
+        }
     }
 }
 
@@ -42,6 +51,9 @@ const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "demo-vapid-key";
  */
 export async function getFCMToken(): Promise<string | null> {
     try {
+        // Firebase 초기化確保
+        ensureFirebaseInitialized();
+        
         if (!messaging) {
             console.warn("⚠️ Firebase가 초기화되지 않았습니다 / Firebaseが初期化されていません");
             return null;
@@ -59,9 +71,14 @@ export async function getFCMToken(): Promise<string | null> {
             return null;
         }
 
+        // Service Worker 등록 대기
+        const registration = await navigator.serviceWorker.ready;
+        console.log("✅ Service Worker 준비 완료 / Service Worker準備完了");
+
         // FCM 토큰 발급 / FCMトークン発行
         const token = await getToken(messaging, {
             vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration,
         });
 
         if (token) {
@@ -83,6 +100,9 @@ export async function getFCMToken(): Promise<string | null> {
  */
 export function setupFCMListener(onMessageCallback?: (payload: MessagePayload) => void) {
     try {
+        // Firebase 初期化確保
+        ensureFirebaseInitialized();
+        
         if (!messaging) {
             console.warn("⚠️ Firebase가 초기화되지 않았습니다 / Firebaseが初期化されていません");
             return;
