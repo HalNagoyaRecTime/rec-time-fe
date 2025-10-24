@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import RecTimeFlame from "../components/ui/recTimeFlame";
 import { FaAngleRight } from "react-icons/fa6";
 import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
-import { clearAllCache, reinstallPWA } from "~/utils/clearCache";
 import type { Message } from "~/types/timetable";
 import type { Route } from "./+types/settings";
 
@@ -14,10 +13,9 @@ export const meta: Route.MetaFunction = () => {
     ];
 };
 
-type ModalType = "notification" | "clearCache" | "reinstallPWA" | null;
+type ModalType = "notification" | null;
 
 export default function Settings() {
-    const navigate = useNavigate();
     const { studentData } = useStudentData();
     const { isEnabled: isPushEnabled, toggleNotification } = useNotificationSettings();
     const [modalType, setModalType] = useState<ModalType>(null);
@@ -49,43 +47,6 @@ export default function Settings() {
         await toggleNotification(false);
         setModalType(null);
         setMessage({ type: "success", content: "通知をオフにしました" });
-    };
-
-    // キャッシュ削除ボタンクリック
-    const handleClearCache = () => {
-        setModalType("clearCache");
-    };
-
-    // キャッシュ削除を確定
-    const confirmClearCache = async () => {
-        try {
-            await clearAllCache();
-            setModalType(null);
-            // 登録ページにリダイレクト
-            navigate("/register/student-id");
-        } catch (error) {
-            console.error("[Settings] キャッシュ削除エラー:", error);
-            setMessage({ type: "error", content: "キャッシュの削除に失敗しました" });
-            setModalType(null);
-        }
-    };
-
-    // PWA再インストールボタンクリック
-    const handleReinstallPWA = () => {
-        setModalType("reinstallPWA");
-    };
-
-    // PWA再インストールを確定
-    const confirmReinstallPWA = async () => {
-        try {
-            setMessage({ type: "success", content: "PWAを再インストール中..." });
-            await reinstallPWA();
-            // リロードされるのでここには到達しない
-        } catch (error) {
-            console.error("[Settings] PWA再インストールエラー:", error);
-            setMessage({ type: "error", content: "PWAの再インストールに失敗しました" });
-            setModalType(null);
-        }
     };
 
     // モーダルをキャンセル
@@ -167,25 +128,6 @@ export default function Settings() {
                             <div className="peer relative h-6 w-11 rounded-full bg-gray-600 transition-colors duration-200 ease-in-out peer-checked:bg-[#000D91] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:duration-200 after:content-[''] peer-checked:after:translate-x-full"></div>
                         </label>
                     </div>
-
-                    <div className="flex w-full flex-col gap-2">
-                        <div className="flex w-full justify-end">
-                            <button
-                                onClick={handleReinstallPWA}
-                                className="cursor-pointer rounded-lg border-1 border-blue-600 bg-transparent px-4 py-2 text-sm font-bold text-blue-600 transition-colors hover:bg-blue-50"
-                            >
-                                PWAを再インストール
-                            </button>
-                        </div>
-                        <div className="flex w-full justify-end">
-                            <button
-                                onClick={handleClearCache}
-                                className="cursor-pointer rounded-lg border-1 border-red-600 bg-transparent px-4 py-2 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
-                            >
-                                キャッシュを削除
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 {/* 確認モーダル - 通知オフ */}
@@ -208,66 +150,6 @@ export default function Settings() {
                                     className="flex-1 cursor-pointer rounded-lg bg-[#000D91] px-4 py-2 text-white transition-colors hover:bg-[#000D91]/80"
                                 >
                                     オフにする
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 確認モーダル - キャッシュ削除 */}
-                {modalType === "clearCache" && (
-                    <div className="fixed inset-0 z-100 flex h-screen w-full items-center justify-center bg-black/50">
-                        <div className="w-80 rounded-lg border-1 border-black bg-white p-6 shadow-lg">
-                            <h3 className="mb-4 text-center text-lg font-semibold text-black">
-                                キャッシュを削除しますか？
-                            </h3>
-                            <p className="mb-6 text-center text-sm text-black">
-                                すべてのユーザーデータが削除され、登録画面に戻ります
-                            </p>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={cancelModal}
-                                    className="flex-1 cursor-pointer rounded-lg border-1 border-black bg-transparent px-4 py-2 text-black transition-colors hover:bg-black/10"
-                                >
-                                    キャンセル
-                                </button>
-                                <button
-                                    onClick={confirmClearCache}
-                                    className="flex-1 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-                                >
-                                    削除する
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 確認モーダル - PWA再インストール */}
-                {modalType === "reinstallPWA" && (
-                    <div className="fixed inset-0 z-100 flex h-screen w-full items-center justify-center bg-black/50">
-                        <div className="w-80 rounded-lg border-1 border-black bg-white p-6 shadow-lg">
-                            <h3 className="mb-4 text-center text-lg font-semibold text-black">
-                                PWAを再インストールしますか？
-                            </h3>
-                            <p className="mb-6 text-center text-sm text-black">
-                                Service Workerとキャッシュを削除して、アプリを再起動します。
-                                <br />
-                                <span className="text-xs text-gray-600">
-                                    ※ユーザーデータは保持されます
-                                </span>
-                            </p>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={cancelModal}
-                                    className="flex-1 cursor-pointer rounded-lg border-1 border-black bg-transparent px-4 py-2 text-black transition-colors hover:bg-black/10"
-                                >
-                                    キャンセル
-                                </button>
-                                <button
-                                    onClick={confirmReinstallPWA}
-                                    className="flex-1 cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-                                >
-                                    再インストール
                                 </button>
                             </div>
                         </div>

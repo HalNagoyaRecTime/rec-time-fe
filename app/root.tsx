@@ -6,6 +6,10 @@ import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
+import UpdateModal from "./components/ui/update-modal";
+import { APP_VERSION } from "./constants/version";
+import { needsUpdate, saveVersion } from "./utils/versionCheck";
+import { reinstallPWA } from "./utils/clearCache";
 
 import "./app.css";
 
@@ -53,6 +57,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+
+    useEffect(() => {
+        // メンテナンスモードチェック
+        const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
+        if (maintenanceMode) {
+            setIsMaintenanceMode(true);
+            return;
+        }
+
+        // バージョンチェック
+        if (needsUpdate(APP_VERSION)) {
+            console.log("[App] 🆕 新しいバージョンを検出しました:", APP_VERSION);
+            setShowUpdateModal(true);
+        } else {
+            // 初回起動時または同じバージョンならバージョンを保存
+            saveVersion(APP_VERSION);
+        }
+    }, []);
 
     useEffect(() => {
         if ("serviceWorker" in navigator) {
@@ -133,6 +157,25 @@ export default function App() {
         }
     }, []);
 
+    // 更新処理
+    const handleUpdate = async () => {
+        saveVersion(APP_VERSION); // バージョン保存
+        await reinstallPWA(); // PWA再インストール（自動リロード）
+    };
+
+    // メンテナンス画面
+    if (isMaintenanceMode) {
+        const maintenanceMessage = import.meta.env.VITE_MAINTENANCE_MESSAGE || "メンテナンス中です。しばらくお待ちください。";
+        
+        return (
+            <div className="flex h-screen w-screen flex-col items-center justify-center bg-white px-6">
+                <div className="text-6xl mb-4">🔧</div>
+                <h1 className="mb-2 text-2xl font-bold text-gray-800">メンテナンス中</h1>
+                <p className="text-center text-gray-600">{maintenanceMessage}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="wrapper flex h-screen w-screen flex-col bg-white">
             <Header />
@@ -142,6 +185,9 @@ export default function App() {
                 <Outlet />
                 <Footer />
             </main>
+            
+            {/* 更新モーダル */}
+            {showUpdateModal && <UpdateModal onUpdate={handleUpdate} />}
         </div>
     );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegStar } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { APP_VERSION } from "~/constants/version";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -128,9 +129,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         </div>
 
                         <div
-                            className={`flex w-full justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex w-full flex-col items-start transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             <h2 className="w-full text-5xl tracking-[2px] text-white">recTime</h2>
+                            <p className="mt-1 text-xs text-white/70">v{APP_VERSION}</p>
                         </div>
                     </div>
                 </div>
