@@ -1,6 +1,7 @@
 // public/sw.js
 
-const APP_VERSION = "2025-10-23";
+// ⚠️ このバージョン番号は app/constants/version.ts の APP_VERSION と同期してください
+const APP_VERSION = "25.1.0";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
