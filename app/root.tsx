@@ -13,7 +13,7 @@ export const meta: Route.MetaFunction = () => {
     return [
         { title: "recTime - レクリエーション呼び出しアプリ" },
         { name: "author", content: "recTime" },
-        { property: "og:title", content: "recTime - 授業時間割アプリ" },
+        { property: "og:title", content: "recTime - レクリエーション通知アプリ" },
         { property: "og:type", content: "website" },
         { property: "og:site_name", content: "recTime" },
     ];
