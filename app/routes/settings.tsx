@@ -91,7 +91,33 @@ export default function Settings() {
                                 onPointerDown={(e) => {
                                     if (!studentData?.f_student_num) return;
                                     const timeoutId = setTimeout(() => {
-                                        navigator.clipboard.writeText(studentData.f_student_num.toString());
+                                        const text = studentData.f_student_num.toString();
+                                        // Clipboard API
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(text).catch(() => {
+                                                // フォールバック
+                                                const textarea = document.createElement('textarea');
+                                                textarea.value = text;
+                                                textarea.setAttribute('readonly', '');
+                                                textarea.style.position = 'absolute';
+                                                textarea.style.left = '-9999px';
+                                                document.body.appendChild(textarea);
+                                                textarea.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(textarea);
+                                            });
+                                        } else {
+                                            // フォールバック
+                                            const textarea = document.createElement('textarea');
+                                            textarea.value = text;
+                                            textarea.setAttribute('readonly', '');
+                                            textarea.style.position = 'absolute';
+                                            textarea.style.left = '-9999px';
+                                            document.body.appendChild(textarea);
+                                            textarea.select();
+                                            document.execCommand('copy');
+                                            document.body.removeChild(textarea);
+                                        }
                                         // 簡易フィードバック
                                         if (window && window.navigator && window.navigator.vibrate) {
                                             window.navigator.vibrate(80);
