@@ -129,7 +129,7 @@ export default function Settings() {
                                             document.body.removeChild(textarea);
                                             doCopy();
                                         }
-                                    }, 600); // 600ms長押しでコピー
+                                    }, 300); // 300ms長押しでコピー
                                     const clear = () => {
                                         clearTimeout(timeoutId);
                                         window.removeEventListener('pointerup', clear);
