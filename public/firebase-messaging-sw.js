@@ -1,11 +1,11 @@
 // Firebase Cloud Messaging Service Worker
 // Firebase Cloud Messaging Service Worker
 
-// Firebase SDKs를 import (ES6 모듈 방식)
+// Import Firebase SDKs (ES6 module style)
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// Firebase 설정
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAUDY7ty75NHqwfmT4xGiTeJj3f5VT0Duc",
   authDomain: "rec-time-593b0.firebaseapp.com",
@@ -16,17 +16,18 @@ const firebaseConfig = {
   measurementId: "G-5YRL3CV57Z"
 };
 
-// Firebase 초기화
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// FCM 메시징 인스턴스
+// FCM messaging instance
 const messaging = firebase.messaging();
 
-// 백그라운드 메시지 수신 처리
-// 역할: FCM이 백엔드에서 푸시 알림을 보낼 때 앱이 백그라운드/종료 상태에서도
-// 기존 Service Worker 알림과 동일한 형태로 표시
+// Background message handling
+// Purpose: When FCM sends push notifications from backend, display them
+// in the same format as existing Service Worker notifications
+// even when app is in background/terminated state
 messaging.onBackgroundMessage((payload) => {
-  console.log('[FCM] 백그라운드 메시지 수신:', payload);
+  console.log('[FCM] Background message received:', payload);
 
   const notificationTitle = payload.notification?.title || 'RecTime 通知設定';
   const notificationOptions = {
@@ -50,13 +51,13 @@ messaging.onBackgroundMessage((payload) => {
     ]
   };
 
-  // 알림 표시
+  // Show notification
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// 알림 클릭 처리
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
-  console.log('[FCM] 알림 클릭:', event);
+  console.log('[FCM] Notification clicked:', event);
 
   event.notification.close();
 
@@ -64,16 +65,16 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  // 앱 열기 또는 포커스
+  // Open app or focus
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // 이미 열린 창이 있으면 포커스
+      // Focus existing window if available
       for (const client of clientList) {
         if (client.url.includes(self.registration.scope) && 'focus' in client) {
           return client.focus();
         }
       }
-      // 새 창 열기
+      // Open new window
       if (clients.openWindow) {
         return clients.openWindow('/');
       }
@@ -81,9 +82,9 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// 알림 닫기 처리
+// Notification close handling
 self.addEventListener('notificationclose', (event) => {
-  console.log('[FCM] 알림 닫기:', event);
+  console.log('[FCM] Notification closed:', event);
 });
 
-console.log('[FCM] Service Worker 초기화 완료');
+console.log('[FCM] Service Worker initialized');
