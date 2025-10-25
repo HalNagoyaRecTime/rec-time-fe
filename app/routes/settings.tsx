@@ -92,20 +92,30 @@ export default function Settings() {
                                     if (!studentData?.f_student_num) return;
                                     const timeoutId = setTimeout(() => {
                                         const text = studentData.f_student_num.toString();
-                                        // Clipboard API
+                                        // コピー処理
+                                        const doCopy = () => {
+                                            setMessage({ type: "success", content: "学籍番号をコピーしました" });
+                                            setTimeout(() => setMessage({ type: null, content: "" }), 2000);
+                                            if (window && window.navigator && window.navigator.vibrate) {
+                                                window.navigator.vibrate(80);
+                                            }
+                                        };
                                         if (navigator.clipboard && navigator.clipboard.writeText) {
-                                            navigator.clipboard.writeText(text).catch(() => {
-                                                // フォールバック
-                                                const textarea = document.createElement('textarea');
-                                                textarea.value = text;
-                                                textarea.setAttribute('readonly', '');
-                                                textarea.style.position = 'absolute';
-                                                textarea.style.left = '-9999px';
-                                                document.body.appendChild(textarea);
-                                                textarea.select();
-                                                document.execCommand('copy');
-                                                document.body.removeChild(textarea);
-                                            });
+                                            navigator.clipboard.writeText(text)
+                                                .then(doCopy)
+                                                .catch(() => {
+                                                    // フォールバック
+                                                    const textarea = document.createElement('textarea');
+                                                    textarea.value = text;
+                                                    textarea.setAttribute('readonly', '');
+                                                    textarea.style.position = 'absolute';
+                                                    textarea.style.left = '-9999px';
+                                                    document.body.appendChild(textarea);
+                                                    textarea.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(textarea);
+                                                    doCopy();
+                                                });
                                         } else {
                                             // フォールバック
                                             const textarea = document.createElement('textarea');
@@ -117,10 +127,7 @@ export default function Settings() {
                                             textarea.select();
                                             document.execCommand('copy');
                                             document.body.removeChild(textarea);
-                                        }
-                                        // 簡易フィードバック
-                                        if (window && window.navigator && window.navigator.vibrate) {
-                                            window.navigator.vibrate(80);
+                                            doCopy();
                                         }
                                     }, 600); // 600ms長押しでコピー
                                     const clear = () => {
