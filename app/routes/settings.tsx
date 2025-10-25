@@ -86,7 +86,26 @@ export default function Settings() {
                         </div>
 
                         <div className="relative mb-1 flex w-full items-center justify-center">
-                            <h2 className="cursor-pointer text-3xl font-medium text-white">
+                            <h2
+                                className="cursor-pointer text-3xl font-medium text-white select-none"
+                                onPointerDown={(e) => {
+                                    if (!studentData?.f_student_num) return;
+                                    const timeoutId = setTimeout(() => {
+                                        navigator.clipboard.writeText(studentData.f_student_num.toString());
+                                        // 簡易フィードバック
+                                        if (window && window.navigator && window.navigator.vibrate) {
+                                            window.navigator.vibrate(80);
+                                        }
+                                    }, 600); // 600ms長押しでコピー
+                                    const clear = () => {
+                                        clearTimeout(timeoutId);
+                                        window.removeEventListener('pointerup', clear);
+                                        window.removeEventListener('pointercancel', clear);
+                                    };
+                                    window.addEventListener('pointerup', clear);
+                                    window.addEventListener('pointercancel', clear);
+                                }}
+                            >
                                 {studentData?.f_student_num || "-----"}
                             </h2>
                             <Link
