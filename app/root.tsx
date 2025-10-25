@@ -7,7 +7,8 @@ import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
 import UpdateModal from "./components/ui/update-modal";
-import { checkVersionFromBackend, markVersionAsSeen } from "./utils/versionCheckBackend";
+import { useVersionCheck } from "./hooks/useVersionCheck";
+import { markVersionAsSeen } from "./utils/versionCheckBackend";
 import { reinstallPWA } from "./utils/clearCache";
 
 import "./app.css";
@@ -60,82 +61,21 @@ export default function App() {
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
     const [updateInfo, setUpdateInfo] = useState<{ version: string; message: string } | null>(null);
 
-    // バージョンチェック関数（共通化）
-    const checkForUpdates = async (source: string) => {
-        const { hasUpdate, latestVersion, message, skipped } = await checkVersionFromBackend();
-        
-        if (skipped) {
-            console.log(`[${source}] チェックスキップ（5分以内）`);
-            return;
-        }
-        
-        if (hasUpdate) {
-            console.log(`[${source}] 🆕 新しいバージョンを検出: ${latestVersion}`);
-            setUpdateInfo({ version: latestVersion, message: message || "更新情報なし" });
+    // バージョンチェックフック
+    useVersionCheck({
+        autoCheck: !isMaintenanceMode,
+        onUpdateDetected: (info) => {
+            setUpdateInfo(info);
             setShowUpdateModal(true);
-        }
-    };
+        },
+    });
 
     useEffect(() => {
         // メンテナンスモードチェック
         const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
         if (maintenanceMode) {
             setIsMaintenanceMode(true);
-            return;
         }
-
-        // 1. 起動時チェック
-        checkForUpdates('起動時');
-
-        // 2. ランダムな初回待機時間（1-5分）
-        const randomDelay = Math.floor(Math.random() * 4 * 60 * 1000) + 60 * 1000; // 1-5分
-        console.log(`[VersionCheck] 初回チェックまで ${Math.floor(randomDelay / 1000 / 60)}分待機`);
-
-        const initialTimer = setTimeout(() => {
-            checkForUpdates('定期チェック（初回）');
-
-            // 3. 5分ごとの定期チェック
-            const interval = setInterval(() => {
-                checkForUpdates('定期チェック');
-            }, 5 * 60 * 1000); // 5分
-
-            return () => clearInterval(interval);
-        }, randomDelay);
-
-        // 4. バックグラウンド復帰時チェック
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                console.log('[VersionCheck] バックグラウンドから復帰');
-                checkForUpdates('バックグラウンド復帰');
-            }
-        };
-
-        const handleFocus = () => {
-            console.log('[VersionCheck] ウィンドウがフォーカスされました');
-            checkForUpdates('フォーカス');
-        };
-
-        // 5. 他のコンポーネントからのバージョン更新通知を受信
-        const handleVersionUpdateDetected = (event: Event) => {
-            const customEvent = event as CustomEvent;
-            console.log(`[VersionCheck] 他のコンポーネントから更新検知: ${customEvent.detail.version}`);
-            setUpdateInfo({
-                version: customEvent.detail.version,
-                message: customEvent.detail.message || "更新情報なし"
-            });
-            setShowUpdateModal(true);
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('focus', handleFocus);
-        window.addEventListener('version-update-detected', handleVersionUpdateDetected);
-
-        return () => {
-            clearTimeout(initialTimer);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('focus', handleFocus);
-            window.removeEventListener('version-update-detected', handleVersionUpdateDetected);
-        };
     }, []);
 
     useEffect(() => {
