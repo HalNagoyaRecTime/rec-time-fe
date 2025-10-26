@@ -42,6 +42,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         const alarmEvents: any[] = await alarmRes.json();
         console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
+        console.log(`[API] アラーム情報 상세:`, alarmEvents);
 
         // 学生情報を取得（生年月日認証用に保存されている場合）
         const { STORAGE_KEYS } = await import("~/constants/storage");
@@ -69,6 +70,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         const eventsData = await eventsRes.json();
         const allEvents: any[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
+        console.log(`[API] 전체 이벤트: ${allEvents.length}件`);
+        console.log(`[API] 전체 이벤트 상세:`, allEvents.map(e => ({ id: e.f_event_id, name: e.f_event_name, time: e.f_time })));
 
         // 全イベントとアラーム情報をマージ
         const eventsWithMapping: EventRow[] = allEvents.map((ev: any) => {
@@ -76,8 +79,16 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
             // アラーム情報から該当イベントを検索
             const alarmEvent = alarmEvents.find(e => String(e.f_event_id) === eventId);
+            
+            // 디버깅: 매칭 확인
+            if (alarmEvent) {
+                console.log(`[API] 매칭 성공 - 이벤트 ID: ${eventId}, 이름: ${ev.f_event_name}`);
+            }
 
-            const startTime = ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null;
+            // 백엔드 테이블에는 f_time 필드만 있음
+            const startTime = ev.f_time ? String(ev.f_time) : null;
+            // alarmEvent에도 f_time 필드 사용 (f_start_time이 아닌)
+            const alarmStartTime = alarmEvent?.f_time ? String(alarmEvent.f_time) : null;
 
             if (alarmEvent) {
                 // アラーム情報がある場合（参加イベント）、そのデータを使用
@@ -85,7 +96,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? alarmEvent.f_event_name ?? null,
-                    f_start_time: alarmEvent.f_start_time ?? startTime,
+                    f_start_time: alarmStartTime ?? startTime, // f_time 사용
                     f_duration: alarmEvent.f_duration ?? (ev.f_duration ? String(ev.f_duration) : null),
                     f_place: alarmEvent.f_place ?? ev.f_place ?? null,
                     f_gather_time: alarmEvent.f_gather_time ? String(alarmEvent.f_gather_time) : null,
@@ -156,7 +167,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
+            f_start_time: ev.f_time ? String(ev.f_time) : null, // 백엔드에는 f_time만 있음
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,

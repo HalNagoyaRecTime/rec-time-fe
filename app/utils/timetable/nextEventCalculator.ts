@@ -24,16 +24,29 @@ export function getNextParticipatingEvent(events: EventRow[]): EventRow | null {
 
     // 参加予定のイベントのみフィルタ
     const myEvents = events.filter((event) => event.f_is_my_entry === true);
+    
+    console.log(`[nextEventCalculator] 전체 이벤트: ${events.length}개, 참가 이벤트: ${myEvents.length}개`);
+    console.log(`[nextEventCalculator] 현재 시간: ${currentTime} (${now.getHours()}:${now.getMinutes()})`);
 
-    // 現在時刻以降のイベントを抽出
+    // 현재 진행 중이거나 미래의 이벤트를 추출 (과거 이벤트 제외)
     const upcomingEvents = myEvents.filter((event) => {
-        if (!event.f_start_time) return false;
+        if (!event.f_start_time) {
+            console.log(`[nextEventCalculator] 이벤트 ${event.f_event_name} - 시작 시간 없음`);
+            return false;
+        }
         const startTime = parseInt(event.f_start_time, 10);
-        return startTime > currentTime;
+        const isUpcoming = startTime >= currentTime; // 현재 시간 이후 또는 현재 진행 중
+        console.log(`[nextEventCalculator] 이벤트 ${event.f_event_name} - 시작: ${startTime}, 미래: ${isUpcoming}`);
+        return isUpcoming;
     });
 
+    console.log(`[nextEventCalculator] 미래/진행 중 이벤트: ${upcomingEvents.length}개`);
+
     // 開始時刻が最も早いイベントを返す
-    if (upcomingEvents.length === 0) return null;
+    if (upcomingEvents.length === 0) {
+        console.log(`[nextEventCalculator] 다음 이벤트 없음`);
+        return null;
+    }
 
     upcomingEvents.sort((a, b) => {
         const aTime = parseInt(a.f_start_time || "0", 10);
@@ -41,6 +54,7 @@ export function getNextParticipatingEvent(events: EventRow[]): EventRow | null {
         return aTime - bTime;
     });
 
+    console.log(`[nextEventCalculator] 다음 이벤트: ${upcomingEvents[0].f_event_name} (${upcomingEvents[0].f_start_time})`);
     return upcomingEvents[0];
 }
 
