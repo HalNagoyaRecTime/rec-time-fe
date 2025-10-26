@@ -461,7 +461,6 @@ async function showNotification(notification) {
     };
 
     await self.registration.showNotification(title, options);
-    console.log(`[SW] 通知表示: ${title} - ${notification.notification_label}`);
 }
 
 // === 通知クリック時の処理 ===
