@@ -78,8 +78,7 @@ export function useAppVersion(): string {
         const handleVersionUpdate = ((e: CustomEvent) => {
             const version = e.detail?.version;
             if (version) {
-                // localStorageも更新して、定期同期による上書きを防ぐ
-                localStorage.setItem("app:last_seen_version", version);
+                // stateのみ更新（localStorageはユーザーが更新ボタンを押した時のみ更新）
                 setAppVersion(version);
             }
         }) as EventListener;
