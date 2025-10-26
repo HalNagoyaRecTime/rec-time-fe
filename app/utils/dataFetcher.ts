@@ -38,7 +38,6 @@ export async function downloadAndSaveEvents(
         // LocalStorageに保存（常に保存）
         const storageKey = id ? STORAGE_KEYS.EVENTS(id) : STORAGE_KEYS.EVENTS("guest");
         localStorage.setItem(storageKey, JSON.stringify(payload.t_events));
-        console.log(`[dataFetcher] LocalStorageに保存: ${storageKey}`);
 
         // オンライン取得時のみ最終更新時間を更新
         if (!isFromCache) {
