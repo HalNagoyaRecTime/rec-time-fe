@@ -164,9 +164,6 @@ self.addEventListener("message", async (event) => {
     const data = event.data;
     if (!data) return;
 
-    if (data.type === "LOG_JSON") {
-        console.log("[SW] 受け取ったJSON:", data.payload);
-    }
 
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
