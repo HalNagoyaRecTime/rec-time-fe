@@ -62,8 +62,6 @@ export async function clearAllCache(): Promise<void> {
                 type: "STOP_NOTIFICATIONS",
             });
         }
-
-        console.log("[clearCache] ✅ すべてのキャッシュを削除しました");
     } catch (error) {
         console.error("[clearCache] キャッシュ削除エラー:", error);
         throw error;
