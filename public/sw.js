@@ -451,30 +451,32 @@ async function startNotificationCheckLoop() {
 async function checkAndSendNotifications() {
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
 
     try {
         const notifications = await getNotificationsFromIndexedDB();
         console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
-    for (const notification of scheduledNotifications) {
-        if (notification.notification_time === currentTimeStr && !notification.notified) {
-            
-            // 既に送信済みかチェック（LocalStorageと連携）
-            try {
-                const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const notification of notifications) {
+            if (!notification.notified) {
+                // notification_time을 분 단위로 변환하여 비교
+                const notifyTimeStr = notification.notification_time;
+                if (!notifyTimeStr || notifyTimeStr.length < 4) continue;
                 
-                // アクティブなクライアントがある場合は、アプリ側に任せる
-                if (clients && clients.length > 0) {
-                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
-                    continue;
+                const notifyHour = parseInt(notifyTimeStr.substring(0, 2), 10);
+                const notifyMinute = parseInt(notifyTimeStr.substring(2, 4), 10);
+                const notifyTotalMinutes = notifyHour * 60 + notifyMinute;
+                
+                // 현재 시간이 알림 시간을 넘어갔는지 확인 (최대 10분 지연까지 허용)
+                const timeDiff = currentTotalMinutes - notifyTotalMinutes;
+                if (timeDiff >= 0 && timeDiff <= 10) {
+                    // 원래대로 Service Worker가 직접 알림 표시 (앱 상태와 관계없이)
+                    console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label}), 시간차: ${timeDiff}분`);
+                    await showNotification(notification);
+                    notification.notified = true;
+                    await markAsNotifiedInIndexedDB(`${notification.f_event_id}_${notification.notification_time}_${notification.notification_label}`);
                 }
-            } catch (error) {
-                console.error('[SW] クライアントチェックエラー:', error);
             }
-            
-            console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
-            await showNotification(notification);
-            notification.notified = true;
         }
     } catch (error) {
         console.error("[SW] 通知チェックエラー:", error);

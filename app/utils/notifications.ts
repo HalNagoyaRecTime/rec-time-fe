@@ -407,9 +407,8 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     // 이벤트 변경 시에만 사용 (주석 해제)
     // myEvents.forEach(scheduleNotification);
 
-    // Service Worker가 백그라운드에서 알림을 처리하므로 프론트엔드 주기적 확인 비활성화
-    // 앱이 닫혀있을 때는 Service Worker가 처리하고, 앱이 열려있을 때도 Service Worker가 처리함
-    // startNotificationCheck(myEvents); // 중복 방지를 위해 비활성화
+    // Service Worker가 백그라운드에서 알림을 처리하지만, 프론트엔드 주기적 확인도 유지 (원래 동작)
+    startNotificationCheck(myEvents);
 }
 
 // === 定期チェック開始 ===
