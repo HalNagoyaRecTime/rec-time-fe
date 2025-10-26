@@ -8,9 +8,7 @@ import type { Message } from "~/types/timetable";
 import type { Route } from "./+types/settings";
 
 export const meta: Route.MetaFunction = () => {
-    return [
-        { title: "設定 - recTime" },
-    ];
+    return [{ title: "設定 - recTime" }];
 };
 
 type ModalType = "notification" | null;
@@ -78,13 +76,9 @@ export default function Settings() {
                         <div className="h-5">
                             {message?.type && message.content && (
                                 <h4
-                                    className={`flex h-full items-center rounded-md px-2 pb-[2px] text-xs font-normal text-white whitespace-nowrap ${
+                                    className={`flex h-full items-center rounded-md px-2 pb-[2px] text-xs font-normal whitespace-nowrap text-white ${
                                         message.type === "success" ? "bg-green-600" : "bg-red-600"
-                                    } ${
-                                        isErrorPulse && message.type === "error"
-                                            ? "animate-error-pulse"
-                                            : ""
-                                    }`}
+                                    } ${isErrorPulse && message.type === "error" ? "animate-error-pulse" : ""}`}
                                 >
                                     {message.content}
                                 </h4>
@@ -155,6 +149,37 @@ export default function Settings() {
                         </div>
                     </div>
                 )}
+                <div className="flex w-full justify-end">
+                    <a
+                        href="https://forms.office.com/r/01DKwaYiX2?origin=lprLink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex w-fit cursor-pointer items-center gap-2 rounded-lg border-1 border-[#000D91]/30 bg-gradient-to-r from-[#000D91]/5 to-[#000D91]/10 px-5 py-3 text-sm font-medium text-[#000D91] shadow-sm transition-all duration-200 hover:border-transparent hover:bg-[#000D91]/70 hover:text-white hover:shadow-md active:scale-95"
+                    >
+                        <svg
+                            className="h-4 w-4 transition-transform group-hover:scale-110"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                        </svg>
+                        <span>お問い合わせ</span>
+                        <svg
+                            className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         </RecTimeFlame>
     );
