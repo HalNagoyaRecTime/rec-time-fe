@@ -72,7 +72,6 @@ function openDatabase() {
                 const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
                 store.createIndex("notification_time", "notification_time", { unique: false });
                 store.createIndex("notified", "notified", { unique: false });
-                console.log("[SW] IndexedDB初期化完了");
             }
         };
     });
