@@ -76,10 +76,7 @@ export default function App() {
                                             tag: 'sw-update'
                                         });
                                     }
-                                } else if (newWorker.state === 'activated') {
-                                    console.log("[SW] 🚀 新しいService Workerが有効になりました");
-                                }
-                            });
+                        }});
                         }
                     });
                     
