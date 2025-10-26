@@ -381,7 +381,6 @@ function restartKeepAlive() {
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
 async function startNotificationCheckLoop() {
     if (checkLoopRunning) {
-        console.log("[SW] チェックループは既に実行中");
         return;
     }
 
