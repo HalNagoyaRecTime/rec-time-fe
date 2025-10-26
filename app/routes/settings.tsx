@@ -63,14 +63,66 @@ export default function Settings() {
                         </div>
 
                         <div className="relative mb-1 flex w-full items-center justify-center">
-                            <h2 className="cursor-pointer text-3xl font-medium text-white">
+                            <h2
+                                className="cursor-pointer text-3xl font-medium text-white select-none"
+                                onPointerDown={(e) => {
+                                    if (!studentData?.f_student_num) return;
+                                    const timeoutId = setTimeout(() => {
+                                        const text = studentData.f_student_num.toString();
+                                        // コピー処理
+                                        const doCopy = () => {
+                                            setMessage({ type: "success", content: "学籍番号をコピーしました" });
+                                            setTimeout(() => setMessage({ type: null, content: "" }), 2000);
+                                            if (window && window.navigator && window.navigator.vibrate) {
+                                                window.navigator.vibrate(80);
+                                            }
+                                        };
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(text)
+                                                .then(doCopy)
+                                                .catch(() => {
+                                                    // フォールバック
+                                                    const textarea = document.createElement('textarea');
+                                                    textarea.value = text;
+                                                    textarea.setAttribute('readonly', '');
+                                                    textarea.style.position = 'absolute';
+                                                    textarea.style.left = '-9999px';
+                                                    document.body.appendChild(textarea);
+                                                    textarea.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(textarea);
+                                                    doCopy();
+                                                });
+                                        } else {
+                                            // フォールバック
+                                            const textarea = document.createElement('textarea');
+                                            textarea.value = text;
+                                            textarea.setAttribute('readonly', '');
+                                            textarea.style.position = 'absolute';
+                                            textarea.style.left = '-9999px';
+                                            document.body.appendChild(textarea);
+                                            textarea.select();
+                                            document.execCommand('copy');
+                                            document.body.removeChild(textarea);
+                                            doCopy();
+                                        }
+                                    }, 300); // 300ms長押しでコピー
+                                    const clear = () => {
+                                        clearTimeout(timeoutId);
+                                        window.removeEventListener('pointerup', clear);
+                                        window.removeEventListener('pointercancel', clear);
+                                    };
+                                    window.addEventListener('pointerup', clear);
+                                    window.addEventListener('pointercancel', clear);
+                                }}
+                            >
                                 {studentData?.f_student_num || "-----"}
                             </h2>
                             <Link
                                 to="/register/student-id"
-                                className="absolute right-2 flex h-10 w-10 cursor-pointer p-2"
+                                className="absolute right-2 flex h-15 w-15 cursor-pointer items-center justify-center"
                             >
-                                <FaAngleRight className="h-full w-full text-white" />
+                                <FaAngleRight className="h-6 w-6 text-white" />
                             </Link>
                         </div>
                         <div className="h-5">
