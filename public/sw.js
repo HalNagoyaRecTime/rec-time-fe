@@ -412,7 +412,7 @@ async function checkAndSendNotifications() {
 
     try {
         const notifications = await getNotificationsFromIndexedDB();
-        console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
+        (`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
         for (const notification of notifications) {
             if (notification.notification_time === currentTimeStr && !notification.notified) {
@@ -421,7 +421,6 @@ async function checkAndSendNotifications() {
                     const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
 
                     if (clients && clients.length > 0) {
-                        console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
                         continue;
                     }
                 } catch (error) {
