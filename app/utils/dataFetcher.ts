@@ -59,7 +59,6 @@ export async function downloadAndSaveEvents(
         if (cachedData) {
             try {
                 const events = JSON.parse(cachedData);
-                console.log(`[dataFetcher] LocalStorageからフォールバック: ${events.length}個`);
                 return { success: true, events, isFromCache: true };
             } catch (parseError) {
                 console.error("[dataFetcher] キャッシュデータのパースエラー:", parseError);
