@@ -332,7 +332,6 @@ function stopServiceWorkerNotifications(): void {
         type: "STOP_NOTIFICATIONS",
     });
     
-    console.log("[通知] Service Workerの通知を停止しました");
 }
 
 // === 全イベント通知スケジュール ===
