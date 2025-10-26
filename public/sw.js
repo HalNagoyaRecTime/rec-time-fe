@@ -314,7 +314,6 @@ async function performKeepAlive() {
 
         if (response.ok) {
             const data = await response.json();
-            console.log("[SW] Keep-Alive成功:", data);
 
             // 成功したら失敗カウントをリセット
             keepAliveFailCount = 0;
