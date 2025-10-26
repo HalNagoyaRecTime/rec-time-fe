@@ -396,6 +396,5 @@ function stopNotificationCheck(): void {
     if (notificationCheckInterval !== null) {
         clearInterval(notificationCheckInterval);
         notificationCheckInterval = null;
-        console.log("[通知] 定期チェック停止");
     }
 }
