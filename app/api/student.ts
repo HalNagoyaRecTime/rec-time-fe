@@ -42,7 +42,14 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         const alarmEvents: any[] = await alarmRes.json();
         console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
-        console.log(`[API] アラーム情報 상세:`, alarmEvents);
+        console.log(`[API] 알람 이벤트 전체 필드 (첫 번째):`, alarmEvents[0]);
+        console.log(`[API] アラーム情報 상세:`, alarmEvents.map(e => ({
+            id: e.f_event_id,
+            name: e.f_event_name,
+            time: e.f_time,
+            time_type: typeof e.f_time,
+            time_length: e.f_time ? String(e.f_time).length : 0
+        })));
 
         // 学生情報を取得（生年月日認証用に保存されている場合）
         const { STORAGE_KEYS } = await import("~/constants/storage");
@@ -71,7 +78,15 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const eventsData = await eventsRes.json();
         const allEvents: any[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
         console.log(`[API] 전체 이벤트: ${allEvents.length}件`);
-        console.log(`[API] 전체 이벤트 상세:`, allEvents.map(e => ({ id: e.f_event_id, name: e.f_event_name, time: e.f_time })));
+        console.log(`[API] 백엔드 응답 전체:`, eventsData);
+        console.log(`[API] 첫 번째 이벤트 전체 필드:`, allEvents[0]);
+        console.log(`[API] 전체 이벤트 상세:`, allEvents.map(e => ({ 
+            id: e.f_event_id, 
+            name: e.f_event_name, 
+            time: e.f_time,
+            time_type: typeof e.f_time,
+            time_length: e.f_time ? String(e.f_time).length : 0
+        })));
 
         // 全イベントとアラーム情報をマージ
         const eventsWithMapping: EventRow[] = allEvents.map((ev: any) => {
@@ -85,22 +100,32 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 console.log(`[API] 매칭 성공 - 이벤트 ID: ${eventId}, 이름: ${ev.f_event_name}`);
             }
 
-            // 백엔드 테이블에는 f_time 필드만 있음
-            // f_time이 2자리 숫자("12")면 4자리("1200")로 변환
+            // 백엔드 응답: f_time 또는 f_start_time 필드 사용 가능
+            // 백엔드가 "12:00" 형식으로 보낼 수 있으므로 변환 필요
             const normalizeTime = (time: any): string | null => {
                 if (!time) return null;
-                const timeStr = String(time);
+                const timeStr = String(time).trim();
+                
+                // "12:00" 형식인 경우 "1200"으로 변환
+                if (timeStr.includes(":")) {
+                    const [hours, minutes] = timeStr.split(":");
+                    const normalized = (hours || "00").padStart(2, "0") + (minutes || "00").padStart(2, "0");
+                    console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
+                    return normalized;
+                }
+                
                 // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
                 if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
                     return timeStr + "00";
                 }
+                
                 // 이미 4자리면 그대로 사용
                 return timeStr;
             };
             
-            const startTime = normalizeTime(ev.f_time);
-            // alarmEvent에도 f_time 필드 사용 (f_start_time이 아닌)
-            const alarmStartTime = normalizeTime(alarmEvent?.f_time);
+            // 백엔드가 f_start_time을 반환할 수도 있고, f_time을 반환할 수도 있음
+            const startTime = normalizeTime(ev.f_start_time ?? ev.f_time);
+            const alarmStartTime = normalizeTime(alarmEvent?.f_start_time ?? alarmEvent?.f_time);
 
             if (alarmEvent) {
                 // アラーム情報がある場合（参加イベント）、そのデータを使用
