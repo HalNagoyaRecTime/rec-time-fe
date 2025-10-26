@@ -107,11 +107,6 @@ export default function App() {
             }).catch((error) => {
                 console.error("[Storage] 永続ストレージ要求エラー:", error);
             });
-
-            // 現在の状態を確認
-            navigator.storage.persisted().then((isPersisted) => {
-                console.log(`[Storage] 現在の永続化状態: ${isPersisted ? '永続' : '非永続'}`);
-            });
         }
     }, []);
 
