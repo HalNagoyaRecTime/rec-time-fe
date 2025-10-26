@@ -9,8 +9,8 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/icons/pwa-192.png",
-      "sizes": "192x192",
+      "src": "/icons/pwa-128.png",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },

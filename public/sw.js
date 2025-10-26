@@ -35,7 +35,7 @@ const STATIC_FILES = [
     // 静的アセット
     "/favicon.ico",
     "/manifest.webmanifest",
-    "/icons/pwa-192.png",
+    "/icons/pwa-128.png",
     "/icons/pwa-512.png",
     "/icons/app-icon/timetable.svg",
     "/icons/app-icon/map.svg",
@@ -491,8 +491,8 @@ async function showNotification(notification) {
 
     const options = {
         body: body,
-        icon: "/icons/pwa-192.png",
-        badge: "/icons/pwa-192.png",
+        icon: "/icons/pwa-128.png",
+        badge: "/icons/pwa-128.png",
         tag: `event-${notification.f_event_id}-${notification.notification_time}`,
         requireInteraction: true,
         vibrate: [200, 100, 200],
