@@ -374,7 +374,6 @@ function restartKeepAlive() {
         keepAliveInterval = setInterval(() => {
             performKeepAlive();
         }, currentKeepAliveInterval);
-        console.log(`[SW] Keep-Alive間隔を${currentKeepAliveInterval / 1000}秒に変更`);
     }
 }
 
