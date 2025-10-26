@@ -528,7 +528,6 @@ self.addEventListener("activate", (event) => {
                 // 通知チェックループを開始（既存の通知がある場合）
                 const notifications = await getNotificationsFromIndexedDB();
                 if (notifications.length > 0) {
-                    console.log(`[SW] ${notifications.length}件の通知スケジュールを復元`);
                     startNotificationCheckLoop();
                     startKeepAlive();
                 }
