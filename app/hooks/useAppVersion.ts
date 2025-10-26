@@ -43,28 +43,9 @@ export function useAppVersion(): string {
         return localStorage.getItem("app:last_seen_version") || "";
     });
 
-    useEffect(() => {
-        // 初回マウント時にlocalStorageがない場合、APIから直接取得
-        const initializeVersion = async () => {
-            const storedVersion = localStorage.getItem("app:last_seen_version");
-            if (!storedVersion) {
-                try {
-                    const { getCurrentVersion } = await import("~/utils/versionCheckBackend");
-                    const version = await getCurrentVersion();
-                    if (version && version !== "不明") {
-                        localStorage.setItem("app:last_seen_version", version);
-                        setAppVersion(version);
-                    } else {
-                        console.warn("[useAppVersion] API取得失敗 - 空文字のまま");
-                    }
-                } catch (error) {
-                    console.error("[useAppVersion] API取得エラー:", error);
-                }
-            }
-        };
-
-        void initializeVersion();
-    }, []); // 初回のみ実行
+    // 初回マウント時のAPI呼び出しを削除
+    // useVersionCheckが既にAPIを呼び出してlocalStorageを更新するため、
+    // ここではlocalStorageの読み取りのみを行う
 
     useEffect(() => {
         // localStorageの変更を監視（他のタブやuseVersionCheckからの更新を検知）
