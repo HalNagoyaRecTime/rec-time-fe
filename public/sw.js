@@ -154,7 +154,6 @@ async function markAsNotifiedInIndexedDB(notificationId) {
                 putRequest.onsuccess = () => resolve();
                 putRequest.onerror = () => reject(putRequest.error);
             });
-            console.log(`[SW] 通知済みマーク: ${notificationId}`);
         }
     } catch (error) {
         console.error("[SW] 通知済みマーク失敗:", error);
