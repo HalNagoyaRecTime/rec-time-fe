@@ -35,8 +35,6 @@ export async function clearAllCache(): Promise<void> {
         localStorage.removeItem("notification:notified_events");
         localStorage.removeItem("notification:last_reset_date");
 
-        console.log("[clearCache] ✅ LocalStorageをクリアしました");
-
         // 2. IndexedDBの削除（Service Worker用の通知スケジュール）
         try {
             const DB_NAME = "RecTimeNotificationsDB";
