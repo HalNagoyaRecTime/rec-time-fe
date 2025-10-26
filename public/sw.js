@@ -385,7 +385,6 @@ async function startNotificationCheckLoop() {
     }
 
     checkLoopRunning = true;
-    console.log("[SW] 通知チェックループ開始");
 
     async function checkLoop() {
         if (!checkLoopRunning) {
