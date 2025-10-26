@@ -282,7 +282,6 @@ async function adjustKeepAliveInterval() {
         // iOS PWA対応: イベント30分前から15秒ごとにチェック（実験的）
         if (minDiff <= 30) {
             currentKeepAliveInterval = 15 * 1000; // 15秒
-            console.log("[SW] イベントまで30分以内 → Keep-Alive間隔を15秒に短縮（iOS PWA実験的）");
         } else if (minDiff <= 60) {
             currentKeepAliveInterval = 60 * 1000; // 1分
             console.log("[SW] イベントまで1時間以内 → Keep-Alive間隔を1分に短縮");
