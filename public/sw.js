@@ -601,7 +601,6 @@ self.addEventListener("fetch", (event) => {
                     return response;
                 })
                 .catch((error) => {
-                    console.log("[SW] ネットワークエラー、キャッシュから取得:", url.pathname);
                     // ネットワークエラー時はキャッシュから返す
                     return caches.match(request).then((cachedResponse) => {
                         if (cachedResponse) {
