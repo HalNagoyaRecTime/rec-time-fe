@@ -92,14 +92,7 @@ export default function App() {
                         }
                     }
                 })
-                .catch((err) => console.error("[SW] register failed:", err));
-            
-            // Service Workerからのメッセージを受信
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SW_UPDATED') {
-                    console.log("[SW] 💬 Service Workerからメッセージ:", event.data.message);
-                }
-            });
+                .catch((err) => console.error("[SW] register failed:", err));   
         }
 
         // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
