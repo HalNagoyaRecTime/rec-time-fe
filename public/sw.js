@@ -219,7 +219,6 @@ const API_BASE_URL = getApiBaseUrl();
 
 function startKeepAlive() {
     if (keepAliveInterval) {
-        console.log("[SW] Keep-Aliveは既に実行中");
         return;
     }
 
