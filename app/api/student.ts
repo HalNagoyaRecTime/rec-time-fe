@@ -204,14 +204,24 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_birthday: null,
         };
 
-        // 시간 정규화 함수 (2자리 -> 4자리 변환)
+        // 시간 정규화 함수 (백엔드 응답 처리)
         const normalizeTime = (time: any): string | null => {
             if (!time) return null;
-            const timeStr = String(time);
+            const timeStr = String(time).trim();
+            
+            // "12:00" 형식인 경우 "1200"으로 변환
+            if (timeStr.includes(":")) {
+                const [hours, minutes] = timeStr.split(":");
+                const normalized = (hours || "00").padStart(2, "0") + (minutes || "00").padStart(2, "0");
+                console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
+                return normalized;
+            }
+            
             // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
             if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
                 return timeStr + "00";
             }
+            
             // 이미 4자리면 그대로 사용
             return timeStr;
         };
@@ -219,7 +229,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: normalizeTime(ev.f_time), // 시간 정규화 적용
+            f_start_time: normalizeTime(ev.f_start_time ?? ev.f_time), // 백엔드가 f_start_time 또는 f_time 반환 가능
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
