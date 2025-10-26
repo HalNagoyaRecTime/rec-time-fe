@@ -85,7 +85,6 @@ export default function App() {
                             await (reg as any).periodicSync.register('check-notifications', {
                                 minInterval: 60 * 1000, // 1分（ブラウザが実際の間隔を決定）
                             });
-                            console.log("[SW] Periodic Background Sync登録成功");
                         } catch (error) {
                             console.warn("[SW] Periodic Background Sync登録失敗:", error);
                         }
