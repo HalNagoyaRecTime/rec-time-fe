@@ -508,7 +508,6 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-    console.log("[SW] activate", APP_VERSION);
     event.waitUntil(
         caches
             .keys()
