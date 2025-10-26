@@ -284,7 +284,6 @@ async function adjustKeepAliveInterval() {
             currentKeepAliveInterval = 15 * 1000; // 15秒
         } else if (minDiff <= 60) {
             currentKeepAliveInterval = 60 * 1000; // 1分
-            console.log("[SW] イベントまで1時間以内 → Keep-Alive間隔を1分に短縮");
         } else {
             currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
         }
