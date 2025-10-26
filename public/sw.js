@@ -167,7 +167,6 @@ self.addEventListener("message", async (event) => {
 
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
-        console.log("[SW] 通知スケジュール受信:", data.notifications);
 
         // IndexedDBに保存
         await saveNotificationsToIndexedDB(data.notifications || []);
@@ -183,7 +182,6 @@ self.addEventListener("message", async (event) => {
 
     // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
-        console.log("[SW] 通知停止");
 
         // IndexedDBをクリア
         try {
