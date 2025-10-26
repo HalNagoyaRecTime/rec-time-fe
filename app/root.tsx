@@ -1,11 +1,19 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect, useState } from "react";
-import type { Route } from "./+types/root";
+// import type { Route } from "./+types/root";
+
+// 임시 타입 정의
+namespace Route {
+    export type LinksFunction = () => Array<{ rel: string; href: string; type?: string; sizes?: string; crossOrigin?: string }>;
+    export type ErrorBoundaryProps = { error: any };
+}
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
+import { initializeFCM } from "./utils/firebaseConfig";
+import "./utils/fcmTest"; // FCM 테스트 함수 등록
 
 import "./app.css";
 
@@ -55,81 +63,12 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
+        // Service Worker 등록 (통합 버전)
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
-                .then(async (reg) => {
-                    console.log("[SW] registered:", reg.scope);
-                    
-                    // Service Worker更新検知
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        console.log("[SW] 🔄 新しいService Workerを検出しました");
-                        
-                        if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log("[SW] ✅ 新しいService Workerがインストールされました");
-                                    console.log("[SW] 📢 ページをリロードすると新しいバージョンが適用されます");
-                                    
-                                    // オプション: 自動リロードを促す通知を表示
-                                    if ('Notification' in window && Notification.permission === 'granted') {
-                                        new Notification('RecTime更新', {
-                                            body: '新しいバージョンが利用可能です。ページをリロードしてください。',
-                                            tag: 'sw-update'
-                                        });
-                                    }
-                                } else if (newWorker.state === 'activated') {
-                                    console.log("[SW] 🚀 新しいService Workerが有効になりました");
-                                }
-                            });
-                        }
-                    });
-                    
-                    // 既存のService Worker情報をログ出力
-                    if (reg.active) {
-                        console.log("[SW] 📦 現在のService Workerバージョン: 2025-10-22-03-ios-15sec");
-                    }
-                    
-                    // Periodic Background Syncを登録（サポートされている場合）
-                    if ('periodicSync' in reg) {
-                        try {
-                            await (reg as any).periodicSync.register('check-notifications', {
-                                minInterval: 60 * 1000, // 1分（ブラウザが実際の間隔を決定）
-                            });
-                            console.log("[SW] Periodic Background Sync登録成功");
-                        } catch (error) {
-                            console.warn("[SW] Periodic Background Sync登録失敗:", error);
-                        }
-                    }
-                })
+                .then((reg) => console.log("[SW] registered:", reg.scope))
                 .catch((err) => console.error("[SW] register failed:", err));
-            
-            // Service Workerからのメッセージを受信
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SW_UPDATED') {
-                    console.log("[SW] 💬 Service Workerからメッセージ:", event.data.message);
-                }
-            });
-        }
-
-        // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
-        if (navigator.storage && navigator.storage.persist) {
-            navigator.storage.persist().then((isPersisted) => {
-                if (isPersisted) {
-                    console.log("[Storage] ✅ 永続ストレージが許可されました");
-                } else {
-                    console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
-                    console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
-                }
-            }).catch((error) => {
-                console.error("[Storage] 永続ストレージ要求エラー:", error);
-            });
-
-            // 現在の状態を確認
-            navigator.storage.persisted().then((isPersisted) => {
-                console.log(`[Storage] 現在の永続化状態: ${isPersisted ? '永続' : '非永続'}`);
-            });
         }
     }, []);
 
