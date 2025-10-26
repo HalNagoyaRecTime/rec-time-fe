@@ -184,7 +184,6 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
             const permission = await Notification.requestPermission();
             return permission;
         } catch (error) {
-            console.error("[通知] 権限要求エラー:", error);
             return "denied";
         }
     }
