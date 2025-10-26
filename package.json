@@ -3,13 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node sync-version.js && react-router build",
+    "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "vite:dev": "vite",
-    "vite:build": "node sync-version.js && vite build",
-    "build:staging": "cross-env VITE_API_BASE_URL=https://stg.example.com node sync-version.js && react-router build",
+    "vite:build": "vite build",
+    "build:staging": "cross-env VITE_API_BASE_URL=https://stg.example.com react-router build",
     "add-event": "node scripts/addFutureEvent.js",
     "format": "prettier --write \"app/**/*.{ts,tsx,js,jsx}\"",
     "format:check": "prettier --check \"app/**/*.{ts,tsx,js,jsx}\""
