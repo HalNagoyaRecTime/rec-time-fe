@@ -197,9 +197,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
-        if (isFromCache) {
-            console.log("[API] キャッシュからデータを取得しました");
-        }
 
         const data = await res.json();
         const eventsArray: EventRow[] = Array.isArray(data?.events) ? data.events : [];
