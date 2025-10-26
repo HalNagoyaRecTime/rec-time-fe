@@ -34,7 +34,6 @@ export async function downloadAndSaveEvents(
         const payload = result.payload;
         const isFromCache = result.isFromCache;
 
-        console.log(`[dataFetcher] 성공 - 이벤트 ${payload.t_events.length}개, 캐시: ${isFromCache}`);
 
         // LocalStorageに保存（常に保存）
         const storageKey = id ? STORAGE_KEYS.EVENTS(id) : STORAGE_KEYS.EVENTS("guest");
