@@ -489,7 +489,6 @@ self.addEventListener("notificationclick", (event) => {
 // 注意: Periodic Background Syncは一部のブラウザでのみサポート
 self.addEventListener("periodicsync", async (event) => {
     if (event.tag === "check-notifications") {
-        console.log("[SW] Periodic Sync: 通知チェック");
         event.waitUntil(checkAndSendNotifications());
     }
 });
