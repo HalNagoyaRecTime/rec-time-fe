@@ -80,7 +80,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
             if (alarmEvent) {
                 // アラーム情報がある場合（参加イベント）、そのデータを使用
-                console.log(`[アラーム] ${ev.f_event_name}: 集合時間 = ${alarmEvent.f_gather_time || 'なし'}, 場所 = ${alarmEvent.f_place || 'なし'}`);
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? alarmEvent.f_event_name ?? null,
