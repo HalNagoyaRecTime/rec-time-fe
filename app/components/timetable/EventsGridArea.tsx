@@ -96,9 +96,6 @@ export default function EventsGridArea({
                                     zIndex: 11,
                                 }}
                                 title={`他${hiddenCount + 1}件のイベントがあります`}
-                                onClick={() => {
-                                    console.log("Show all events at this time slot");
-                                }}
                             >
                                 <div className="flex h-full items-center justify-center font-bold">
                                     +{hiddenCount + 1}
