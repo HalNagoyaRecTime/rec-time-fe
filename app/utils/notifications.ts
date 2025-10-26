@@ -354,7 +354,6 @@ export function scheduleAllNotifications(events: EventRow[]): void {
         return;
     }
 
-    console.log("[通知] 通知スケジュールを開始します");
 
     // 参加予定のイベントのみフィルタリング
     const myEvents = events.filter(e => e.f_is_my_entry);
