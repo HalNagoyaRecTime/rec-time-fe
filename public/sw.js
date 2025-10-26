@@ -225,7 +225,6 @@ function startKeepAlive() {
     // イベントまでの時間で間隔を調整
     adjustKeepAliveInterval();
 
-    console.log(`[SW] Keep-Alive開始 (${currentKeepAliveInterval / 1000}秒ごと)`);
 
     // 即座に1回実行
     performKeepAlive();
