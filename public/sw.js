@@ -495,7 +495,6 @@ self.addEventListener("periodicsync", async (event) => {
 
 // === Push通知（将来的な拡張用） ===
 self.addEventListener("push", (event) => {
-    console.log("[SW] Push通知受信:", event);
     // 将来的にバックエンドからのプッシュ通知をサポートする場合
 });
 
