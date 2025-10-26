@@ -388,7 +388,6 @@ async function startNotificationCheckLoop() {
 
     async function checkLoop() {
         if (!checkLoopRunning) {
-            console.log("[SW] チェックループ停止");
             return;
         }
 
