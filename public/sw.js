@@ -108,7 +108,6 @@ async function saveNotificationsToIndexedDB(notifications) {
             });
         }
 
-        console.log(`[SW] ${notifications.length}件の通知をIndexedDBに保存しました`);
     } catch (error) {
         console.error("[SW] IndexedDB保存エラー:", error);
     }
