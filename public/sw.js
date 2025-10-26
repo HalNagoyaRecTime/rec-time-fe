@@ -1,7 +1,8 @@
 // public/sw.js
 // 통합 Service Worker: 캐싱 + 백그라운드 알림 + FCM
 
-const APP_VERSION = "2025-10-18-01";
+// ⚠️ このバージョン番号は app/constants/version.ts の APP_VERSION と同期してください
+const APP_VERSION = "25.1.0";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -438,11 +439,11 @@ async function startNotificationCheckLoop() {
         } catch (error) {
             console.error("[SW] 通知チェックエラー:", error);
         }
-        
+
         // 30秒後に再度チェック（setIntervalより確実）
         setTimeout(checkLoop, 30000);
     }
-    
+
     // 最初のチェックを即座に実行
     checkLoop();
 }
@@ -462,11 +463,11 @@ async function checkAndSendNotifications() {
                 // notification_time을 분 단위로 변환하여 비교
                 const notifyTimeStr = notification.notification_time;
                 if (!notifyTimeStr || notifyTimeStr.length < 4) continue;
-                
+
                 const notifyHour = parseInt(notifyTimeStr.substring(0, 2), 10);
                 const notifyMinute = parseInt(notifyTimeStr.substring(2, 4), 10);
                 const notifyTotalMinutes = notifyHour * 60 + notifyMinute;
-                
+
                 // 현재 시간이 알림 시간을 넘어갔는지 확인 (최대 10분 지연까지 허용)
                 const timeDiff = currentTotalMinutes - notifyTotalMinutes;
                 if (timeDiff >= 0 && timeDiff <= 10) {
@@ -550,7 +551,7 @@ messaging.onBackgroundMessage((payload) => {
         // 앱이 닫혀있을 때만 Service Worker에서 알림 표시
         let notificationTitle = 'RecTime 알림';
         let notificationBody = '새로운 알림이 있습니다';
-        
+
         if (payload.notification) {
             // 표준 FCM notification 필드 사용
             notificationTitle = payload.notification.title || notificationTitle;
