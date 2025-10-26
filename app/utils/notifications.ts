@@ -267,7 +267,6 @@ function checkAndNotifyEvent(event: EventRow): void {
 function scheduleNotification(event: EventRow): void {
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
-        console.log(`[予約] ${event.f_event_name} → イベント日ではないためスキップ`);
         return;
     }
 
