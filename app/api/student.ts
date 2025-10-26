@@ -41,7 +41,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const alarmEvents: any[] = await alarmRes.json();
-        console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
 
         // 学生情報を取得（生年月日認証用に保存されている場合）
         const { STORAGE_KEYS } = await import("~/constants/storage");
