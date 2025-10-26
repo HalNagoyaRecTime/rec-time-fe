@@ -389,7 +389,6 @@ function startNotificationCheck(events: EventRow[]): void {
         events.forEach(checkAndNotifyEvent);
     }, 60000); // 60秒 = 1分
 
-    console.log("[通知] 定期チェック開始（1分ごと）");
 }
 
 // === 定期チェック停止 ===
