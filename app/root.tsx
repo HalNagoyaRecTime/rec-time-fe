@@ -68,8 +68,6 @@ export default function App() {
                         if (newWorker) {
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log("[SW] ✅ 新しいService Workerがインストールされました");
-                                    console.log("[SW] 📢 ページをリロードすると新しいバージョンが適用されます");
                                     
                                     // オプション: 自動リロードを促す通知を表示
                                     if ('Notification' in window && Notification.permission === 'granted') {
