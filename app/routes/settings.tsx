@@ -5,7 +5,6 @@ import { FaAngleRight } from "react-icons/fa6";
 import { useStudentData } from "~/hooks/useStudentData";
 import { useNotificationSettings } from "~/hooks/useNotificationSettings";
 import { clearAllCache } from "~/utils/clearCache";
-import FCMTestPanel from "~/components/FCMTestPanel";
 import type { Message } from "~/types/timetable";
 
 type ModalType = "notification" | "clearCache" | null;
@@ -144,9 +143,6 @@ export default function Settings() {
                         </button>
                     </div>
                 </div>
-
-                {/* FCM 테스트 패널 / FCMテストパネル */}
-                <FCMTestPanel />
 
                 {/* 確認モーダル - 通知オフ */}
                 {modalType === "notification" && (
