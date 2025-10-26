@@ -11,7 +11,6 @@ import { STORAGE_KEYS } from "~/constants/storage";
  */
 export async function clearAllCache(): Promise<void> {
     try {
-        console.log("[clearCache] キャッシュクリア開始...");
 
         // 1. LocalStorageの削除
         const studentId = localStorage.getItem(STORAGE_KEYS.STUDENT_ID);

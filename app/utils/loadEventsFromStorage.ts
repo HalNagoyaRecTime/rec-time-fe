@@ -13,7 +13,6 @@ export function loadEventsFromStorage(studentId: string | null): EventRow[] {
 
         if (eventsData) {
             const events = JSON.parse(eventsData);
-            console.log(`[loadEventsFromStorage] ${storageKey}から${events.length}個のイベントを読み込み`);
             return Array.isArray(events) ? events : [];
         }
 
