@@ -80,11 +80,6 @@ export default function App() {
                         }
                     });
                     
-                    // 既存のService Worker情報をログ出力
-                    if (reg.active) {
-                        console.log("[SW] 📦 現在のService Workerバージョン: 2025-10-22-03-ios-15sec");
-                    }
-                    
                     // Periodic Background Syncを登録（サポートされている場合）
                     if ('periodicSync' in reg) {
                         try {
