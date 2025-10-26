@@ -182,7 +182,6 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     if (Notification.permission === "default") {
         try {
             const permission = await Notification.requestPermission();
-            console.log(`[通知] 権限要求結果: ${permission}`);
             return permission;
         } catch (error) {
             console.error("[通知] 権限要求エラー:", error);
