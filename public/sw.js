@@ -596,7 +596,6 @@ self.addEventListener("fetch", (event) => {
                         const responseClone = response.clone();
                         caches.open(DATA_CACHE_NAME).then((cache) => {
                             cache.put(request, responseClone);
-                            console.log("[SW] APIレスポンスをキャッシュに保存:", url.pathname);
                         });
                     }
                     return response;
