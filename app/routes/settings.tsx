@@ -143,7 +143,7 @@ export default function Settings() {
                             </h2>
                             <Link
                                 to="/register/student-id"
-                                className="absolute right-2 flex h-10 w-10 cursor-pointer items-center justify-center"
+                                className="absolute right-2 flex h-15 w-15 cursor-pointer items-center justify-center"
                             >
                                 <FaAngleRight className="h-6 w-6 text-white" />
                             </Link>
