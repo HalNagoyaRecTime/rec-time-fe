@@ -96,14 +96,6 @@ export default function App() {
         // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
         if (navigator.storage && navigator.storage.persist) {
             navigator.storage.persist().then((isPersisted) => {
-                if (isPersisted) {
-                    console.log("[Storage] ✅ 永続ストレージが許可されました");
-                } else {
-                    console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
-                    console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
-                }
-            }).catch((error) => {
-                console.error("[Storage] 永続ストレージ要求エラー:", error);
             });
         }
     }, []);
