@@ -72,7 +72,6 @@ function calculateNotificationTimes(event: EventRow): Array<{ time: string; labe
         }
     }
     
-    console.log(`[通知] ${event.f_event_name} の通知タイミング:`, notifications);
     return notifications;
 }
 
