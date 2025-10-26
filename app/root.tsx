@@ -67,18 +67,12 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
-        // Service Worker 등록
+        // Service Worker 등록 (통합 버전)
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
                 .then((reg) => {
-                    console.log("[SW] registered:", reg.scope);
-                    
-                    // FCM Service Worker도 등록
-                    return navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
-                })
-                .then((reg) => {
-                    console.log("[FCM SW] registered:", reg.scope);
+                    console.log("[SW] Service Worker 등록 완료:", reg.scope);
                     
                     // FCM 초기화 시도 (브라우저 환경에서만)
                     // 역할: 앱 시작 시 FCM을 백그라운드에서 초기화하여 오프라인 알림 준비
@@ -94,7 +88,7 @@ export default function App() {
                         });
                     }
                 })
-                .catch((err) => console.error("[SW] register failed:", err));
+                .catch((err) => console.error("[SW] 등록 실패:", err));
         }
     }, []);
 

@@ -94,6 +94,8 @@ export default function Timetable() {
     // === イベントデータが更新されたら通知をスケジュール ===
     useEffect(() => {
         if (events.length > 0) {
+            // 이벤트 데이터가 변경될 때마다 알림 재스케줄
+            console.log(`[Timetable] 이벤트 ${events.length}개 로드 - 알림 재스케줄`);
             scheduleAllNotifications(events);
             
             // 通知が有効で、注意喚起を表示するフラグがある場合

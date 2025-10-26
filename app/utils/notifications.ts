@@ -173,7 +173,19 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
         return "denied";
     }
 
-    // iOS PWAの場合、ホーム画面に追加されているか確認
+    // 이미 권한이 있으면 바로 반환
+    if (Notification.permission === "granted") {
+        console.log("[通知] 既に権限が許可されています");
+        return "granted";
+    }
+
+    // 권한이 거부되었으면 거부 상태 반환
+    if (Notification.permission === "denied") {
+        console.warn("[通知] 権限が既に拒否されています");
+        return "denied";
+    }
+
+    // iOS PWAの場合、ホーム画面に追加されているか 확인
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                          (window.navigator as any).standalone === true;
@@ -183,18 +195,15 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
         return "denied";
     }
 
-    if (Notification.permission === "default") {
-        try {
-            const permission = await Notification.requestPermission();
-            console.log(`[通知] 権限要求結果: ${permission}`);
-            return permission;
-        } catch (error) {
-            console.error("[通知] 権限要求エラー:", error);
-            return "denied";
-        }
+    // 권한 요청
+    try {
+        const permission = await Notification.requestPermission();
+        console.log(`[通知] 権限要求結果: ${permission}`);
+        return permission;
+    } catch (error) {
+        console.error("[通知] 権限要求エラー:", error);
+        return "denied";
     }
-
-    return Notification.permission;
 }
 
 // === 通知フォーマット関数（共通化） ===
@@ -289,19 +298,35 @@ function scheduleNotification(event: EventRow): void {
         const diff = targetTime.getTime() - now;
 
         if (diff > 0 && diff < 24 * 60 * 60 * 1000) { // 24時間以内
-            setTimeout(() => {
+            const timeoutId = window.setTimeout(() => {
                 if (!isAlreadyNotified(event.f_event_id, time, label)) {
                     showEventNotification(event, label);
                     markAsNotified(event.f_event_id, time, label);
                 }
+                // 실행 후 배열에서 제거
+                scheduledTimeouts = scheduledTimeouts.filter(id => id !== timeoutId);
             }, diff);
+            
+            // 스케줄된 timeout ID 저장
+            scheduledTimeouts.push(timeoutId);
             console.log(`[予約] ${event.f_event_name} → ${label} (${time}) に通知予定（${Math.floor(diff / 1000 / 60)}分後）`);
         }
     }
 }
 
+// === 스케줄된 setTimeout 알림 모두 취소 ===
+function clearScheduledNotifications(): void {
+    scheduledTimeouts.forEach(timeoutId => {
+        clearTimeout(timeoutId);
+    });
+    scheduledTimeouts = [];
+    console.log("[通知] 스케줄된 setTimeout 알림 모두 취소");
+}
+
 // === グローバルに保存される定期チェック用タイマー ===
 let notificationCheckInterval: number | null = null;
+// setTimeout으로 스케줄된 알림들을 추적하기 위한 배열
+let scheduledTimeouts: number[] = [];
 
 // === Service Workerにイベントを送信 ===
 function sendEventsToServiceWorker(events: EventRow[]): void {

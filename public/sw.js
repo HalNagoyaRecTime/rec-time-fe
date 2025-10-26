@@ -1,8 +1,31 @@
 // public/sw.js
+// 통합 Service Worker: 캐싱 + 백그라운드 알림 + FCM
 
-const APP_VERSION = "2025-10-18-01";
+const APP_VERSION = "2025-10-25-01";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
+
+// === Firebase SDK Import ===
+// Firebase Cloud Messaging을 위한 SDK 로드
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+
+// Firebase 설정
+const firebaseConfig = {
+  apiKey: "AIzaSyAUDY7ty75NHqwfmT4xGiTeJj3f5VT0Duc",
+  authDomain: "rec-time-593b0.firebaseapp.com",
+  projectId: "rec-time-593b0",
+  storageBucket: "rec-time-593b0.firebasestorage.app",
+  messagingSenderId: "885151050655",
+  appId: "1:885151050655:web:873c0e58da98316a4fabaa",
+  measurementId: "G-5YRL3CV57Z"
+};
+
+// Firebase 초기화
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+console.log('[SW] Firebase 초기화 완료');
 
 // キャッシュするリソース
 const STATIC_FILES = [
@@ -182,6 +205,42 @@ self.addEventListener("notificationclick", (event) => {
             }
         })
     );
+});
+
+// === FCM Background Message Handler ===
+// 백엔드에서 보낸 FCM 푸시 알림을 받아서 표시
+messaging.onBackgroundMessage((payload) => {
+    console.log('[SW] FCM 백그라운드 메시지 수신:', payload);
+
+    const notificationTitle = payload.notification?.title || 'RecTime 알림';
+    const notificationOptions = {
+        body: payload.notification?.body || '새로운 알림이 있습니다',
+        icon: '/icons/pwa-192.png',
+        badge: '/icons/pwa-192.png',
+        tag: payload.data?.eventId || 'fcm-background-notification',
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        data: payload.data || {},
+        actions: [
+            {
+                action: 'open',
+                title: '앱 열기',
+                icon: '/icons/pwa-192.png'
+            },
+            {
+                action: 'close',
+                title: '닫기'
+            }
+        ]
+    };
+
+    // 알림 표시
+    self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// === Notification Close Handler ===
+self.addEventListener("notificationclose", (event) => {
+    console.log("[SW] 알림이 닫혔습니다:", event.notification.data);
 });
 
 // === Periodic Background Sync (将来的な拡張用) ===

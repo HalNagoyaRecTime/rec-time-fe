@@ -84,10 +84,28 @@ export function useStudentData() {
         localStorage.setItem(STORAGE_KEYS.LAST_UPDATED, now);
         
         // FCM 토큰 자동 등록 / FCMトークン自動登録
-        if (fcm.status.isSupported && !fcm.status.isRegistered) {
-            console.log("🔔 FCM 토큰 자동 등록 시작 / FCMトークン自動登録開始:", id);
-            await fcm.registerToken(id);
-        }
+        // 로그인 직후 약간의 지연을 두고 토큰 등록 시도
+        setTimeout(async () => {
+            if (fcm.status.isSupported) {
+                console.log("🔔 FCM 토큰 자동 등록 시작 / FCMトークン自動登録開始:", id);
+                const success = await fcm.registerToken(id);
+                if (success) {
+                    console.log("✅ FCM 토큰 자동 등록 성공");
+                    
+                    // 백엔드 상태 확인 (등록이 제대로 되었는지 확인)
+                    setTimeout(async () => {
+                        const isRegistered = await fcm.checkStatus(id);
+                        if (isRegistered) {
+                            console.log("✅ 백엔드 FCM 토큰 등록 확인 완료");
+                        } else {
+                            console.warn("⚠️ 백엔드 FCM 토큰 등록 상태 확인 실패 - 재등록 필요할 수 있음");
+                        }
+                    }, 2000); // 등록 후 2초 뒤 상태 확인
+                } else {
+                    console.warn("⚠️ FCM 토큰 자동 등록 실패 - 알림 권한 확인 필요");
+                }
+            }
+        }, 1000); // 1초 후 토큰 등록 시도
     };
 
     // 全学生データをクリア

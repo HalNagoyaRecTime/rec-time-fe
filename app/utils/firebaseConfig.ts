@@ -71,8 +71,18 @@ export async function getFCMToken(): Promise<string | null> {
             return null;
         }
 
-        // Service Worker 등록 대기
-        const registration = await navigator.serviceWorker.ready;
+        // Service Worker 등록 확인
+        // 이미 sw.js가 등록되어 있으므로 기존 registration 사용
+        let registration = await navigator.serviceWorker.getRegistration();
+        
+        if (!registration) {
+            // 등록이 안 되어 있으면 새로 등록
+            registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+            console.log("✅ Service Worker 새로 등록 / Service Worker新規登録");
+        }
+        
+        // Service Worker 활성화 대기
+        await navigator.serviceWorker.ready;
         console.log("✅ Service Worker 준비 완료 / Service Worker準備完了");
 
         // FCM 토큰 발급 / FCMトークン発行

@@ -11,6 +11,8 @@ import {
     showSettingNotification,
 } from "~/utils/notifications";
 import { initializeFCM } from "~/utils/firebaseConfig";
+import { registerFCMToken } from "~/utils/registerFCMToken";
+import { getFCMToken } from "~/utils/firebaseConfig";
 import type { EventRow } from "~/api/student";
 
 export function useNotificationSettings() {
@@ -36,13 +38,26 @@ export function useNotificationSettings() {
             saveNotificationSetting(true);
             setIsEnabled(true);
 
-            // FCM 초기화 시도 (백그라운드에서 자동 실행)
-            // FCM初期化試行（バックグラウンドで自動実行）
-            // 역할: FCM이 성공하면 오프라인 알림 가능, 실패해도 사용자는 알아채지 못함
+            // FCM 초기화 및 토큰 등록 시도
             try {
+                // FCM 초기화
                 const fcmInitialized = await initializeFCM();
                 if (fcmInitialized) {
                     console.log("[useNotificationSettings] FCM 초기화 성공 - 오프라인 알림 활성화");
+                    
+                    // FCM 토큰 발급 및 백엔드 등록
+                    const studentId = localStorage.getItem(STORAGE_KEYS.STUDENT_ID);
+                    if (studentId) {
+                        const token = await getFCMToken();
+                        if (token) {
+                            const success = await registerFCMToken(token, studentId);
+                            if (success) {
+                                console.log("[useNotificationSettings] FCM 토큰 등록 성공");
+                            } else {
+                                console.warn("[useNotificationSettings] FCM 토큰 등록 실패");
+                            }
+                        }
+                    }
                 } else {
                     console.log("[useNotificationSettings] FCM 초기화 실패 - 기존 Service Worker 방식 사용");
                 }
