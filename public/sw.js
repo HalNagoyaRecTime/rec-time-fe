@@ -499,7 +499,6 @@ self.addEventListener("push", (event) => {
 });
 
 self.addEventListener("install", (event) => {
-    console.log("[SW] install", APP_VERSION);
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_FILES);
