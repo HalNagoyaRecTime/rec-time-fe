@@ -86,17 +86,31 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             }
 
             // 백엔드 테이블에는 f_time 필드만 있음
-            const startTime = ev.f_time ? String(ev.f_time) : null;
+            // f_time이 2자리 숫자("12")면 4자리("1200")로 변환
+            const normalizeTime = (time: any): string | null => {
+                if (!time) return null;
+                const timeStr = String(time);
+                // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
+                if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
+                    return timeStr + "00";
+                }
+                // 이미 4자리면 그대로 사용
+                return timeStr;
+            };
+            
+            const startTime = normalizeTime(ev.f_time);
             // alarmEvent에도 f_time 필드 사용 (f_start_time이 아닌)
-            const alarmStartTime = alarmEvent?.f_time ? String(alarmEvent.f_time) : null;
+            const alarmStartTime = normalizeTime(alarmEvent?.f_time);
 
             if (alarmEvent) {
                 // アラーム情報がある場合（参加イベント）、そのデータを使用
                 console.log(`[アラーム] ${ev.f_event_name}: 集合時間 = ${alarmEvent.f_gather_time || 'なし'}, 場所 = ${alarmEvent.f_place || 'なし'}`);
+                const finalStartTime = alarmStartTime ?? startTime;
+                console.log(`[API] 참가 이벤트 매핑 - 이름: ${ev.f_event_name}, 시작시간: ${finalStartTime}, f_is_my_entry: true`);
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? alarmEvent.f_event_name ?? null,
-                    f_start_time: alarmStartTime ?? startTime, // f_time 사용
+                    f_start_time: finalStartTime, // f_time 사용
                     f_duration: alarmEvent.f_duration ?? (ev.f_duration ? String(ev.f_duration) : null),
                     f_place: alarmEvent.f_place ?? ev.f_place ?? null,
                     f_gather_time: alarmEvent.f_gather_time ? String(alarmEvent.f_gather_time) : null,
@@ -105,6 +119,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 };
             } else {
                 // 参加していないイベント
+                console.log(`[API] 미참가 이벤트 - 이름: ${ev.f_event_name}, 시작시간: ${startTime}, f_is_my_entry: false`);
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? null,
@@ -164,10 +179,22 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_birthday: null,
         };
 
+        // 시간 정규화 함수 (2자리 -> 4자리 변환)
+        const normalizeTime = (time: any): string | null => {
+            if (!time) return null;
+            const timeStr = String(time);
+            // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
+            if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
+                return timeStr + "00";
+            }
+            // 이미 4자리면 그대로 사용
+            return timeStr;
+        };
+
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : null, // 백엔드에는 f_time만 있음
+            f_start_time: normalizeTime(ev.f_time), // 시간 정규화 적용
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
