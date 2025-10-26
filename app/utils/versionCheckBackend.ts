@@ -1,7 +1,6 @@
 // app/utils/versionCheckBackend.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8787"; // ローカル
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://rec-time-be.ellan122316.workers.dev"; // 本番
+import { getApiBaseUrl } from "~/utils/apiConfig";
 
 const LAST_SEEN_VERSION_KEY = "app:last_seen_version";
 const LAST_CHECK_TIME_KEY = "app:last_check_time";
@@ -66,7 +65,8 @@ export async function checkVersionFromBackend(): Promise<{
     isChecking = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/version`, {
+        const API_BASE_URL = getApiBaseUrl();
+        const response = await fetch(`${API_BASE_URL}/version`, {
             cache: "no-cache",
         });
 
@@ -137,7 +137,8 @@ export async function forceCheckVersion(): Promise<{
  */
 export async function getCurrentVersion(): Promise<string> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/version`, {
+        const API_BASE_URL = getApiBaseUrl();
+        const response = await fetch(`${API_BASE_URL}/version`, {
             cache: "no-cache",
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -159,7 +160,8 @@ export async function getVersionDetail(version: string): Promise<{
     message: string;
 } | null> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/version/detail/${version}`, {
+        const API_BASE_URL = getApiBaseUrl();
+        const response = await fetch(`${API_BASE_URL}/version/detail/${version}`, {
             cache: "no-cache",
         });
 
