@@ -295,7 +295,6 @@ async function adjustKeepAliveInterval() {
 
 async function performKeepAlive() {
     try {
-        console.log("[SW] Keep-Alive: バックエンドに疎通チェック送信");
 
         // バックエンドの軽量なヘルスチェックエンドポイントにリクエスト
         // タイムアウトを短く設定（回線不安定対応）
