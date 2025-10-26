@@ -223,7 +223,6 @@ export function showEventNotification(event: EventRow, label: string = '集合�
     const tag = `event-${event.f_event_id}-${label}`;
 
     new Notification(title, { body, tag });
-    console.log(`[通知] 表示: ${title} (${label})`);
 }
 
 // === 設定オンオフ時の通知を表示 ===
