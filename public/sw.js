@@ -117,8 +117,8 @@ async function startNotificationCheckLoop() {
             console.error("[SW] 通知チェックエラー:", error);
         }
         
-        // 30秒後に再度チェック（setIntervalより確実）
-        setTimeout(checkLoop, 30000);
+        // 10秒後に再度チェック（더 정확한 타이밍을 위해 간격 단축）
+        setTimeout(checkLoop, 10000);
     }
     
     // 最初のチェックを即座に 실행
@@ -128,30 +128,44 @@ async function startNotificationCheckLoop() {
 // === 通知をチェックして送信 ===
 async function checkAndSendNotifications() {
     const now = new Date();
-    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}${currentMinute.toString().padStart(2, '0')}`;
+    const currentTotalMinutes = currentHour * 60 + currentMinute;
 
     console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${scheduledNotifications.length}`);
 
     for (const notification of scheduledNotifications) {
-        if (notification.notification_time === currentTimeStr && !notification.notified) {
+        if (!notification.notified) {
+            // notification_time을 분 단위로 변환하여 비교
+            const notifyTimeStr = notification.notification_time;
+            if (!notifyTimeStr || notifyTimeStr.length < 4) continue;
             
-            // 既に送信済みかチェック（LocalStorageと連携）
-            let hasActiveClient = false;
-            try {
-                const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-                hasActiveClient = clients && clients.length > 0;
-                
-                if (hasActiveClient) {
-                    console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
-                    continue;
+            const notifyHour = parseInt(notifyTimeStr.substring(0, 2), 10);
+            const notifyMinute = parseInt(notifyTimeStr.substring(2, 4), 10);
+            const notifyTotalMinutes = notifyHour * 60 + notifyMinute;
+            
+            // 현재 시간이 알림 시간을 넘어갔는지 확인 (최대 10분 지연까지 허용)
+            const timeDiff = currentTotalMinutes - notifyTotalMinutes;
+            if (timeDiff >= 0 && timeDiff <= 10) {
+                // 既に送信済みかチェック（LocalStorageと連携）
+                let hasActiveClient = false;
+                try {
+                    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+                    hasActiveClient = clients && clients.length > 0;
+                    
+                    if (hasActiveClient) {
+                        console.log(`[SW] アクティブなクライアントがあるため、アプリ側に通知を任せます`);
+                        continue;
+                    }
+                } catch (error) {
+                    console.error('[SW] クライアントチェックエラー:', error);
                 }
-            } catch (error) {
-                console.error('[SW] クライアントチェックエラー:', error);
+                
+                console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label}), 시간차: ${timeDiff}분`);
+                await showNotification(notification);
+                notification.notified = true;
             }
-            
-            console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
-            await showNotification(notification);
-            notification.notified = true;
         }
     }
 }
@@ -212,13 +226,27 @@ self.addEventListener("notificationclick", (event) => {
 // 백엔드에서 보낸 FCM 푸시 알림을 받아서 표시
 messaging.onBackgroundMessage((payload) => {
     console.log('[SW] FCM 백그라운드 메시지 수신:', payload);
+    console.log('[SW] 전체 페이로드:', JSON.stringify(payload, null, 2));
 
-    const notificationTitle = payload.notification?.title || 'RecTime 알림';
+    // 백엔드가 notification 필드 없이 data만 보낼 수 있으므로 처리
+    let notificationTitle = 'RecTime 알림';
+    let notificationBody = '새로운 알림이 있습니다';
+    
+    if (payload.notification) {
+        // 표준 FCM notification 필드 사용
+        notificationTitle = payload.notification.title || notificationTitle;
+        notificationBody = payload.notification.body || notificationBody;
+    } else if (payload.data) {
+        // data 필드에서 title/body 추출 (백엔드가 data만 보낼 경우)
+        notificationTitle = payload.data.title || payload.data.Title || notificationTitle;
+        notificationBody = payload.data.body || payload.data.Body || payload.data.message || notificationBody;
+    }
+
     const notificationOptions = {
-        body: payload.notification?.body || '새로운 알림이 있습니다',
+        body: notificationBody,
         icon: '/icons/pwa-192.png',
         badge: '/icons/pwa-192.png',
-        tag: payload.data?.eventId || 'fcm-background-notification',
+        tag: payload.data?.eventId || payload.data?.event_id || 'fcm-background-notification',
         requireInteraction: true,
         vibrate: [200, 100, 200],
         data: payload.data || {},
@@ -235,8 +263,12 @@ messaging.onBackgroundMessage((payload) => {
         ]
     };
 
+    console.log('[SW] 알림 표시:', notificationTitle, notificationBody);
+
     // 알림 표시
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(notificationTitle, notificationOptions).catch((error) => {
+        console.error('[SW] 알림 표시 실패:', error);
+    });
 });
 
 // === Notification Close Handler ===
