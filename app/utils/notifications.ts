@@ -155,10 +155,8 @@ function isTodayEventDate(): boolean {
     
     // 今日がイベント日の当日または以前（イベント日まで）の場合に有効
     if (today <= targetDate) {
-        console.log(`[通知] イベント日まで有効: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
         return true;
     } else {
-        console.log(`[通知] イベント日を過ぎています: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
         return false;
     }
 }
