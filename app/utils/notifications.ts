@@ -286,7 +286,6 @@ function scheduleNotification(event: EventRow): void {
                     markAsNotified(event.f_event_id, time, label);
                 }
             }, diff);
-            console.log(`[予約] ${event.f_event_name} → ${label} (${time}) に通知予定（${Math.floor(diff / 1000 / 60)}分後）`);
         }
     }
 }
