@@ -427,7 +427,6 @@ async function checkAndSendNotifications() {
                     console.error("[SW] クライアントチェックエラー:", error);
                 }
 
-                console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
                 await showNotification(notification);
 
                 // 通知済みフラグを更新
