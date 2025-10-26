@@ -341,7 +341,6 @@ export function scheduleAllNotifications(events: EventRow[]): void {
 
     // 通知が無効なら何もしない
     if (!getNotificationSetting()) {
-        console.log("[通知] 通知設定が無効のため、スケジュールしません");
         stopNotificationCheck();
         stopServiceWorkerNotifications();
         return;
