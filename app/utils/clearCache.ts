@@ -61,7 +61,6 @@ export async function clearAllCache(): Promise<void> {
             navigator.serviceWorker.controller.postMessage({
                 type: "STOP_NOTIFICATIONS",
             });
-            console.log("[clearCache] ✅ Service Workerに通知停止を送信しました");
         }
 
         console.log("[clearCache] ✅ すべてのキャッシュを削除しました");
