@@ -63,7 +63,7 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
 
     // バージョンチェック関数（共通化）
     const checkForUpdates = useCallback(
-        async (source: string) => {
+        async (source: string, skipThrottle: boolean = false) => {
             if (isCheckingRef.current) {
                 console.log(`[${source}] 既にチェック中 - スキップ`);
                 return;
@@ -72,7 +72,9 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
             isCheckingRef.current = true;
 
             try {
-                const { hasUpdate, latestVersion, skipped } = await checkVersionFromBackend();
+                const { hasUpdate, latestVersion, skipped } = await checkVersionFromBackend({
+                    skipThrottle,
+                });
 
                 if (skipped) {
                     console.log(`[${source}] チェックスキップ（5分以内）`);
@@ -82,11 +84,16 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
                 if (hasUpdate) {
                     console.log(`[${source}] 🆕 新しいバージョンを検出: ${latestVersion}`);
 
+                    // バージョン詳細を取得（データベースから更新内容を取得）
+                    const { getVersionDetail } = await import("~/utils/versionCheckBackend");
+                    const detail = await getVersionDetail(latestVersion);
+                    const message = detail?.message || "新しいバージョンが利用可能です";
+
                     // コールバックを実行
                     if (onUpdateDetected) {
                         onUpdateDetected({
                             version: latestVersion,
-                            message: "新しいバージョンが利用可能です",
+                            message,
                         });
                     }
 
@@ -95,7 +102,7 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
                         new CustomEvent("version-update-detected", {
                             detail: {
                                 version: latestVersion,
-                                message: "新しいバージョンが利用可能です",
+                                message,
                             },
                         })
                     );
@@ -110,7 +117,7 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
     // 手動チェック（5分制限を無視）
     const forceCheck = useCallback(async () => {
         console.log("[手動チェック] バージョンチェック開始");
-        const { hasUpdate, latestVersion } = await forceCheckVersionUtil();
+        const { hasUpdate, latestVersion, message } = await forceCheckVersionUtil();
 
         if (hasUpdate) {
             console.log(`[手動チェック] 🆕 新しいバージョンを検出: ${latestVersion}`);
@@ -118,7 +125,7 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
             if (onUpdateDetected) {
                 onUpdateDetected({
                     version: latestVersion,
-                    message: "新しいバージョンが利用可能です",
+                    message,
                 });
             }
 
@@ -126,7 +133,7 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
                 new CustomEvent("version-update-detected", {
                     detail: {
                         version: latestVersion,
-                        message: "新しいバージョンが利用可能です",
+                        message,
                     },
                 })
             );
@@ -141,12 +148,12 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
             return;
         }
 
-        // 1. 起動時チェック
+        // 1. 起動時チェック（ページリロード = ユーザーアクション → スロットル回避）
         if (checkOnMount) {
-            checkForUpdates("起動時");
+            checkForUpdates("起動時", true);
         }
 
-        // 2. 定期チェック（ランダム待機 + 5分ごと）
+        // 2. 定期チェック（自動チェック → スロットル適用）
         let initialTimer: NodeJS.Timeout | null = null;
         let periodicInterval: NodeJS.Timeout | null = null;
 
@@ -155,28 +162,28 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
             console.log(`[VersionCheck] 初回チェックまで ${Math.floor(randomDelay / 1000 / 60)}分待機`);
 
             initialTimer = setTimeout(() => {
-                checkForUpdates("定期チェック（初回）");
+                checkForUpdates("定期チェック（初回）", false);
 
                 // 5分ごとの定期チェック
                 periodicInterval = setInterval(() => {
-                    checkForUpdates("定期チェック");
+                    checkForUpdates("定期チェック", false);
                 }, 5 * 60 * 1000); // 5分
             }, randomDelay);
         }
 
-        // 3. バックグラウンド復帰時チェック
+        // 3. バックグラウンド復帰時チェック（ユーザーがアプリに戻る = ユーザーアクション → スロットル回避）
         const handleVisibilityChange = () => {
             if (checkOnVisibilityChange && document.visibilityState === "visible") {
                 console.log("[VersionCheck] バックグラウンドから復帰");
-                checkForUpdates("バックグラウンド復帰");
+                checkForUpdates("バックグラウンド復帰", true);
             }
         };
 
-        // 4. フォーカス時チェック
+        // 4. フォーカス時チェック（ユーザーがウィンドウにフォーカス = ユーザーアクション → スロットル回避）
         const handleFocus = () => {
             if (checkOnFocus) {
                 console.log("[VersionCheck] ウィンドウがフォーカスされました");
-                checkForUpdates("フォーカス");
+                checkForUpdates("フォーカス", true);
             }
         };
 
@@ -208,8 +215,8 @@ export function useVersionCheck(options: UseVersionCheckOptions = {}) {
         forceCheck,
 
         /**
-         * 通常のバージョンチェックを実行（5分制限あり）
+         * ユーザーアクションによるバージョンチェック（5分制限を回避）
          */
-        checkNow: () => checkForUpdates("手動"),
+        checkNow: () => checkForUpdates("手動", true),
     };
 }

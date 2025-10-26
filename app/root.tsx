@@ -7,6 +7,7 @@ import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
 import UpdateModal from "./components/ui/update-modal";
+import UpdateSuccessModal from "./components/ui/update-success-modal";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { markVersionAsSeen } from "./utils/versionCheckBackend";
 import { reinstallPWA } from "./utils/clearCache";
@@ -60,10 +61,15 @@ export default function App() {
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
     const [updateInfo, setUpdateInfo] = useState<{ version: string; message: string } | null>(null);
+    const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
 
     // バージョンチェックフック
     useVersionCheck({
         autoCheck: !isMaintenanceMode,
+        checkOnMount: true, // 起動時チェック（初回のみ）
+        checkOnFocus: false, // フォーカス時チェック無効（初期読み込み時の重複を防ぐ）
+        checkOnVisibilityChange: true, // バックグラウンド復帰時チェック
+        enablePeriodicCheck: true, // 定期チェック
         onUpdateDetected: (info) => {
             setUpdateInfo(info);
             setShowUpdateModal(true);
@@ -72,9 +78,16 @@ export default function App() {
 
     useEffect(() => {
         // メンテナンスモードチェック
-        const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
+        const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
         if (maintenanceMode) {
             setIsMaintenanceMode(true);
+        }
+
+        // アップデート完了チェック
+        const updateCompleted = localStorage.getItem("app:update_completed");
+        if (updateCompleted === "true") {
+            localStorage.removeItem("app:update_completed");
+            setShowUpdateSuccess(true);
         }
     }, []);
 
@@ -83,55 +96,42 @@ export default function App() {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
                 .then(async (reg) => {
-                    console.log("[SW] registered:", reg.scope);
-                    
                     // Service Worker更新検知
-                    reg.addEventListener('updatefound', () => {
+                    reg.addEventListener("updatefound", () => {
                         const newWorker = reg.installing;
-                        console.log("[SW] 🔄 新しいService Workerを検出しました");
-                        
+
                         if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log("[SW] ✅ 新しいService Workerがインストールされました");
-                                    console.log("[SW] 📢 ページをリロードすると新しいバージョンが適用されます");
-                                    
+                            newWorker.addEventListener("statechange", () => {
+                                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
                                     // オプション: 自動リロードを促す通知を表示
-                                    if ('Notification' in window && Notification.permission === 'granted') {
-                                        new Notification('RecTime更新', {
-                                            body: '新しいバージョンが利用可能です。ページをリロードしてください。',
-                                            tag: 'sw-update'
+                                    if ("Notification" in window && Notification.permission === "granted") {
+                                        new Notification("RecTime更新", {
+                                            body: "新しいバージョンが利用可能です。ページをリロードしてください。",
+                                            tag: "sw-update",
                                         });
                                     }
-                                } else if (newWorker.state === 'activated') {
-                                    console.log("[SW] 🚀 新しいService Workerが有効になりました");
+                                } else if (newWorker.state === "activated") {
                                 }
                             });
                         }
                     });
-                    
-                    // 既存のService Worker情報をログ出力
-                    if (reg.active) {
-                        console.log("[SW] 📦 現在のService Workerバージョン: 2025-10-22-03-ios-15sec");
-                    }
-                    
+
                     // Periodic Background Syncを登録（サポートされている場合）
-                    if ('periodicSync' in reg) {
+                    if ("periodicSync" in reg) {
                         try {
-                            await (reg as any).periodicSync.register('check-notifications', {
+                            await (reg as any).periodicSync.register("check-notifications", {
                                 minInterval: 60 * 1000, // 1分（ブラウザが実際の間隔を決定）
                             });
-                            console.log("[SW] Periodic Background Sync登録成功");
                         } catch (error) {
                             console.warn("[SW] Periodic Background Sync登録失敗:", error);
                         }
                     }
                 })
                 .catch((err) => console.error("[SW] register failed:", err));
-            
+
             // Service Workerからのメッセージを受信
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'SW_UPDATED') {
+            navigator.serviceWorker.addEventListener("message", (event) => {
+                if (event.data && event.data.type === "SW_UPDATED") {
                     console.log("[SW] 💬 Service Workerからメッセージ:", event.data.message);
                 }
             });
@@ -139,21 +139,19 @@ export default function App() {
 
         // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
         if (navigator.storage && navigator.storage.persist) {
-            navigator.storage.persist().then((isPersisted) => {
-                if (isPersisted) {
-                    console.log("[Storage] ✅ 永続ストレージが許可されました");
-                } else {
-                    console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
-                    console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
-                }
-            }).catch((error) => {
-                console.error("[Storage] 永続ストレージ要求エラー:", error);
-            });
-
-            // 現在の状態を確認
-            navigator.storage.persisted().then((isPersisted) => {
-                console.log(`[Storage] 現在の永続化状態: ${isPersisted ? '永続' : '非永続'}`);
-            });
+            navigator.storage
+                .persist()
+                .then((isPersisted) => {
+                    if (isPersisted) {
+                        console.log("[Storage] ✅ 永続ストレージが許可されました");
+                    } else {
+                        console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
+                        console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
+                    }
+                })
+                .catch((error) => {
+                    console.error("[Storage] 永続ストレージ要求エラー:", error);
+                });
         }
     }, []);
 
@@ -167,11 +165,12 @@ export default function App() {
 
     // メンテナンス画面
     if (isMaintenanceMode) {
-        const maintenanceMessage = import.meta.env.VITE_MAINTENANCE_MESSAGE || "メンテナンス中です。しばらくお待ちください。";
-        
+        const maintenanceMessage =
+            import.meta.env.VITE_MAINTENANCE_MESSAGE || "メンテナンス中です。しばらくお待ちください。";
+
         return (
             <div className="flex h-screen w-screen flex-col items-center justify-center bg-white px-6">
-                <div className="text-6xl mb-4">🔧</div>
+                <div className="mb-4 text-6xl">🔧</div>
                 <h1 className="mb-2 text-2xl font-bold text-gray-800">メンテナンス中</h1>
                 <p className="text-center text-gray-600">{maintenanceMessage}</p>
             </div>
@@ -187,15 +186,14 @@ export default function App() {
                 <Outlet />
                 <Footer />
             </main>
-            
+
             {/* 更新モーダル */}
             {showUpdateModal && updateInfo && (
-                <UpdateModal 
-                    onUpdate={handleUpdate}
-                    version={updateInfo.version}
-                    message={updateInfo.message}
-                />
+                <UpdateModal onUpdate={handleUpdate} version={updateInfo.version} message={updateInfo.message} />
             )}
+
+            {/* アップデート完了モーダル */}
+            {showUpdateSuccess && <UpdateSuccessModal onClose={() => setShowUpdateSuccess(false)} />}
         </div>
     );
 }

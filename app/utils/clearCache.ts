@@ -36,15 +36,12 @@ export async function clearAllCache(): Promise<void> {
         localStorage.removeItem("notification:notified_events");
         localStorage.removeItem("notification:last_reset_date");
 
-        console.log("[clearCache] ✅ LocalStorageをクリアしました");
-
         // 2. IndexedDBの削除（Service Worker用の通知スケジュール）
         try {
             const DB_NAME = "RecTimeNotificationsDB";
             await new Promise<void>((resolve, reject) => {
                 const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
                 deleteRequest.onsuccess = () => {
-                    console.log("[clearCache] ✅ IndexedDB (通知スケジュール) を削除しました");
                     resolve();
                 };
                 deleteRequest.onerror = () => {
@@ -65,10 +62,7 @@ export async function clearAllCache(): Promise<void> {
             navigator.serviceWorker.controller.postMessage({
                 type: "STOP_NOTIFICATIONS",
             });
-            console.log("[clearCache] ✅ Service Workerに通知停止を送信しました");
         }
-
-        console.log("[clearCache] ✅ すべてのキャッシュを削除しました");
     } catch (error) {
         console.error("[clearCache] キャッシュ削除エラー:", error);
         throw error;
@@ -83,38 +77,30 @@ export async function clearAllCache(): Promise<void> {
  */
 export async function reinstallPWA(): Promise<void> {
     try {
-        console.log("[reinstallPWA] 🔄 PWA再インストール開始...");
-
         // 1. Service Workerのすべてのキャッシュを削除
-        if ('caches' in window) {
+        if ("caches" in window) {
             const cacheNames = await caches.keys();
-            console.log(`[reinstallPWA] 🗑️  ${cacheNames.length}個のキャッシュを削除中...`);
-            
+
             await Promise.all(
                 cacheNames.map(async (cacheName) => {
                     const deleted = await caches.delete(cacheName);
                     if (deleted) {
-                        console.log(`[reinstallPWA] ✅ キャッシュ削除: ${cacheName}`);
                     }
                 })
             );
-            console.log("[reinstallPWA] ✅ すべてのService Workerキャッシュを削除しました");
         }
 
         // 2. Service Workerをアンインストール
-        if ('serviceWorker' in navigator) {
+        if ("serviceWorker" in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            console.log(`[reinstallPWA] 🗑️  ${registrations.length}個のService Workerをアンインストール中...`);
-            
+
             await Promise.all(
                 registrations.map(async (registration) => {
                     const unregistered = await registration.unregister();
                     if (unregistered) {
-                        console.log(`[reinstallPWA] ✅ Service Workerアンインストール: ${registration.scope}`);
                     }
                 })
             );
-            console.log("[reinstallPWA] ✅ すべてのService Workerをアンインストールしました");
         }
 
         // 3. IndexedDBも念のため削除
@@ -123,7 +109,6 @@ export async function reinstallPWA(): Promise<void> {
             await new Promise<void>((resolve) => {
                 const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
                 deleteRequest.onsuccess = () => {
-                    console.log("[reinstallPWA] ✅ IndexedDBを削除しました");
                     resolve();
                 };
                 deleteRequest.onerror = () => {
@@ -139,14 +124,14 @@ export async function reinstallPWA(): Promise<void> {
             console.warn("[reinstallPWA] IndexedDB削除エラー:", error);
         }
 
-        console.log("[reinstallPWA] ✅ PWA再インストール完了！ページをリロードします...");
-        
-        // 4. 少し待ってからリロード（確実にアンインストールが完了するのを待つ）
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // 5. ページをリロード（Service Workerが自動で再登録される）
+        // 4. 再インストール完了フラグを保存（リロード後に表示するため）
+        localStorage.setItem("app:update_completed", "true");
+
+        // 5. 少し待ってからリロード（確実にアンインストールが完了するのを待つ）
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // 6. ページをリロード（Service Workerが自動で再登録される）
         window.location.reload();
-        
     } catch (error) {
         console.error("[reinstallPWA] ❌ PWA再インストールエラー:", error);
         throw error;

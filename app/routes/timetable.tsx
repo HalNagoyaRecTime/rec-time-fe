@@ -16,9 +16,7 @@ import type { Message } from "~/types/timetable";
 import type { Route } from "./+types/timetable";
 
 export const meta: Route.MetaFunction = () => {
-    return [
-        { title: "TimeTable - recTime" },
-    ];
+    return [{ title: "TimeTable - recTime" }];
 };
 
 export default function Timetable() {
@@ -43,15 +41,17 @@ export default function Timetable() {
             console.log(`[Timetable] 성공 - 이벤트 ${result.events.length}개 로드`);
             setEvents(result.events);
             setMessage({ type: null, content: "" });
-            
+
             // データ更新時にバージョンチェック（強制・5分制限無視）
             const { hasUpdate, latestVersion, message } = await forceCheckVersion();
             if (hasUpdate) {
                 console.log(`[Timetable] 🆕 新バージョン検出: ${latestVersion}`);
                 // 更新モーダルはroot.tsxで表示されるので、ここでは通知イベント発火
-                window.dispatchEvent(new CustomEvent('version-update-detected', {
-                    detail: { version: latestVersion, message }
-                }));
+                window.dispatchEvent(
+                    new CustomEvent("version-update-detected", {
+                        detail: { version: latestVersion, message },
+                    })
+                );
             }
         } else {
             console.error("[Timetable] データ更新失敗");
@@ -107,17 +107,34 @@ export default function Timetable() {
             hasFetchedRef.current = true;
             void handleDataUpdate();
         }
+
+        // ページ表示時にバージョンチェック（ユーザーアクション = 5分制限回避）
+        void (async () => {
+            console.log("[Timetable] ページ表示時のバージョンチェック");
+            const { hasUpdate, latestVersion, message } = await forceCheckVersion();
+            if (hasUpdate) {
+                // 更新モーダルはroot.tsxで表示される
+                window.dispatchEvent(
+                    new CustomEvent("version-update-detected", {
+                        detail: {
+                            version: latestVersion,
+                            message,
+                        },
+                    })
+                );
+            }
+        })();
     }, []);
 
     // === イベントデータが更新されたら通知をスケジュール ===
     useEffect(() => {
         if (events.length > 0) {
             scheduleAllNotifications(events);
-            
+
             // 通知が有効で、注意喚起を表示するフラグがある場合
             const shouldShowWarning = localStorage.getItem("notification:should_show_warning");
             const notificationEnabled = getNotificationSetting();
-            
+
             if (notificationEnabled && shouldShowWarning === "true") {
                 setShowNotificationWarning(true);
                 // フラグをクリア
@@ -171,7 +188,7 @@ export default function Timetable() {
                     </div>
                 </div>
             </PullToRefresh>
-            
+
             {/* 通知に関する注意喚起モーダル */}
             <NotificationWarning
                 isVisible={showNotificationWarning}

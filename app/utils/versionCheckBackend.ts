@@ -45,21 +45,32 @@ function shouldCheckVersion(): boolean {
 /**
  * バックエンドからバージョン情報を取得
  * GET /api/version - バージョン番号のみ取得（更新確認用）
+ *
+ * @param options.skipThrottle - trueの場合、5分制限を無視して即座にチェック（ユーザーアクション時）
  */
-export async function checkVersionFromBackend(): Promise<{
+export async function checkVersionFromBackend(options?: {
+    skipThrottle?: boolean;
+}): Promise<{
     hasUpdate: boolean;
     latestVersion: string;
     skipped?: boolean;
 }> {
+    const { skipThrottle = false } = options || {};
+
     // 既に実行中の場合はスキップ（React Strict Mode対応）
     if (isChecking) {
         console.log('[VersionCheck] 既にチェック実行中 - スキップ');
         return { hasUpdate: false, latestVersion: "実行中", skipped: true };
     }
 
-    // 5分経過していなければスキップ
-    if (!shouldCheckVersion()) {
+    // 5分経過していなければスキップ（ただし skipThrottle=true の場合は無視）
+    if (!skipThrottle && !shouldCheckVersion()) {
         return { hasUpdate: false, latestVersion: "チェックスキップ", skipped: true };
+    }
+
+    // skipThrottle=true の場合、5分制限を無視してチェック実行
+    if (skipThrottle) {
+        console.log('[VersionCheck] 🚀 スロットル回避モード - 即座にチェック実行');
     }
 
     isChecking = true;
@@ -121,14 +132,24 @@ export function markVersionAsSeen(version: string): void {
 export async function forceCheckVersion(): Promise<{
     hasUpdate: boolean;
     latestVersion: string;
+    message: string;
 }> {
     // 最終チェック時刻をリセット
     localStorage.removeItem(LAST_CHECK_TIME_KEY);
 
     const result = await checkVersionFromBackend();
+
+    // 新バージョンがある場合、詳細情報を取得
+    let message = "最新版です";
+    if (result.hasUpdate) {
+        const detail = await getVersionDetail(result.latestVersion);
+        message = detail?.message || "新しいバージョンが利用可能です";
+    }
+
     return {
         hasUpdate: result.hasUpdate,
         latestVersion: result.latestVersion,
+        message,
     };
 }
 
