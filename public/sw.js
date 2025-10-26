@@ -1,7 +1,7 @@
 // public/sw.js
 // 통합 Service Worker: 캐싱 + 백그라운드 알림 + FCM
 
-const APP_VERSION = "2025-10-25-01";
+const APP_VERSION = "2025-10-25-02";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -66,6 +66,92 @@ function formatNotificationBody(label, place) {
 let scheduledNotifications = [];
 let checkLoopRunning = false;
 
+// === IndexedDB를 통한 알람 스케줄 영구 저장 ===
+const DB_NAME = 'rec-time-alarms';
+const DB_VERSION = 1;
+const STORE_NAME = 'scheduled-notifications';
+
+// IndexedDB 초기화
+async function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+// 알람 스케줄을 IndexedDB에 저장
+async function saveNotificationsToDB(notifications) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        
+        // 기존 데이터 삭제 후 새 데이터 저장
+        return new Promise((resolve, reject) => {
+            // 먼저 clear
+            const clearRequest = store.clear();
+            clearRequest.onsuccess = () => {
+                // 새 데이터 저장
+                let savedCount = 0;
+                if (notifications.length === 0) {
+                    console.log(`[SW] IndexedDB에 알람 스케줄 저장 완료 (0개)`);
+                    resolve();
+                    return;
+                }
+                
+                notifications.forEach((notif, index) => {
+                    const putRequest = store.put({ id: index, ...notif });
+                    putRequest.onsuccess = () => {
+                        savedCount++;
+                        if (savedCount === notifications.length) {
+                            console.log(`[SW] IndexedDB에 ${notifications.length}개의 알람 스케줄 저장 완료`);
+                            resolve();
+                        }
+                    };
+                    putRequest.onerror = () => reject(putRequest.error);
+                });
+            };
+            clearRequest.onerror = () => reject(clearRequest.error);
+        });
+    } catch (error) {
+        console.error('[SW] IndexedDB 저장 실패:', error);
+    }
+}
+
+// IndexedDB에서 알람 스케줄 복원
+async function loadNotificationsFromDB() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                const notifications = request.result.map(item => {
+                    const { id, ...notif } = item;
+                    return notif;
+                });
+                console.log(`[SW] IndexedDB에서 ${notifications.length}개의 알람 스케줄 복원`);
+                resolve(notifications);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('[SW] IndexedDB 로드 실패:', error);
+        return [];
+    }
+}
+
 self.addEventListener("message", (event) => {
     const data = event.data;
     if (!data) return;
@@ -78,6 +164,10 @@ self.addEventListener("message", (event) => {
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
         console.log("[SW] 通知スケジュール受信:", data.notifications);
         scheduledNotifications = data.notifications || [];
+        
+        // IndexedDB에 저장 (오프라인 대비)
+        saveNotificationsToDB(scheduledNotifications);
+        
         console.log(`[SW] ${scheduledNotifications.length}件の通知をスケジュールしました`);
         
         // ループがまだ開始されていなければ開始
@@ -127,6 +217,15 @@ async function startNotificationCheckLoop() {
 
 // === 通知をチェックして送信 ===
 async function checkAndSendNotifications() {
+    // IndexedDB에서 스케줄 복원 (오프라인 대비)
+    if (scheduledNotifications.length === 0) {
+        const savedNotifications = await loadNotificationsFromDB();
+        if (savedNotifications.length > 0) {
+            scheduledNotifications = savedNotifications;
+            console.log(`[SW] IndexedDB에서 스케줄 복원: ${scheduledNotifications.length}개`);
+        }
+    }
+    
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -151,6 +250,9 @@ async function checkAndSendNotifications() {
             console.log(`[SW] 通知送信: ${notification.f_event_name} (${notification.notification_label})`);
             await showNotification(notification);
             notification.notified = true;
+            
+            // IndexedDB 업데이트
+            saveNotificationsToDB(scheduledNotifications);
         }
     }
 }
@@ -279,6 +381,19 @@ self.addEventListener("activate", (event) => {
                 );
             })
             .then(() => self.clients.claim())
+            .then(async () => {
+                // 활성화 시 IndexedDB에서 스케줄 복원
+                const savedNotifications = await loadNotificationsFromDB();
+                if (savedNotifications.length > 0) {
+                    scheduledNotifications = savedNotifications;
+                    console.log(`[SW] 활성화 시 스케줄 복원: ${scheduledNotifications.length}개`);
+                    
+                    // 체크 루프 시작
+                    if (!checkLoopRunning) {
+                        startNotificationCheckLoop();
+                    }
+                }
+            })
     );
 });
 
