@@ -228,46 +228,56 @@ messaging.onBackgroundMessage((payload) => {
     console.log('[SW] FCM 백그라운드 메시지 수신:', payload);
     console.log('[SW] 전체 페이로드:', JSON.stringify(payload, null, 2));
 
-    // 백엔드가 notification 필드 없이 data만 보낼 수 있으므로 처리
-    let notificationTitle = 'RecTime 알림';
-    let notificationBody = '새로운 알림이 있습니다';
-    
-    if (payload.notification) {
-        // 표준 FCM notification 필드 사용
-        notificationTitle = payload.notification.title || notificationTitle;
-        notificationBody = payload.notification.body || notificationBody;
-    } else if (payload.data) {
-        // data 필드에서 title/body 추출 (백엔드가 data만 보낼 경우)
-        notificationTitle = payload.data.title || payload.data.Title || notificationTitle;
-        notificationBody = payload.data.body || payload.data.Body || payload.data.message || notificationBody;
-    }
+    // 앱이 열려있으면 프론트엔드의 onMessage가 처리함
+    // FCM은 자동으로 앱이 열려있으면 onMessage로, 닫혀있으면 onBackgroundMessage로 분기됨
+    // 따라서 여기서는 앱이 닫혀있을 때만 처리하면 됨
+    return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        if (clientList && clientList.length > 0) {
+            console.log('[SW] 앱이 열려있으므로 프론트엔드의 onMessage가 처리함 (알림 표시 안 함)');
+            return;
+        }
 
-    const notificationOptions = {
-        body: notificationBody,
-        icon: '/icons/pwa-192.png',
-        badge: '/icons/pwa-192.png',
-        tag: payload.data?.eventId || payload.data?.event_id || 'fcm-background-notification',
-        requireInteraction: true,
-        vibrate: [200, 100, 200],
-        data: payload.data || {},
-        actions: [
-            {
-                action: 'open',
-                title: '앱 열기',
-                icon: '/icons/pwa-192.png'
-            },
-            {
-                action: 'close',
-                title: '닫기'
-            }
-        ]
-    };
+        // 앱이 닫혀있을 때만 Service Worker에서 알림 표시
+        let notificationTitle = 'RecTime 알림';
+        let notificationBody = '새로운 알림이 있습니다';
+        
+        if (payload.notification) {
+            // 표준 FCM notification 필드 사용
+            notificationTitle = payload.notification.title || notificationTitle;
+            notificationBody = payload.notification.body || notificationBody;
+        } else if (payload.data) {
+            // data 필드에서 title/body 추출 (백엔드가 data만 보낼 경우)
+            notificationTitle = payload.data.title || payload.data.Title || notificationTitle;
+            notificationBody = payload.data.body || payload.data.Body || payload.data.message || notificationBody;
+        }
 
-    console.log('[SW] 알림 표시:', notificationTitle, notificationBody);
+        const notificationOptions = {
+            body: notificationBody,
+            icon: '/icons/pwa-192.png',
+            badge: '/icons/pwa-192.png',
+            tag: payload.data?.eventId || payload.data?.event_id || payload.notification?.title || 'fcm-background-notification',
+            requireInteraction: true,
+            vibrate: [200, 100, 200],
+            data: payload.data || {},
+            actions: [
+                {
+                    action: 'open',
+                    title: '앱 열기',
+                    icon: '/icons/pwa-192.png'
+                },
+                {
+                    action: 'close',
+                    title: '닫기'
+                }
+            ]
+        };
 
-    // 알림 표시
-    return self.registration.showNotification(notificationTitle, notificationOptions).catch((error) => {
-        console.error('[SW] 알림 표시 실패:', error);
+        console.log('[SW] 알림 표시 (앱 닫힘 상태):', notificationTitle, notificationBody);
+
+        // 알림 표시
+        return self.registration.showNotification(notificationTitle, notificationOptions).catch((error) => {
+            console.error('[SW] 알림 표시 실패:', error);
+        });
     });
 });
 

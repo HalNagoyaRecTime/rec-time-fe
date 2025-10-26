@@ -126,17 +126,31 @@ export function setupFCMListener(onMessageCallback?: (payload: MessagePayload) =
         }
 
         onMessage(messaging, (payload) => {
-            console.log("🔔 FCM 메시지 수신 / FCMメッセージ受信:", payload);
+            console.log("🔔 FCM 메시지 수신 (앱 열림 상태) / FCMメッセージ受信:", payload);
             
-            // 기본 알림 표시 / デフォルト通知表示
+            // 앱이 열려있을 때 알림 표시
             if (payload.notification) {
-                new Notification(payload.notification.title || "알림", {
+                new Notification(payload.notification.title || "RecTime 알림", {
                     body: payload.notification.body || "",
                     icon: payload.notification.icon || "/icons/pwa-192.png",
+                    badge: "/icons/pwa-192.png",
+                    tag: payload.data?.eventId || payload.data?.event_id || 'fcm-message',
+                    requireInteraction: false,
+                });
+            } else if (payload.data) {
+                // data 필드에서 알림 표시
+                const title = payload.data.title || payload.data.Title || "RecTime 알림";
+                const body = payload.data.body || payload.data.Body || payload.data.message || "새로운 알림이 있습니다";
+                new Notification(title, {
+                    body: body,
+                    icon: "/icons/pwa-192.png",
+                    badge: "/icons/pwa-192.png",
+                    tag: payload.data?.eventId || payload.data?.event_id || 'fcm-message',
+                    requireInteraction: false,
                 });
             }
             
-            // 커스텀 콜백 실행 / カスタムコールバック実行
+            // 커스텀 콜백 실행
             if (onMessageCallback) {
                 onMessageCallback(payload);
             }
