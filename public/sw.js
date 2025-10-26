@@ -465,7 +465,6 @@ async function showNotification(notification) {
 
 // === 通知クリック時の処理 ===
 self.addEventListener("notificationclick", (event) => {
-    console.log("[SW] 通知がクリックされました:", event.notification.data);
 
     event.notification.close();
 
