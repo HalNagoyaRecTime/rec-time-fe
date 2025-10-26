@@ -516,7 +516,6 @@ self.addEventListener("activate", (event) => {
                     cacheNames.map((cacheName) => {
                         // 古いキャッシュを削除
                         if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
-                            console.log("[SW] 古いキャッシュを削除:", cacheName);
                             return caches.delete(cacheName);
                         }
                     })
