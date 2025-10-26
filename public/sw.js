@@ -241,7 +241,6 @@ function stopKeepAlive() {
         keepAliveInterval = null;
         keepAliveFailCount = 0;
         currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-        console.log("[SW] Keep-Alive停止");
     }
 }
 
