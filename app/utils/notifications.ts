@@ -46,7 +46,6 @@ function getNotificationTimings(): NotificationTiming[] {
         }
     }
     
-    console.log('[通知] タイミング設定:', timings);
     return timings;
 }
 
