@@ -71,6 +71,13 @@ export async function getFCMToken(): Promise<string | null> {
             return null;
         }
 
+        // PWA 환경 확인
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                      (window.navigator as any).standalone === true;
+        if (isPWA) {
+            console.log("📱 PWA 환경에서 실행 중");
+        }
+
         // Service Worker 등록 확인
         // 이미 sw.js가 등록되어 있으므로 기존 registration 사용
         let registration = await navigator.serviceWorker.getRegistration();

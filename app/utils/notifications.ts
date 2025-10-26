@@ -376,32 +376,34 @@ export function scheduleAllNotifications(events: EventRow[]): void {
     // 日付リセットチェック
     resetNotificationHistoryIfNeeded();
 
+    // 기존 스케줄된 알림 모두 취소 (이벤트 변경 시 재스케줄을 위해)
+    clearScheduledNotifications();
+    stopNotificationCheck();
+    stopServiceWorkerNotifications();
+
     // 通知が無効なら何もしない
     if (!getNotificationSetting()) {
         console.log("[通知] 通知設定が無効のため、スケジュールしません");
-        stopNotificationCheck();
-        stopServiceWorkerNotifications();
         return;
     }
 
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
         // isTodayEventDate() 内で既にログ出力済み
-        stopNotificationCheck();
-        stopServiceWorkerNotifications();
         return;
     }
 
-    console.log("[通知] 通知スケジュールを開始します");
+    console.log("[通知] 通知スケジュールを開始します（기존 스케줄 취소 후 재설정）");
 
     // 参加予定のイベントのみフィルタリング
     const myEvents = events.filter(e => e.f_is_my_entry);
+    console.log(`[通知] 참가 예정 이벤트: ${myEvents.length}개`);
 
     // Service Workerにイベントを送信（バックグラウンド通知用）
     sendEventsToServiceWorker(myEvents);
 
-    // setTimeoutでスケジュール（アプリが開いている場合の補助）
-    // 注意: setIntervalと重複するため無効化を推奨
+    // setTimeoutでスケジュール（アプリが開いている 경우の補助）
+    // 이벤트 변경 시에만 사용 (주석 해제)
     // myEvents.forEach(scheduleNotification);
 
     // 定期チェックを開始（1分ごと、アプリが開いている場合の補助）
