@@ -233,7 +233,6 @@ export function showSettingNotification(message: string): void {
     }
 
     new Notification("RecTime 通知設定", { body: message });
-    console.log(`[通知] 設定変更: ${message}`);
 }
 
 // === 時刻チェック（定期実行用） ===
