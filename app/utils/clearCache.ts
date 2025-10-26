@@ -41,7 +41,6 @@ export async function clearAllCache(): Promise<void> {
             await new Promise<void>((resolve, reject) => {
                 const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
                 deleteRequest.onsuccess = () => {
-                    console.log("[clearCache] ✅ IndexedDB (通知スケジュール) を削除しました");
                     resolve();
                 };
                 deleteRequest.onerror = () => {
