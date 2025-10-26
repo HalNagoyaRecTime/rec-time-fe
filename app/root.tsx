@@ -1,13 +1,7 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect, useState } from "react";
-// import type { Route } from "./+types/root";
-
-// 임시 타입 정의
-namespace Route {
-    export type LinksFunction = () => Array<{ rel: string; href: string; type?: string; sizes?: string; crossOrigin?: string }>;
-    export type ErrorBoundaryProps = { error: any };
-}
+import type { Route } from "./+types/root";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
@@ -17,7 +11,6 @@ import UpdateSuccessModal from "./components/ui/update-success-modal";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import { markVersionAsSeen } from "./utils/versionCheckBackend";
 import { reinstallPWA } from "./utils/clearCache";
-import { initializeFCM } from "./utils/firebaseConfig";
 import "./utils/fcmTest"; // FCM 테스트 함수 등록
 
 import "./app.css";
@@ -36,11 +29,11 @@ export const links: Route.LinksFunction = () => [
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
         rel: "icon",
-        href: "/icons/pwa-192.png?v=2",
+        href: "/icons/pwa-128.png?v=2",
         type: "image/png",
         sizes: "192x192",
     },
-    { rel: "apple-touch-icon", href: "/icons/pwa-192.png?v=2" },
+    { rel: "apple-touch-icon", href: "/icons/pwa-128.png?v=2" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

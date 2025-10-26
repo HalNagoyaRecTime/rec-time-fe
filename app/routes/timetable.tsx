@@ -38,7 +38,6 @@ export default function Timetable() {
         const result = await downloadAndSaveEvents();
 
         if (result.success) {
-            console.log(`[Timetable] 성공 - 이벤트 ${result.events.length}개 로드`);
             setEvents(result.events);
             setMessage({ type: null, content: "" });
 
