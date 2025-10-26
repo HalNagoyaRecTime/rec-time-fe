@@ -59,7 +59,6 @@ export default function App() {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
                 .then(async (reg) => {
-                    console.log("[SW] registered:", reg.scope);
                     
                     // Service Worker更新検知
                     reg.addEventListener('updatefound', () => {
