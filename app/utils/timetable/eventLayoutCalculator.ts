@@ -23,6 +23,15 @@ function getEventDurationUnits(event: EventRow): number {
  */
 export function calculateEventLayout(events: EventRow[]): Map<string, EventLayout> {
     const eventPositions = new Map<string, EventLayout>();
+    
+    console.log(`[eventLayoutCalculator] 레이아웃 계산 시작 - 전체 이벤트: ${events.length}개`);
+    console.log(`[eventLayoutCalculator] 이벤트 목록:`, events.map(e => ({
+        id: e.f_event_id,
+        name: e.f_event_name,
+        start: e.f_start_time,
+        duration: e.f_duration,
+        isMyEntry: e.f_is_my_entry
+    })));
 
     // 時間順でソート
     const sortedEvents = [...events].sort((a, b) => {
@@ -38,9 +47,13 @@ export function calculateEventLayout(events: EventRow[]): Map<string, EventLayou
     const eventTimeRanges: Map<string, EventTimeRange> = new Map();
 
     sortedEvents.forEach((event) => {
-        if (!event.f_start_time) return;
+        if (!event.f_start_time) {
+            console.warn(`[eventLayoutCalculator] 이벤트 ${event.f_event_name} (${event.f_event_id}) - 시작 시간 없음, 스킵`);
+            return;
+        }
 
         const startTime = parseInt(event.f_start_time, 10);
+        console.log(`[eventLayoutCalculator] 이벤트 ${event.f_event_name} - 시작: ${startTime}, 참가: ${event.f_is_my_entry}`);
         const startHours = Math.floor(startTime / 100);
         const startMinutes = startTime % 100;
         const startTotalMinutes = startHours * 60 + startMinutes;
@@ -131,5 +144,6 @@ export function calculateEventLayout(events: EventRow[]): Map<string, EventLayou
         position.positionIndex = position.column;
     });
 
+    console.log(`[eventLayoutCalculator] 레이아웃 계산 완료 - 표시 가능한 이벤트: ${eventPositions.size}개`);
     return eventPositions;
 }

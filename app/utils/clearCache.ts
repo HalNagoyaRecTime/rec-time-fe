@@ -67,3 +67,72 @@ export async function clearAllCache(): Promise<void> {
         throw error;
     }
 }
+
+/**
+ * PWAを完全に再インストール（疑似的）
+ * - Service Workerのすべてのキャッシュを削除
+ * - Service Workerをアンインストール
+ * - ページをリロードして自動再登録
+ */
+export async function reinstallPWA(): Promise<void> {
+    try {
+        // 1. Service Workerのすべてのキャッシュを削除
+        if ("caches" in window) {
+            const cacheNames = await caches.keys();
+
+            await Promise.all(
+                cacheNames.map(async (cacheName) => {
+                    const deleted = await caches.delete(cacheName);
+                    if (deleted) {
+                    }
+                })
+            );
+        }
+
+        // 2. Service Workerをアンインストール
+        if ("serviceWorker" in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+
+            await Promise.all(
+                registrations.map(async (registration) => {
+                    const unregistered = await registration.unregister();
+                    if (unregistered) {
+                    }
+                })
+            );
+        }
+
+        // 3. IndexedDBも念のため削除
+        try {
+            const DB_NAME = "RecTimeNotificationsDB";
+            await new Promise<void>((resolve) => {
+                const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                deleteRequest.onsuccess = () => {
+                    resolve();
+                };
+                deleteRequest.onerror = () => {
+                    console.warn("[reinstallPWA] ⚠️  IndexedDB削除エラー");
+                    resolve();
+                };
+                deleteRequest.onblocked = () => {
+                    console.warn("[reinstallPWA] ⚠️  IndexedDB削除がブロックされました");
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.warn("[reinstallPWA] IndexedDB削除エラー:", error);
+        }
+
+        // 4. 再インストール完了フラグを保存（リロード後に表示するため）
+        localStorage.setItem("app:update_completed", "true");
+
+        // 5. 少し待ってからリロード（確実にアンインストールが完了するのを待つ）
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // 6. ページをリロード（Service Workerが自動で再登録される）
+        window.location.reload();
+    } catch (error) {
+        console.error("[reinstallPWA] ❌ PWA再インストールエラー:", error);
+        throw error;
+    }
+}

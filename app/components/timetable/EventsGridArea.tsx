@@ -75,7 +75,10 @@ export default function EventsGridArea({
                     const participant = isParticipant(event);
                     const layout = eventLayout.get(event.f_event_id);
 
-                    if (!layout) return null;
+                    if (!layout) {
+                        console.warn(`[EventsGridArea] 이벤트 ${event.f_event_name} (${event.f_event_id}) - 레이아웃 없음 (시작시간: ${event.f_start_time})`);
+                        return null;
+                    }
 
                     // 表示制限を超えた場合は非表示
                     const isOverLimit = layout.positionIndex >= MAX_VISIBLE_EVENTS;

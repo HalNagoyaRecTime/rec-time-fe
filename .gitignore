@@ -8,5 +8,6 @@
 # 環境変数ファイル
 .env.local
 .env.dev
+.env.development
 .env.staging
 # .env.production と .env.example はコミット対象（参照用テンプレート）

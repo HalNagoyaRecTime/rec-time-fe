@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
     };
 
     return {
+        publicDir: 'public', // public 폴더를 루트에 정적 파일로 복사
         resolve: {
             alias: {
                 "~": path.resolve(__dirname, "./app"),
