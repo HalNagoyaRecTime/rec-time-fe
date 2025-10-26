@@ -320,7 +320,6 @@ function sendEventsToServiceWorker(events: EventRow[]): void {
         notifications: notificationData,
     });
     
-    console.log(`[通知] Service Workerに${notificationData.length}件の通知を送信しました`);
 }
 
 // === Service Workerの通知を停止 ===
