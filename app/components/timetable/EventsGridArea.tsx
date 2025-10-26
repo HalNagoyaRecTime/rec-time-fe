@@ -8,7 +8,7 @@ import { getOptimalWidth, getOptimalLeft } from "~/utils/timetable/eventPosition
 import CurrentTimeLine from "./CurrentTimeLine";
 import PastTimeOverlay from "./PastTimeOverlay";
 
-const { MAX_VISIBLE_EVENTS, START_HOUR, END_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { MAX_VISIBLE_EVENTS, START_HOUR, STOP_HOUR, SLOT_HEIGHT_PX, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface EventsGridAreaProps {
     timeSlots: TimeSlot[];
@@ -44,18 +44,28 @@ export default function EventsGridArea({
                 const isHourStart = index % 12 === 0; // 5分 × 12 = 1時間
                 return (
                     <div key={index} className="relative" style={{ height: "8px" }}>
-                        {isHourStart && <div className="absolute top-0 right-0 left-0 h-px bg-[#FFB4004D]/60"></div>}
+                        {isHourStart && <div className="absolute top-0 right-0 left-0 h-px bg-[#020F95]/20"></div>}
                     </div>
                 );
             })}
 
             {/* 過去の時間帯の背景（グレーオーバーレイ） */}
-            {currentTime && <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} />}
+            {currentTime && (
+                <PastTimeOverlay currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={STOP_HOUR} />
+            )}
 
             {/* 現在時刻ライン（右側カレンダーエリア） */}
             {currentTime && (
-                <div className="absolute top-0 right-0 left-0" style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}>
-                    <CurrentTimeLine currentTime={currentTime} hourHeight={hourHeight} startHour={START_HOUR} endHour={END_HOUR} />
+                <div
+                    className="absolute top-0 right-0 left-0"
+                    style={{ height: `${timeSlots.length * SLOT_HEIGHT_PX}px` }}
+                >
+                    <CurrentTimeLine
+                        currentTime={currentTime}
+                        hourHeight={hourHeight}
+                        startHour={START_HOUR}
+                        endHour={STOP_HOUR}
+                    />
                 </div>
             )}
 
@@ -65,7 +75,10 @@ export default function EventsGridArea({
                     const participant = isParticipant(event);
                     const layout = eventLayout.get(event.f_event_id);
 
-                    if (!layout) return null;
+                    if (!layout) {
+                        console.warn(`[EventsGridArea] 이벤트 ${event.f_event_name} (${event.f_event_id}) - 레이아웃 없음 (시작시간: ${event.f_start_time})`);
+                        return null;
+                    }
 
                     // 表示制限を超えた場合は非表示
                     const isOverLimit = layout.positionIndex >= MAX_VISIBLE_EVENTS;

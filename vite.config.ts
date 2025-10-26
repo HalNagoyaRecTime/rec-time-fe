@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
 
     // 環境変数バリデーション関数
     const getApiUrl = () => {
-        const url = env.VITE_API_BASE_URL || "http://127.0.0.1:8787";
+        const url = env.VITE_API_BASE_URL || "https://rec-time-be.ellan122316.workers.dev/";
         console.log(`[Vite Config] Validating VITE_API_BASE_URL: "${url}"`);
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             throw new Error(`Invalid VITE_API_BASE_URL format: "${url}". Must start with http:// or https://`);
@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
     };
 
     return {
+        publicDir: 'public', // public 폴더를 루트에 정적 파일로 복사
         resolve: {
             alias: {
                 "~": path.resolve(__dirname, "./app"),

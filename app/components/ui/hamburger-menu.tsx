@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegStar } from "react-icons/fa";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { useAppVersion } from "~/hooks/useAppVersion";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -10,6 +12,7 @@ interface HamburgerMenuProps {
 export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
+    const appVersion = useAppVersion();
     const location = useLocation();
 
     useEffect(() => {
@@ -61,9 +64,9 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                     className={`absolute top-0 left-0 h-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? "w-64" : "w-0"}`}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="h-full min-w-fit bg-blue-950 px-6 pt-24">
+                    <div className="flex h-full min-w-fit flex-col justify-between bg-[#040b1f] pt-24 pb-6 pl-11">
                         <div
-                            className={`flex flex-col gap-6 pr-7 pl-5 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex flex-col gap-6 pr-7 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             {menuItems.map((item) => {
                                 const isActive = location.pathname === item.to;
@@ -88,7 +91,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="pr-10 text-lg whitespace-nowrap" style={{ color }}>
+                                            <p
+                                                className="mb-1 pr-10 text-lg font-bold whitespace-nowrap"
+                                                style={{ color }}
+                                            >
                                                 {item.label}
                                             </p>
                                         </div>
@@ -102,7 +108,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 
                             {/* 外部リンク */}
                             <a
-                                href="https://www.hal.ac.jp/nagoya"
+                                href="https://rectime-web.pages.dev"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex cursor-pointer flex-col items-start gap-2"
@@ -110,12 +116,12 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                             >
                                 <div className="flex items-center gap-3 pl-1">
                                     <div className="h-8 w-8">
-                                        <FaRegStar className="h-7 w-7" />
+                                        <FaRegStar className="h-7 w-7 text-white" />
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <p className="text-lg text-white">レクサイト</p>
+                                    <div className="flex items-center gap-1 pb-1">
+                                        <p className="text-lg font-bold text-white">レクサイト</p>
                                         <div className="mr-5 h-5 w-5">
-                                            <img src="/icons/app-icon/link.svg" alt="" />
+                                            <FaArrowUpRightFromSquare className="mt-[2px] ml-[2px] text-white" />
                                         </div>
                                     </div>
                                 </div>
@@ -127,11 +133,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         </div>
 
                         <div
-                            className={`flex justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex w-full flex-col items-start transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
-                            <div className="w-35 pt-5">
-                                <img src="/icons/app-icon/rec-time.png" alt="" />
-                            </div>
+                            <h2 className="w-full text-5xl tracking-[2px] text-white">recTime</h2>
+                            {appVersion && <p className="mt-1 text-xs text-white/70">v.{appVersion}</p>}
                         </div>
                     </div>
                 </div>

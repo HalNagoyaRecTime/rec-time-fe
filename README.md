@@ -57,25 +57,41 @@ npm run typecheck
 
 ## 2. 環境変数
 
+### ⚠️ 重要: 開発/本番環境 DB分離
+
+**한국어**: 백엔드가 개발/본환경 DB로 분리되었으므로, 환경별로 적절한 백엔드 URL을 설정해야 합니다.
+
+**日本語**: バックエンドが開発環境と本番環境でデータベースが分離されているため、環境ごとに適切なバックエンドURLを設定する必要があります。
+
 ### 必須設定
 
-`.env.dev` ファイルで以下の環境変数を設定します。
+`.env.development` ファイルで以下の環境変수를 설정합니다.
 
 | 変数名 | デフォルト値 | 説明 |
 |--------|------------|------|
-| `VITE_API_BASE_URL` | `http://127.0.0.1:8787` | バックエンドAPIのベースURL |
+| `VITE_API_BASE_URL` | `https://rec-time-be.ellan122316.workers.dev/` | バックエンドAPIのベースURL |
 | `VITE_DEV_PORT` | `5173` | 開発サーバーのポート番号 |
 | `VITE_HOST` | `0.0.0.0` | サーバーのホスト（外部アクセス許可） |
 
 ### 設定例
 
 ```bash
-# .env.dev
-NODE_ENV=development
-VITE_API_BASE_URL=http://127.0.0.1:8787
+# .env.development (開発環境)
+# 開発용 백엔드 DB에 연결 / 開発用バックエンドDBに接続
+VITE_API_BASE_URL=http://localhost:8787
 VITE_DEV_PORT=5173
 VITE_HOST=0.0.0.0
 ```
+
+### 本番環境設定
+
+**한국어**: 본환경은 **Cloudflare Pages**의 환경 변수에서 설정합니다:
+- Settings → Environment Variables → Production
+- `VITE_API_BASE_URL=https://rec-time-be.your-domain.workers.dev`
+
+**日本語**: 本番環境は **Cloudflare Pages** の環境変数で設定します:
+- Settings → Environment Variables → Production
+- `VITE_API_BASE_URL=https://rec-time-be.your-domain.workers.dev`
 
 📖 **詳細ガイド**: [環境変数設定手順書](./doc/01-fe-環境変数設定手順書.md)
 

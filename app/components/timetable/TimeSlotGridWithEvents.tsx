@@ -7,7 +7,7 @@ import { TIMETABLE_CONSTANTS } from "~/types/timetable";
 import TimeLabelsColumn from "./TimeLabelsColumn";
 import EventsGridArea from "./EventsGridArea";
 
-const { START_HOUR, END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
 interface TimeSlotGridWithEventsProps {
     displayEvents: EventRow[];
@@ -19,19 +19,15 @@ interface TimeSlotGridWithEventsProps {
 /**
  * タイムテーブル全体のコンテナコンポーネント
  */
-export default function TimeSlotGridWithEvents({
-    displayEvents,
-    studentId,
-    currentTime,
-}: TimeSlotGridWithEventsProps) {
+export default function TimeSlotGridWithEvents({ displayEvents, studentId, currentTime }: TimeSlotGridWithEventsProps) {
     // タイムスロット生成
-    const timeSlots = generateTimeSlots(START_HOUR, END_HOUR, SLOT_INTERVAL_MINUTES);
+    const timeSlots = generateTimeSlots(START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES);
 
     // イベントレイアウト計算
     const eventLayout = calculateEventLayout(displayEvents);
 
     return (
-        <div className="relative h-full w-full rounded-lg bg-blue-950 px-1">
+        <div className="relative mb-10 h-full w-full rounded-lg px-1">
             {/* タイムスロット背景 */}
             <div className="flex">
                 {/* 左側：時間ラベル列 */}

@@ -30,47 +30,135 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
     const API_BASE = getApiBaseUrl();
 
     if (id) {
-        // 登録済み: localStorageから学生情報を取得し、学籍番号+生年月日で認証
-        const { STORAGE_KEYS } = await import("~/constants/storage");
-        const birthday = localStorage.getItem(STORAGE_KEYS.STUDENT_BIRTHDAY);
-        if (!birthday) {
-            throw new Error("生年月日が保存されていません。再度ログインしてください。");
-        }
-
-        // 学籍番号+生年月日で学生情報を取得
-        const studentRes = await fetch(`${API_BASE}/students/by-student-num/${id}/birthday/${birthday}`, {
+        // 登録済み: アラーム情報エンドポイントを使用（集合場所・時間を含む完全なデータ）
+        const alarmRes = await fetch(`${API_BASE}/entries/alarm/${id}`, {
             cache: "no-store",
         });
 
-        if (!studentRes.ok) {
-            throw new Error(`学生情報の取得に失敗しました ${studentRes.status}`);
+        if (!alarmRes.ok) {
+            console.error(`[API] アラーム情報取得失敗: ${alarmRes.status}`);
+            throw new Error(`アラーム情報の取得に失敗しました ${alarmRes.status}`);
         }
 
-        const studentData = await studentRes.json();
+        const alarmEvents: any[] = await alarmRes.json();
+        console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
+        console.log(`[API] 알람 이벤트 전체 필드 (첫 번째):`, alarmEvents[0]);
+        console.log(`[API] アラーム情報 상세:`, alarmEvents.map(e => ({
+            id: e.f_event_id,
+            name: e.f_event_name,
+            time: e.f_time,
+            time_type: typeof e.f_time,
+            time_length: e.f_time ? String(e.f_time).length : 0
+        })));
 
-        // イベント情報を取得
-        const eventsRes = await fetch(`${API_BASE}/events`, { cache: "no-store" });
+        // 学生情報を取得（生年月日認証用に保存されている場合）
+        const { STORAGE_KEYS } = await import("~/constants/storage");
+        const birthday = localStorage.getItem(STORAGE_KEYS.STUDENT_BIRTHDAY);
+
+        let studentData: any = null;
+        if (birthday) {
+            const studentRes = await fetch(`${API_BASE}/students/by-student-num/${id}/birthday/${birthday}`, {
+                cache: "no-store",
+            });
+            if (studentRes.ok) {
+                studentData = await studentRes.json();
+            }
+        }
+
+        // 全イベント一覧を取得
+        const eventsRes = await fetch(`${API_BASE}/events?student_num=${id}`, {
+            cache: "no-store"
+        });
+        
         if (!eventsRes.ok) {
+            console.error(`[API] イベント情報取得失敗: ${eventsRes.status}`);
             throw new Error(`イベント情報の取得に失敗しました ${eventsRes.status}`);
         }
 
         const eventsData = await eventsRes.json();
-        const eventsArray: EventRow[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
+        const allEvents: any[] = Array.isArray(eventsData?.events) ? eventsData.events : [];
+        console.log(`[API] 전체 이벤트: ${allEvents.length}件`);
+        console.log(`[API] 백엔드 응답 전체:`, eventsData);
+        console.log(`[API] 첫 번째 이벤트 전체 필드:`, allEvents[0]);
+        console.log(`[API] 전체 이벤트 상세:`, allEvents.map(e => ({ 
+            id: e.f_event_id, 
+            name: e.f_event_name, 
+            time: e.f_time,
+            time_type: typeof e.f_time,
+            time_length: e.f_time ? String(e.f_time).length : 0
+        })));
 
-        // 学生の出場情報を取得
-        const entriesUrl = `${API_BASE}/entries?f_student_id=${studentData.f_student_id}`;
-        const entriesRes = await fetch(entriesUrl, {
-            cache: "no-store",
+        // 全イベントとアラーム情報をマージ
+        const eventsWithMapping: EventRow[] = allEvents.map((ev: any) => {
+            const eventId = String(ev.f_event_id ?? "");
+
+            // アラーム情報から該当イベントを検索
+            const alarmEvent = alarmEvents.find(e => String(e.f_event_id) === eventId);
+            
+            // 디버깅: 매칭 확인
+            if (alarmEvent) {
+                console.log(`[API] 매칭 성공 - 이벤트 ID: ${eventId}, 이름: ${ev.f_event_name}`);
+            }
+
+            // 백엔드 응답: f_time 또는 f_start_time 필드 사용 가능
+            // 백엔드가 "12:00" 형식으로 보낼 수 있으므로 변환 필요
+            const normalizeTime = (time: any): string | null => {
+                if (!time) return null;
+                const timeStr = String(time).trim();
+                
+                // "12:00" 형식인 경우 "1200"으로 변환
+                if (timeStr.includes(":")) {
+                    const [hours, minutes] = timeStr.split(":");
+                    const normalized = (hours || "00").padStart(2, "0") + (minutes || "00").padStart(2, "0");
+                    console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
+                    return normalized;
+                }
+                
+                // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
+                if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
+                    return timeStr + "00";
+                }
+                
+                // 이미 4자리면 그대로 사용
+                return timeStr;
+            };
+            
+            // 백엔드가 f_start_time을 반환할 수도 있고, f_time을 반환할 수도 있음
+            const startTime = normalizeTime(ev.f_start_time ?? ev.f_time);
+            const alarmStartTime = normalizeTime(alarmEvent?.f_start_time ?? alarmEvent?.f_time);
+
+            if (alarmEvent) {
+                // アラーム情報がある場合（参加イベント）、そのデータを使用
+                console.log(`[アラーム] ${ev.f_event_name}: 集合時間 = ${alarmEvent.f_gather_time || 'なし'}, 場所 = ${alarmEvent.f_place || 'なし'}`);
+                const finalStartTime = alarmStartTime ?? startTime;
+                console.log(`[API] 참가 이벤트 매핑 - 이름: ${ev.f_event_name}, 시작시간: ${finalStartTime}, f_is_my_entry: true`);
+                return {
+                    f_event_id: eventId,
+                    f_event_name: ev.f_event_name ?? alarmEvent.f_event_name ?? null,
+                    f_start_time: finalStartTime, // f_time 사용
+                    f_duration: alarmEvent.f_duration ?? (ev.f_duration ? String(ev.f_duration) : null),
+                    f_place: alarmEvent.f_place ?? ev.f_place ?? null,
+                    f_gather_time: alarmEvent.f_gather_time ? String(alarmEvent.f_gather_time) : null,
+                    f_summary: alarmEvent.f_summary ?? ev.f_summary ?? null,
+                    f_is_my_entry: true,
+                };
+            } else {
+                // 参加していないイベント
+                console.log(`[API] 미참가 이벤트 - 이름: ${ev.f_event_name}, 시작시간: ${startTime}, f_is_my_entry: false`);
+                return {
+                    f_event_id: eventId,
+                    f_event_name: ev.f_event_name ?? null,
+                    f_start_time: startTime,
+                    f_duration: ev.f_duration ? String(ev.f_duration) : null,
+                    f_place: ev.f_place ?? null,
+                    f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
+                    f_summary: ev.f_summary ?? null,
+                    f_is_my_entry: false,
+                };
+            }
         });
 
-        let myEventIds = new Set<string>();
-        if (entriesRes.ok) {
-            const entriesData = await entriesRes.json();
-            const entries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
-            myEventIds = new Set(entries.map((e: any) => String(e.f_event_id)));
-        }
-
-        const student: StudentRow = {
+        const student: StudentRow = studentData ? {
             f_student_id: String(studentData.f_student_id ?? ""),
             f_student_num: String(studentData.f_student_num ?? ""),
             f_class: studentData.f_class ?? null,
@@ -78,25 +166,26 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_name: studentData.f_name ?? null,
             f_note: studentData.f_note ?? null,
             f_birthday: studentData.f_birthday ?? null,
+        } : {
+            f_student_id: "",
+            f_student_num: id,
+            f_class: null,
+            f_number: null,
+            f_name: null,
+            f_note: null,
+            f_birthday: null,
         };
-
-        const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
-            f_event_id: String(ev.f_event_id ?? ""),
-            f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
-            f_duration: ev.f_duration ? String(ev.f_duration) : null,
-            f_place: ev.f_place ?? null,
-            f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,
-            f_summary: ev.f_summary ?? null,
-            f_is_my_entry: myEventIds.has(String(ev.f_event_id)),
-        }));
 
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache: false };
     } else {
         // 未登録: イベント一覧のみ
-        const res = await fetch(`${API_BASE}/events`, { cache: "no-store" });
+        // 未登録 사용자도 다운로드 로그 기록을 위해 student_num 파라미터 추가
+        const res = await fetch(`${API_BASE}/events?student_num=`, { cache: "no-store" });
 
-        if (!res.ok) throw new Error(`データ取得失敗 ${res.status}`);
+        if (!res.ok) {
+            console.error(`[API] イベント情報取得失敗: ${res.status}`);
+            throw new Error(`データ取得失敗 ${res.status}`);
+        }
 
         const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
         if (isFromCache) {
@@ -115,10 +204,32 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             f_birthday: null,
         };
 
+        // 시간 정규화 함수 (백엔드 응답 처리)
+        const normalizeTime = (time: any): string | null => {
+            if (!time) return null;
+            const timeStr = String(time).trim();
+            
+            // "12:00" 형식인 경우 "1200"으로 변환
+            if (timeStr.includes(":")) {
+                const [hours, minutes] = timeStr.split(":");
+                const normalized = (hours || "00").padStart(2, "0") + (minutes || "00").padStart(2, "0");
+                console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
+                return normalized;
+            }
+            
+            // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
+            if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
+                return timeStr + "00";
+            }
+            
+            // 이미 4자리면 그대로 사용
+            return timeStr;
+        };
+
         const eventsWithMapping: EventRow[] = eventsArray.map((ev: any) => ({
             f_event_id: String(ev.f_event_id ?? ""),
             f_event_name: ev.f_event_name ?? null,
-            f_start_time: ev.f_time ? String(ev.f_time) : ev.f_start_time ? String(ev.f_start_time) : null,
+            f_start_time: normalizeTime(ev.f_start_time ?? ev.f_time), // 백엔드가 f_start_time 또는 f_time 반환 가능
             f_duration: ev.f_duration ? String(ev.f_duration) : null,
             f_place: ev.f_place ?? null,
             f_gather_time: ev.f_gather_time ? String(ev.f_gather_time) : null,

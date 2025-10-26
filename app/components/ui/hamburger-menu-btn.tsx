@@ -13,31 +13,13 @@ export default function HamburgerMenuBtn({ onClick, isOpen }: HamburgerMenuBtnPr
         >
             <div className="flex flex-col gap-1">
                 <div
-                    className={`h-1 w-6 rounded-full transition-all duration-300 ${isOpen ? "translate-y-[8px] rotate-45" : ""}`}
-                    style={{
-                        backgroundImage: `linear-gradient(90deg, #fec42e, #fce6a0)`,
-                        // WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        // backgroundClip: "text",
-                    }}
+                    className={`h-1 w-6 rounded-full transition-all duration-300 ${isOpen ? "translate-y-[8px] rotate-45 bg-white" : "bg-[#111646]"}`}
                 />
                 <div
-                    className={`h-1 w-6 rounded-full bg-white transition-all duration-300 ${isOpen ? "opacity-0" : ""}`}
-                    style={{
-                        backgroundImage: `linear-gradient(90deg, #fec42e, #fce6a0)`,
-                        // WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        // backgroundClip: "text",
-                    }}
+                    className={`h-1 w-6 rounded-full transition-all duration-300 ${isOpen ? "opacity-0" : "bg-[#111646]"}`}
                 />
                 <div
-                    className={`h-1 w-6 rounded-full bg-white transition-all duration-300 ${isOpen ? "-translate-y-[8px] -rotate-45" : ""}`}
-                    style={{
-                        backgroundImage: `linear-gradient(90deg, #fec42e, #fce6a0)`,
-                        // WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        // backgroundClip: "text",
-                    }}
+                    className={`h-1 w-6 rounded-full transition-all duration-300 ${isOpen ? "-translate-y-[8px] -rotate-45 bg-white" : "bg-[#111646]"}`}
                 />
             </div>
         </button>

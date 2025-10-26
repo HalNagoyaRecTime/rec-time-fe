@@ -33,6 +33,11 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     const containerRef = useRef<HTMLDivElement>(null);
     const swipeDirection = useRef<"horizontal" | "vertical" | null>(null);
 
+    // imagesプロップまたはinitialIndexプロップが変更されたときにcurrentIndexをリセット
+    useEffect(() => {
+        setCurrentIndex(initialIndex);
+    }, [images, initialIndex]);
+
     // 全ての画像を事前にプリロード
     useEffect(() => {
         images.forEach((img) => {
@@ -308,6 +313,12 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     };
 
     if (!isOpen) return null;
+
+    // imagesプロップの変更後に古いcurrentIndexでレンダリングしようとするのを防ぐ
+    if (currentIndex >= images.length) {
+        // 不正なインデックスの場合、何もレンダリングせず、useEffectがcurrentIndexを更新して再レンダリングするのを待つ
+        return null;
+    }
 
     return (
         <div
