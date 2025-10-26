@@ -63,7 +63,6 @@ export default function App() {
                     // Service Worker更新検知
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
-                        console.log("[SW] 🔄 新しいService Workerを検出しました");
                         
                         if (newWorker) {
                             newWorker.addEventListener('statechange', () => {
