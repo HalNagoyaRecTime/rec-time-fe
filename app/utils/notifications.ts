@@ -119,7 +119,6 @@ function resetNotificationHistoryIfNeeded(): void {
     if (lastResetDate !== today) {
         localStorage.setItem(NOTIFIED_EVENTS_KEY, JSON.stringify([]));
         localStorage.setItem("notification:last_reset_date", today);
-        console.log("[通知] 日付が変わったため、通知履歴をリセットしました");
     }
 }
 
