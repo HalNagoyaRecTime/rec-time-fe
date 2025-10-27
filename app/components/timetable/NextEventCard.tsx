@@ -46,9 +46,24 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [] }: Nex
     // 参加予定のイベントがない場合
     if (!event) {
         return (
-            <div className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-16 text-black shadow-2xl">
-                <h3 className="font-title text-lg font-black text-white">本日参加予定のイベントはありません</h3>
-            </div>
+            <>
+                <div
+                    className="relative mt-4 mb-9 flex flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-16 text-black shadow-2xl cursor-pointer hover:bg-[#000D91]/90 transition-all active:scale-[0.98]"
+                    onClick={handleOpenModal}
+                >
+                    <h3 className="font-title text-lg font-black text-white">本日参加予定のイベントはありません</h3>
+                    <div className="text-white text-xs opacity-70 mt-2">
+                        タップで全予定表示 →
+                    </div>
+                </div>
+
+                {/* 全予定表示モーダル */}
+                <AllSchedulesModal
+                    isOpen={showModal}
+                    events={allEvents}
+                    onClose={() => setShowModal(false)}
+                />
+            </>
         );
     }
 
