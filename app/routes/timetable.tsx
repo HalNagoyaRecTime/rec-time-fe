@@ -173,7 +173,7 @@ export default function Timetable() {
                     />
 
                     {/* 次の予定カード */}
-                    <NextEventCard event={nextEvent} isLoggedIn={!!studentId} />
+                    <NextEventCard event={nextEvent} isLoggedIn={!!studentId} allEvents={events} />
 
                     <TimeSlotGridWithEvents
                         displayEvents={events}
