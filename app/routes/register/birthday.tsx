@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-import NumberKeypad from "../../components/ui/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 import { getApiBaseUrl } from "~/utils/apiConfig";
@@ -12,54 +11,19 @@ export const meta: Route.MetaFunction = () => {
     ];
 };
 
-function DateInputField({
-    value,
-    defaultValue,
-    length,
-    isCurrentField,
-}: {
-    value: string;
-    defaultValue: string;
-    length: number;
-    isCurrentField: boolean;
-}) {
-    return (
-        <div className="flex gap-1">
-            {Array.from({ length }).map((_, i) => (
-                <React.Fragment key={i}>
-                    <div className="flex flex-col items-center gap-1">
-                        {value[i] ? (
-                            <p className="w-5 text-center leading-none">{value[i]}</p>
-                        ) : i === value.length && isCurrentField ? (
-                            <div className="flex h-9 w-5 items-center justify-start">
-                                <div className="h-6 w-0.5 animate-pulse bg-[#F5F5DC]"></div>
-                            </div>
-                        ) : (
-                            <p className="w-5 text-center leading-none text-gray-400">{defaultValue[i]}</p>
-                        )}
-                        <div className="h-[3px] w-5 rounded-full bg-[#F5F5DC]">
-                            {isCurrentField && i === value.length && (
-                                <div className="h-full w-full rounded-full bg-[#F5F5DC]"></div>
-                            )}
-                        </div>
-                    </div>
-                </React.Fragment>
-            ))}
-        </div>
-    );
-}
-
 export default function Birthday() {
     const navigate = useNavigate();
     const { registerStudent } = useStudentData();
     const [year, setYear] = useState("");
     const [month, setMonth] = useState("");
     const [day, setDay] = useState("");
-    const [currentField, setCurrentField] = useState<"year" | "month" | "day">("year");
     const [status, setStatus] = useState<
         "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
+    const yearRef = useRef<HTMLInputElement>(null);
+    const monthRef = useRef<HTMLInputElement>(null);
+    const dayRef = useRef<HTMLInputElement>(null);
 
     // 学籍番号の確認
     useEffect(() => {
@@ -77,18 +41,13 @@ export default function Birthday() {
         const savedDay = sessionStorage.getItem("temp-birthday-day");
 
         if (savedYear) setYear(savedYear);
-        if (savedMonth) {
-            setMonth(savedMonth);
-            if (savedYear && savedYear.length === 4) {
-                setCurrentField("month");
-            }
-        }
-        if (savedDay) {
-            setDay(savedDay);
-            if (savedMonth && savedMonth.length === 2) {
-                setCurrentField("day");
-            }
-        }
+        if (savedMonth) setMonth(savedMonth);
+        if (savedDay) setDay(savedDay);
+    }, []);
+
+    // 初期フォーカス
+    useEffect(() => {
+        yearRef.current?.focus();
     }, []);
 
     // 入力内容をsessionStorageに自動保存
@@ -116,16 +75,54 @@ export default function Birthday() {
         }
     }, [day]);
 
-    const handleNumberClick = (num: string) => {
+    const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+        setYear(value);
         setStatus("idle");
-        if (currentField === "year" && year.length < 4) {
-            setYear((prev) => prev + num);
-            if (year.length === 3) setCurrentField("month");
-        } else if (currentField === "month" && month.length < 2) {
-            setMonth((prev) => prev + num);
-            if (month.length === 1) setCurrentField("day");
-        } else if (currentField === "day" && day.length < 2) {
-            setDay((prev) => prev + num);
+        if (value.length === 4) {
+            monthRef.current?.focus();
+        }
+    };
+
+    const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+        setMonth(value);
+        setStatus("idle");
+        if (value.length === 2) {
+            dayRef.current?.focus();
+        }
+    };
+
+    const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+        setDay(value);
+        setStatus("idle");
+    };
+
+    const handleYearKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Backspace" && year === "") {
+            // 年が空の場合は何もしない
+        } else if (e.key === "Enter" && year.length === 4) {
+            e.preventDefault();
+            monthRef.current?.focus();
+        }
+    };
+
+    const handleMonthKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Backspace" && month === "") {
+            yearRef.current?.focus();
+        } else if (e.key === "Enter" && month.length === 2) {
+            e.preventDefault();
+            dayRef.current?.focus();
+        }
+    };
+
+    const handleDayKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Backspace" && day === "") {
+            monthRef.current?.focus();
+        } else if (e.key === "Enter" && isComplete && !isLoading) {
+            e.preventDefault();
+            void handleRegister();
         }
     };
 
@@ -133,24 +130,8 @@ export default function Birthday() {
         setYear("");
         setMonth("");
         setDay("");
-        setCurrentField("year");
         setStatus("idle");
-    };
-
-    const handleBackspace = () => {
-        if (currentField === "day" && day.length > 0) {
-            setDay((prev) => prev.slice(0, -1));
-        } else if (currentField === "day" && day.length === 0 && month.length > 0) {
-            setCurrentField("month");
-            setMonth((prev) => prev.slice(0, -1));
-        } else if (currentField === "month" && month.length > 0) {
-            setMonth((prev) => prev.slice(0, -1));
-        } else if (currentField === "month" && month.length === 0 && year.length > 0) {
-            setCurrentField("year");
-            setYear((prev) => prev.slice(0, -1));
-        } else if (currentField === "year" && year.length > 0) {
-            setYear((prev) => prev.slice(0, -1));
-        }
+        yearRef.current?.focus();
     };
 
     const handleBack = () => {
@@ -265,61 +246,88 @@ export default function Birthday() {
                     <p className="text-sm font-semibold text-[#111646]">8桁の生年月日を入力してください</p>
                 </div>
 
-                {/* 入力表示エリア */}
-                <div className="relative flex h-30 w-79 items-center justify-center rounded-md bg-[#000D91]/80 text-center shadow-lg">
-                    <div className="flex h-10 w-47 flex-col items-center justify-end font-mono text-4xl text-white">
-                        <div className="flex items-center gap-2">
-                            {/* Year */}
-                            <div className="flex flex-col items-start">
-                                <DateInputField
-                                    value={year}
-                                    defaultValue="2001"
-                                    length={4}
-                                    isCurrentField={currentField === "year"}
-                                />
-                            </div>
+                {/* 入力エリア */}
+                <div className="flex w-full max-w-md flex-col gap-4">
+                    <div className="relative flex items-center justify-center gap-3">
+                        {/* 年 */}
+                        <div className="flex flex-col gap-1">
+                            <input
+                                ref={yearRef}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={year}
+                                onChange={handleYearChange}
+                                onKeyDown={handleYearKeyDown}
+                                placeholder="YYYY"
+                                className="w-24 rounded-lg border-2 border-gray-300 bg-white px-3 py-3 text-center text-2xl font-medium text-[#111646] shadow-sm transition-colors focus:border-[#000D91] focus:outline-none focus:ring-2 focus:ring-[#000D91]/20"
+                                maxLength={4}
+                            />
+                            <span className="text-center text-xs text-gray-600">年</span>
+                        </div>
 
-                            <span>-</span>
+                        <span className="text-2xl text-[#111646]">/</span>
 
-                            {/* Month */}
-                            <div className="flex flex-col items-center">
-                                <DateInputField
-                                    value={month}
-                                    defaultValue="01"
-                                    length={2}
-                                    isCurrentField={currentField === "month"}
-                                />
-                            </div>
+                        {/* 月 */}
+                        <div className="flex flex-col gap-1">
+                            <input
+                                ref={monthRef}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={month}
+                                onChange={handleMonthChange}
+                                onKeyDown={handleMonthKeyDown}
+                                placeholder="MM"
+                                className="w-20 rounded-lg border-2 border-gray-300 bg-white px-3 py-3 text-center text-2xl font-medium text-[#111646] shadow-sm transition-colors focus:border-[#000D91] focus:outline-none focus:ring-2 focus:ring-[#000D91]/20"
+                                maxLength={2}
+                            />
+                            <span className="text-center text-xs text-gray-600">月</span>
+                        </div>
 
-                            <span>-</span>
+                        <span className="text-2xl text-[#111646]">/</span>
 
-                            {/* Day */}
-                            <div className="flex flex-col items-center">
-                                <DateInputField
-                                    value={day}
-                                    defaultValue="01"
-                                    length={2}
-                                    isCurrentField={currentField === "day"}
-                                />
-                            </div>
+                        {/* 日 */}
+                        <div className="flex flex-col gap-1">
+                            <input
+                                ref={dayRef}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={day}
+                                onChange={handleDayChange}
+                                onKeyDown={handleDayKeyDown}
+                                placeholder="DD"
+                                className="w-20 rounded-lg border-2 border-gray-300 bg-white px-3 py-3 text-center text-2xl font-medium text-[#111646] shadow-sm transition-colors focus:border-[#000D91] focus:outline-none focus:ring-2 focus:ring-[#000D91]/20"
+                                maxLength={2}
+                            />
+                            <span className="text-center text-xs text-gray-600">日</span>
                         </div>
                     </div>
 
+                    {/* エラーメッセージ */}
                     {status !== "idle" && (
-                        <div className="absolute bottom-2 h-6">
-                            <h4 className="flex h-full items-center rounded-md bg-red-600 px-4 text-sm font-normal text-white">
+                        <div className="flex justify-center">
+                            <span className="rounded-md bg-red-600 px-4 py-1 text-sm text-white">
                                 {status === "invalid-date" && "正しい日付を入力してください"}
                                 {status === "not-found" && "学籍番号または誕生日が違う可能性があります"}
                                 {status === "auth-failed" && "認証に失敗しました"}
                                 {status === "network-error" && "サーバーに接続できませんでした"}
                                 {status === "no-student-id" && "学籍番号が設定されていません"}
-                            </h4>
+                            </span>
                         </div>
                     )}
-                </div>
 
-                {/* キーパッド */}
-                <NumberKeypad onNumberClick={handleNumberClick} onClear={handleClear} onBackspace={handleBackspace} />
+                    {/* クリアボタン */}
+                    {(year || month || day) && (
+                        <button
+                            onClick={handleClear}
+                            className="mx-auto rounded-lg bg-gray-500 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-600"
+                        >
+                            クリア
+                        </button>
+                    )}
+                </div>
 
                 {/* 登録ボタン */}
                 <div className="flex w-57 items-center justify-between">

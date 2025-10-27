@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
-import NumberKeypad from "../../components/ui/number-keypad";
 import type { Route } from "./+types/student-id";
 
 export const meta: Route.MetaFunction = () => {
@@ -14,6 +13,7 @@ export default function StudentId() {
     const navigate = useNavigate();
     const [studentId, setStudentId] = useState("");
     const [status, setStatus] = useState<"idle" | "no-input">("idle");
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // 初期表示時にsessionStorageから学籍番号を復元
     React.useEffect(() => {
@@ -31,19 +31,21 @@ export default function StudentId() {
         }
     }, []);
 
-    const handleNumberClick = (num: string) => {
-        setStudentId((prev) => (prev.length < 5 ? prev + num : prev));
+    // 自動フォーカス
+    React.useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, ""); // 数字のみ許可
+        setStudentId(value);
         setStatus("idle");
     };
 
     const handleClear = () => {
         setStudentId("");
         setStatus("idle");
-    };
-
-    const handleBackspace = () => {
-        setStudentId((prev) => prev.slice(0, -1));
-        setStatus("idle");
+        inputRef.current?.focus();
     };
 
     const handleNext = () => {
@@ -74,20 +76,13 @@ export default function StudentId() {
     // 入力チェック：数字のみで1文字以上
     const isValidInput = studentId.length > 0 && /^\d+$/.test(studentId);
 
-    // Ctrl+Enterで次へボタンを押す
-    React.useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey && event.key === "Enter") {
-                event.preventDefault();
-                handleNext();
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [studentId]);
+    // Enterキーで次へボタンを押す
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && isValidInput) {
+            e.preventDefault();
+            handleNext();
+        }
+    };
 
     return (
         <RecTimeFlame>
@@ -97,37 +92,40 @@ export default function StudentId() {
                     <p className="text-sm font-semibold text-[#111646]">学籍番号を入力してください</p>
                 </div>
 
-                {/* 入力表示エリア */}
-                <div className="relative flex h-30 w-79 items-center justify-center rounded-md bg-[#000D91]/80 text-center shadow-lg">
-                    <div className="flex h-10 w-47 flex-col items-center justify-end font-mono text-5xl text-white">
-                        <div className="flex gap-3">
-                            {Array.from(studentId).map((digit, i) => (
-                                <div key={i} className="flex flex-col items-center">
-                                    <p className="h-12 w-7 text-center leading-none">{digit}</p>
-                                    <div className="h-[3px] w-7 rounded-full bg-[#F5F5DC]"></div>
-                                </div>
-                            ))}
-                            {studentId.length < 5 && (
-                                <div className="jus flex h-full flex-col">
-                                    <div className="flex h-12 w-7 items-center text-center leading-none">
-                                        <div className="h-8 w-0.5 animate-pulse bg-white"></div>
-                                    </div>
-                                    <div className="h-[3px] w-7 rounded-full bg-[#F5F5DC]"></div>
-                                </div>
-                            )}
-                        </div>
+                {/* 入力エリア */}
+                <div className="flex w-full max-w-md flex-col gap-4">
+                    <div className="relative">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={studentId}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                            placeholder="学籍番号"
+                            className="w-full rounded-lg border-2 border-gray-300 bg-white px-6 py-4 text-center text-3xl font-medium tracking-wider text-[#111646] shadow-sm transition-colors focus:border-[#000D91] focus:outline-none focus:ring-2 focus:ring-[#000D91]/20"
+                            maxLength={10}
+                        />
+                        {status === "no-input" && (
+                            <div className="absolute -bottom-8 left-0 right-0 flex justify-center">
+                                <span className="rounded-md bg-red-600 px-4 py-1 text-sm text-white">
+                                    学籍番号を入力してください
+                                </span>
+                            </div>
+                        )}
                     </div>
-                    {status === "no-input" && (
-                        <div className="absolute bottom-2 h-6">
-                            <h4 className="flex h-full items-center rounded-md bg-red-600 px-4 text-sm font-normal text-white">
-                                学籍番号を入力してください
-                            </h4>
-                        </div>
+
+                    {/* クリアボタン */}
+                    {studentId.length > 0 && (
+                        <button
+                            onClick={handleClear}
+                            className="mx-auto rounded-lg bg-gray-500 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-600"
+                        >
+                            クリア
+                        </button>
                     )}
                 </div>
-
-                {/* キーパッド */}
-                <NumberKeypad onNumberClick={handleNumberClick} onClear={handleClear} onBackspace={handleBackspace} />
 
                 {/* 登録ボタン */}
                 {/*Todo:登録した後の遷移方法を修正。*/}
