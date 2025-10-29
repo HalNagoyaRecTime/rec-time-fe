@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import type { EventRow } from "~/api/student";
 import { formatTime } from "~/utils/timetable/nextEventCalculator";
 import ZoomableImageModal from "./ZoomableImageModal";
+import { getEventMapConfig } from "~/config/eventMapConfig";
 
 interface EventListItemProps {
     event: EventRow;
@@ -17,8 +18,8 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
     const [isExpanded, setIsExpanded] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-    // ハードコードされた地図画像URL（仮）
-    const MAP_IMAGE_URL = "https://placehold.co/600x400/1e3a8a/fbbf24?text=競技場マップ";
+    // イベントIDから地図設定を取得
+    const mapConfig = getEventMapConfig(event.f_event_id);
 
     const handleToggle = () => {
         setIsExpanded(!isExpanded);
@@ -27,6 +28,14 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
     const handleImageClick = (e: React.MouseEvent) => {
         e.stopPropagation(); // アコーディオンのトグルを防ぐ
         setIsImageModalOpen(true);
+    };
+
+    // 外部リンクを開く
+    const handleExternalLinkClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // アコーディオンのトグルを防ぐ
+        if (mapConfig.externalUrl) {
+            window.open(mapConfig.externalUrl, "_blank", "noopener,noreferrer");
+        }
     };
 
     return (
@@ -76,7 +85,7 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
                     onClick={handleImageClick}
                 >
                     <img
-                        src={MAP_IMAGE_URL}
+                        src={mapConfig.imageUrl}
                         alt={isExpanded ? "競技場マップ" : "地図"}
                         className={
                             isExpanded
@@ -87,12 +96,22 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
                 </div>
             </div>
 
+            {/* 外部リンクボタン（展開時かつURLが設定されている場合のみ表示） */}
+            {isExpanded && mapConfig.externalUrl && (
+                <button
+                    onClick={handleExternalLinkClick}
+                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
+                >
+                    {mapConfig.linkLabel || "詳細を見る"}
+                </button>
+            )}
+
             {/* 縮小ヒント（展開時のみ） */}
             {isExpanded && <div className="text-center text-xs text-gray-500">タップで縮小 ↑</div>}
 
             {/* 地図拡大表示モーダル */}
             <ZoomableImageModal
-                images={[{ src: MAP_IMAGE_URL, title: event.f_event_name || "競技場マップ" }]}
+                images={[{ src: mapConfig.imageUrl, title: event.f_event_name || "競技場マップ" }]}
                 initialIndex={0}
                 isOpen={isImageModalOpen}
                 onClose={() => setIsImageModalOpen(false)}

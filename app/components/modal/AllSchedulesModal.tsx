@@ -21,14 +21,7 @@ interface AllSchedulesModalProps {
  * - 下からスライドインアニメーション
  * - スクロール上端でスワイプダウンすると閉じる
  */
-export default function AllSchedulesModal({
-    isOpen,
-    events,
-    onClose,
-    onClosing,
-    isClosing = false,
-    cardRotation = 0,
-}: AllSchedulesModalProps) {
+export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }: AllSchedulesModalProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [translateY, setTranslateY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
