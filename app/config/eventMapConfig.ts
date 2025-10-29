@@ -24,19 +24,19 @@ export const eventMapConfigs: Record<number, EventMapConfig> = {
     // event_id: 4 - 走れ〇人〇脚
     4: {
         imageUrl: "/images/area-marunin-01.jpg",
-        // externalUrl: "https://example.com/marunin", // 必要に応じて追加
+        externalUrl: "https://rectime-web.pages.dev/ninnkyaku",
     },
 
     // event_id: 5 - ガチンコ綱引き
     5: {
         imageUrl: "/images/area-tunahiki-01.jpg",
-        // externalUrl: "https://example.com/tunahiki",
+        externalUrl: "https://rectime-web.pages.dev/tunahiki",
     },
 
     // event_id: 6 - 四天王ドッチボール
     6: {
         imageUrl: "/images/area-dotchiboru-01.jpg",
-        // externalUrl: "https://example.com/dotchiboru",
+        externalUrl: "https://rectime-web.pages.dev/dojji",
     },
 
     // event_id: 10 - 紙飛行機飛ばし
@@ -48,7 +48,7 @@ export const eventMapConfigs: Record<number, EventMapConfig> = {
     // event_id: 11 - 学科別対抗リレー
     11: {
         imageUrl: "/images/area-relay-01.jpg",
-        // externalUrl: "https://example.com/relay",
+        externalUrl: "https://rectime-web.pages.dev/relay",
     },
 
     // 他のイベントも必要に応じて追加
