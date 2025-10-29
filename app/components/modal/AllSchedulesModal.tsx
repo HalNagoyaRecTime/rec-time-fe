@@ -275,17 +275,6 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                         {/* ハンドルバー */}
                         <div className="h-1.5 w-12 rounded-full bg-gray-300"></div>
                     </div>
-
-                    {/*/!* 閉じるボタン（左上固定） *!/*/}
-                    {/*<div className="absolute left-0 flex h-full items-center pl-2">*/}
-                    {/*    <button*/}
-                    {/*        onClick={handleClose}*/}
-                    {/*        className="top-4 left-4 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-2xl hover:bg-gray-100"*/}
-                    {/*        aria-label="閉じる"*/}
-                    {/*    >*/}
-                    {/*        <FaXmark className="h-6 w-6 text-black/50" />*/}
-                    {/*    </button>*/}
-                    {/*</div>*/}
                 </div>
 
                 {/* スクロール可能エリア */}
@@ -305,9 +294,15 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                             {/* 大きく表示するイベント（開催中 or 次の予定） */}
                             {highlightedEvents.length > 0 && (
                                 <div className="space-y-4">
-                                    {highlightedEvents.map((event) => (
-                                        <EventDetailCard key={event.f_event_id} event={event} />
-                                    ))}
+                                    {highlightedEvents.map((event, index) => {
+                                        // ステータスを決定
+                                        const isOngoing = ongoingEvents.some((e) => e.f_event_id === event.f_event_id);
+                                        const isNext =
+                                            !isOngoing && index === 0 && ongoingEvents.length === 0;
+                                        const status = isOngoing ? "ongoing" : isNext ? "next" : null;
+
+                                        return <EventDetailCard key={event.f_event_id} event={event} status={status} />;
+                                    })}
                                 </div>
                             )}
 

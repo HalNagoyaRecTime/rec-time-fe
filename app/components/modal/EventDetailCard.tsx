@@ -7,13 +7,14 @@ import { getEventMapConfig } from "~/config/eventMapConfig";
 
 interface EventDetailCardProps {
     event: EventRow;
+    status?: "next" | "ongoing" | null; // イベントのステータス
 }
 
 /**
  * イベントの詳細を大きく表示するカード
  * - 次の予定や、タップして開いた詳細表示に使用
  */
-export default function EventDetailCard({ event }: EventDetailCardProps) {
+export default function EventDetailCard({ event, status = null }: EventDetailCardProps) {
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     // イベントIDから地図設定を取得
@@ -34,15 +35,30 @@ export default function EventDetailCard({ event }: EventDetailCardProps) {
     return (
         <>
             <div className="w-full">
+                {/* 次の予定バッジ（最上部） */}
+                {status === "next" && (
+                    <div className="mb-2 flex justify-start">
+                        <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+                            次の予定
+                        </span>
+                    </div>
+                )}
+
                 <div className="flex flex-col gap-3">
                     {/* イベント情報エリア */}
                     <div className="w-full">
                         {/* タイトル */}
-                        <div className="relative flex items-center">
+                        <div className="relative flex items-center gap-2">
                             <div className="absolute h-6 w-1 rounded-full bg-blue-950"></div>
                             <h4 className="overflow-hidden pb-1 pl-2 text-2xl font-bold text-gray-900">
                                 {event.f_event_name || "イベント"}
                             </h4>
+                            {/* 開催中バッジ（タイトル右） */}
+                            {status === "ongoing" && (
+                                <span className="flex-shrink-0 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
+                                    開催中
+                                </span>
+                            )}
                         </div>
 
                         {/* 集合場所・時間 */}
