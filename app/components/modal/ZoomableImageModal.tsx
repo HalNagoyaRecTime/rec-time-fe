@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { MdFileDownload } from "react-icons/md";
 import { FaXmark } from "react-icons/fa6";
 
@@ -51,6 +52,28 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         setScale(1);
         setPosition({ x: 0, y: 0 });
     }, [currentIndex]);
+
+    // モーダルが開いている間、背景のスクロールとpull-to-refreshを無効化
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            document.body.style.overscrollBehavior = "none";
+            // iOS Safari用
+            document.documentElement.style.overflow = "hidden";
+            document.documentElement.style.overscrollBehavior = "none";
+        } else {
+            document.body.style.overflow = "";
+            document.body.style.overscrollBehavior = "";
+            document.documentElement.style.overflow = "";
+            document.documentElement.style.overscrollBehavior = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+            document.body.style.overscrollBehavior = "";
+            document.documentElement.style.overflow = "";
+            document.documentElement.style.overscrollBehavior = "";
+        };
+    }, [isOpen]);
 
     // キーボード操作
     useEffect(() => {
@@ -122,11 +145,15 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     };
 
     const handleTouchStart = (e: React.TouchEvent) => {
+        // 背景へのスクロール伝播を防ぐ
+        e.stopPropagation();
+
         const touch = e.touches[0];
         touchStartPos.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
 
         if (e.touches.length === 2) {
             // ピンチズーム開始
+            e.preventDefault(); // 背景へのスクロール防止
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
             const distance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
@@ -134,6 +161,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         } else if (e.touches.length === 1) {
             if (scale > 1) {
                 // ズーム中はドラッグ
+                e.preventDefault(); // 背景へのスクロール防止
                 setIsDragging(true);
                 setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
             } else {
@@ -145,8 +173,12 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
+        // 背景へのスクロール伝播を防ぐ
+        e.stopPropagation();
+
         if (e.touches.length === 2 && lastTouchDistance.current) {
             // ピンチズーム
+            e.preventDefault(); // 背景へのスクロール防止
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
             const distance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
@@ -159,6 +191,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
 
             if (isDragging && scale > 1) {
                 // ズーム中のドラッグ
+                e.preventDefault(); // 背景へのスクロール防止
                 setPosition({
                     x: touch.clientX - dragStart.x,
                     y: touch.clientY - dragStart.y,
@@ -176,12 +209,16 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                 // 確定した方向に応じて処理
                 if (swipeDirection.current === "vertical") {
                     // 縦方向のスワイプ（閉じる動作）
+                    e.preventDefault(); // 背景へのスクロール防止
                     const swipeY = touch.clientY - swipeStartY.current;
                     if (swipeY > 0) {
                         setSwipeDownDistance(swipeY);
                         // UI を非表示にする
                         setShowUI(false);
                     }
+                } else if (swipeDirection.current === "horizontal") {
+                    // 横方向のスワイプ（画像切り替え）
+                    e.preventDefault(); // 背景へのスクロール防止
                 }
                 // 横方向のスワイプは handleTouchEnd で処理
             }
@@ -189,6 +226,9 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
+        // 背景へのスクロール伝播を防ぐ
+        e.stopPropagation();
+
         const touch = e.changedTouches[0];
 
         // 上から下へのスワイプで閉じる判定
@@ -320,7 +360,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         return null;
     }
 
-    return (
+    const modalContent = (
         <div
             className="fixed inset-0 z-[9999] flex items-center justify-center"
             role="dialog"
@@ -481,4 +521,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
             )}
         </div>
     );
+
+    // Portal を使って body 直下にレンダリング
+    return createPortal(modalContent, document.body);
 }
