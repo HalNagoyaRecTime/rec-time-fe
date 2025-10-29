@@ -68,9 +68,6 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
     // 参加予定のイベントをフィルタ
     const myEvents = events.filter((event) => event.f_is_my_entry === true);
 
-    // 次の予定イベント
-    const nextEvent = getNextParticipatingEvent(events);
-
     // 現在時刻（HHmm形式に変換）
     const now = new Date();
     const currentTime = now.getHours() * 100 + now.getMinutes();
@@ -93,43 +90,69 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
         return currentTime >= startTime && currentTime <= endTime;
     };
 
+    // すべてのイベントを時刻順にソート
+    const sortedEvents = [...myEvents].sort((a, b) => {
+        const aTime = parseInt(a.f_start_time || "0", 10);
+        const bTime = parseInt(b.f_start_time || "0", 10);
+        return aTime - bTime;
+    });
+
     // 開催中のイベント
-    const ongoingEvents = myEvents
-        .filter((e) => isEventOngoing(e))
-        .sort((a, b) => {
-            const aTime = parseInt(a.f_start_time || "0", 10);
-            const bTime = parseInt(b.f_start_time || "0", 10);
-            return aTime - bTime;
-        });
+    const ongoingEvents = sortedEvents.filter((e) => isEventOngoing(e));
 
-    // 残りの未来のイベント（次のイベントを除く、開催中も除く）
-    const upcomingEvents = myEvents
-        .filter((e) => {
-            // 次のイベント以外で、開催中でない全てのイベントを表示
-            return e.f_event_id !== nextEvent?.f_event_id && !isEventOngoing(e);
-        })
-        .sort((a, b) => {
-            const aTime = parseInt(a.f_start_time || "0", 10);
-            const bTime = parseInt(b.f_start_time || "0", 10);
-            return aTime - bTime;
-        });
-
-    // 未来のイベント（開始時刻が現在より後）
-    const futureEvents = upcomingEvents.filter((e) => {
+    // 未来のイベント（まだ開始していないイベント）
+    const futureEvents = sortedEvents.filter((e) => {
         const startTime = parseInt(e.f_start_time || "0", 10);
-        const isFuture = startTime > currentTime;
-        console.log(`[AllSchedulesModal] ${e.f_event_name}: ${startTime} > ${currentTime} = ${isFuture}`);
-        return isFuture;
+        return startTime > currentTime;
     });
 
-    // 終了したイベント（開始時刻が現在以前）
-    const pastEvents = upcomingEvents.filter((e) => {
+    // 上部に大きく表示するイベントを決定
+    // 1. 開催中のイベントが複数ある場合 → 全て大きく表示
+    // 2. 開催中が1つ + 未来のイベントで時刻が重複 → 重複分を大きく表示
+    // 3. 開催中がない場合 → 次の1つ（または同時刻の複数）を大きく表示
+    const highlightedEvents: EventRow[] = [];
+    const remainingFutureEvents: EventRow[] = [];
+
+    if (ongoingEvents.length > 0) {
+        // 開催中イベントが存在する場合
+        const lastOngoingTime = parseInt(ongoingEvents[ongoingEvents.length - 1].f_start_time || "0", 10);
+
+        // 開催中イベントを全て追加
+        highlightedEvents.push(...ongoingEvents);
+
+        // 未来のイベントで、開催中と同時刻のものも大きく表示
+        futureEvents.forEach((event) => {
+            const startTime = parseInt(event.f_start_time || "0", 10);
+            if (startTime === lastOngoingTime) {
+                highlightedEvents.push(event);
+            } else {
+                remainingFutureEvents.push(event);
+            }
+        });
+    } else if (futureEvents.length > 0) {
+        // 開催中がない場合、次のイベントの時刻を取得
+        const nextEventTime = parseInt(futureEvents[0].f_start_time || "0", 10);
+
+        // 同時刻のイベントを全て大きく表示
+        futureEvents.forEach((event) => {
+            const startTime = parseInt(event.f_start_time || "0", 10);
+            if (startTime === nextEventTime) {
+                highlightedEvents.push(event);
+            } else {
+                remainingFutureEvents.push(event);
+            }
+        });
+    }
+
+    // 終了したイベント（開始時刻が現在以前で、開催中でもないもの）
+    const pastEvents = sortedEvents.filter((e) => {
         const startTime = parseInt(e.f_start_time || "0", 10);
-        return startTime <= currentTime;
+        return startTime <= currentTime && !isEventOngoing(e);
     });
 
-    console.log("[AllSchedulesModal] 未来のイベント:", futureEvents.length);
-    console.log("[AllSchedulesModal] 終了イベント:", pastEvents.length);
+    console.log("[AllSchedulesModal] 大きく表示:", highlightedEvents.length);
+    console.log("[AllSchedulesModal] 残りの未来:", remainingFutureEvents.length);
+    console.log("[AllSchedulesModal] 終了:", pastEvents.length);
 
     // スクロール可能領域でのタッチ開始
     const handleScrollTouchStart = (e: React.TouchEvent) => {
@@ -283,11 +306,17 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* 次のイベント（最上部に大きく表示） */}
-                            {nextEvent && <EventDetailCard event={nextEvent} />}
+                            {/* 大きく表示するイベント（開催中 or 次の予定） */}
+                            {highlightedEvents.length > 0 && (
+                                <div className="space-y-4">
+                                    {highlightedEvents.map((event) => (
+                                        <EventDetailCard key={event.f_event_id} event={event} />
+                                    ))}
+                                </div>
+                            )}
 
-                            {/* 参加予定イベント（未来） */}
-                            <EventSection title="参加予定イベント" events={futureEvents} />
+                            {/* 参加予定イベント（残りの未来のイベント） */}
+                            <EventSection title="参加予定イベント" events={remainingFutureEvents} />
 
                             {/* 終了イベント（過去） */}
                             <EventSection title="終了イベント" events={pastEvents} isPast />
