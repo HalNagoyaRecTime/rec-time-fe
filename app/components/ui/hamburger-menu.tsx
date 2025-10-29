@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegStar } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { useAppVersion } from "~/hooks/useAppVersion";
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface HamburgerMenuProps {
 export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
+    const appVersion = useAppVersion();
     const location = useLocation();
 
     useEffect(() => {
@@ -27,27 +29,29 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 
     if (!isVisible) return null;
 
+    const MENU_COLORS = {
+        active: "#ffb400",
+        default: "#ffffff",
+    };
+
     const menuItems = [
         {
             to: "/timetable",
             icon: "/icons/app-icon/timetable.svg",
             label: "Time Table",
-            activeColor: "#ffb400",
-            defaultColor: "#ffffff",
+            activePaths: ["/timetable"],
         },
         {
             to: "/map",
             icon: "/icons/app-icon/map.svg",
             label: "マップ",
-            activeColor: "#ffb400",
-            defaultColor: "#ffffff",
+            activePaths: ["/map"],
         },
         {
             to: "/settings",
             icon: "/icons/app-icon/settings.svg",
             label: "設定",
-            activeColor: "#ffb400",
-            defaultColor: "#ffffff",
+            activePaths: ["/settings", "/register/birthday", "/register/student-id"],
         },
     ];
 
@@ -67,8 +71,8 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                             className={`flex flex-col gap-6 pr-7 transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             {menuItems.map((item) => {
-                                const isActive = location.pathname === item.to;
-                                const color = isActive ? item.activeColor : item.defaultColor;
+                                const isActive = item.activePaths.includes(location.pathname);
+                                const color = isActive ? MENU_COLORS.active : MENU_COLORS.default;
 
                                 return (
                                     <Link
@@ -89,7 +93,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="pr-10 text-lg whitespace-nowrap font-bold mb-1" style={{ color }}>
+                                            <p
+                                                className="mb-1 pr-10 text-lg font-bold whitespace-nowrap"
+                                                style={{ color }}
+                                            >
                                                 {item.label}
                                             </p>
                                         </div>
@@ -128,9 +135,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         </div>
 
                         <div
-                            className={`flex w-full justify-center transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
+                            className={`flex w-full flex-col items-start transition-opacity delay-150 duration-200 ${isAnimating ? "opacity-100" : "opacity-0"}`}
                         >
                             <h2 className="w-full text-5xl tracking-[2px] text-white">recTime</h2>
+                            {appVersion && <p className="mt-1 text-xs text-white/70">v.{appVersion}</p>}
                         </div>
                     </div>
                 </div>

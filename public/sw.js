@@ -1,7 +1,8 @@
 // public/sw.js
 // 통합 Service Worker: 캐싱 + 백그라운드 알림 + FCM
 
-const APP_VERSION = "2025-10-18-01";
+// ⚠️ このバージョン番号は app/constants/version.ts の APP_VERSION と同期してください
+const APP_VERSION = "25.1.0";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
 const DATA_CACHE_NAME = `rec-time-data-cache-${APP_VERSION}`;
 
@@ -34,7 +35,7 @@ const STATIC_FILES = [
     // 静的アセット
     "/favicon.ico",
     "/manifest.webmanifest",
-    "/icons/pwa-192.png",
+    "/icons/pwa-128.png",
     "/icons/pwa-512.png",
     "/icons/app-icon/timetable.svg",
     "/icons/app-icon/map.svg",
@@ -95,7 +96,6 @@ function openDatabase() {
                 const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
                 store.createIndex("notification_time", "notification_time", { unique: false });
                 store.createIndex("notified", "notified", { unique: false });
-                console.log("[SW] IndexedDB初期化完了");
             }
         };
     });
@@ -132,7 +132,6 @@ async function saveNotificationsToIndexedDB(notifications) {
             });
         }
 
-        console.log(`[SW] ${notifications.length}件の通知をIndexedDBに保存しました`);
     } catch (error) {
         console.error("[SW] IndexedDB保存エラー:", error);
     }
@@ -179,7 +178,6 @@ async function markAsNotifiedInIndexedDB(notificationId) {
                 putRequest.onsuccess = () => resolve();
                 putRequest.onerror = () => reject(putRequest.error);
             });
-            console.log(`[SW] 通知済みマーク: ${notificationId}`);
         }
     } catch (error) {
         console.error("[SW] 通知済みマーク失敗:", error);
@@ -190,13 +188,9 @@ self.addEventListener("message", async (event) => {
     const data = event.data;
     if (!data) return;
 
-    if (data.type === "LOG_JSON") {
-        console.log("[SW] 受け取ったJSON:", data.payload);
-    }
 
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
-        console.log("[SW] 通知スケジュール受信:", data.notifications);
 
         // IndexedDBに保存
         await saveNotificationsToIndexedDB(data.notifications || []);
@@ -212,7 +206,6 @@ self.addEventListener("message", async (event) => {
 
     // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
-        console.log("[SW] 通知停止");
 
         // IndexedDBをクリア
         try {
@@ -250,14 +243,12 @@ const API_BASE_URL = getApiBaseUrl();
 
 function startKeepAlive() {
     if (keepAliveInterval) {
-        console.log("[SW] Keep-Aliveは既に実行中");
         return;
     }
 
     // イベントまでの時間で間隔を調整
     adjustKeepAliveInterval();
 
-    console.log(`[SW] Keep-Alive開始 (${currentKeepAliveInterval / 1000}秒ごと)`);
 
     // 即座に1回実行
     performKeepAlive();
@@ -274,7 +265,6 @@ function stopKeepAlive() {
         keepAliveInterval = null;
         keepAliveFailCount = 0;
         currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-        console.log("[SW] Keep-Alive停止");
     }
 }
 
@@ -316,10 +306,8 @@ async function adjustKeepAliveInterval() {
         // iOS PWA対応: イベント30分前から15秒ごとにチェック（実験的）
         if (minDiff <= 30) {
             currentKeepAliveInterval = 15 * 1000; // 15秒
-            console.log("[SW] イベントまで30分以内 → Keep-Alive間隔を15秒に短縮（iOS PWA実験的）");
         } else if (minDiff <= 60) {
             currentKeepAliveInterval = 60 * 1000; // 1分
-            console.log("[SW] イベントまで1時間以内 → Keep-Alive間隔を1分に短縮");
         } else {
             currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
         }
@@ -331,7 +319,6 @@ async function adjustKeepAliveInterval() {
 
 async function performKeepAlive() {
     try {
-        console.log("[SW] Keep-Alive: バックエンドに疎通チェック送信");
 
         // バックエンドの軽量なヘルスチェックエンドポイントにリクエスト
         // タイムアウトを短く設定（回線不安定対応）
@@ -351,7 +338,6 @@ async function performKeepAlive() {
 
         if (response.ok) {
             const data = await response.json();
-            console.log("[SW] Keep-Alive成功:", data);
 
             // 成功したら失敗カウントをリセット
             keepAliveFailCount = 0;
@@ -412,7 +398,6 @@ function restartKeepAlive() {
         keepAliveInterval = setInterval(() => {
             performKeepAlive();
         }, currentKeepAliveInterval);
-        console.log(`[SW] Keep-Alive間隔を${currentKeepAliveInterval / 1000}秒に変更`);
     }
 }
 
@@ -420,16 +405,13 @@ function restartKeepAlive() {
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
 async function startNotificationCheckLoop() {
     if (checkLoopRunning) {
-        console.log("[SW] チェックループは既に実行中");
         return;
     }
 
     checkLoopRunning = true;
-    console.log("[SW] 通知チェックループ開始");
 
     async function checkLoop() {
         if (!checkLoopRunning) {
-            console.log("[SW] チェックループ停止");
             return;
         }
 
@@ -438,11 +420,11 @@ async function startNotificationCheckLoop() {
         } catch (error) {
             console.error("[SW] 通知チェックエラー:", error);
         }
-        
+
         // 30秒後に再度チェック（setIntervalより確実）
         setTimeout(checkLoop, 30000);
     }
-    
+
     // 最初のチェックを即座に実行
     checkLoop();
 }
@@ -455,18 +437,18 @@ async function checkAndSendNotifications() {
 
     try {
         const notifications = await getNotificationsFromIndexedDB();
-        console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
+        (`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
         for (const notification of notifications) {
             if (!notification.notified) {
                 // notification_time을 분 단위로 변환하여 비교
                 const notifyTimeStr = notification.notification_time;
                 if (!notifyTimeStr || notifyTimeStr.length < 4) continue;
-                
+
                 const notifyHour = parseInt(notifyTimeStr.substring(0, 2), 10);
                 const notifyMinute = parseInt(notifyTimeStr.substring(2, 4), 10);
                 const notifyTotalMinutes = notifyHour * 60 + notifyMinute;
-                
+
                 // 현재 시간이 알림 시간을 넘어갔는지 확인 (최대 10분 지연까지 허용)
                 const timeDiff = currentTotalMinutes - notifyTotalMinutes;
                 if (timeDiff >= 0 && timeDiff <= 10) {
@@ -490,8 +472,8 @@ async function showNotification(notification) {
 
     const options = {
         body: body,
-        icon: "/icons/pwa-192.png",
-        badge: "/icons/pwa-192.png",
+        icon: "/icons/pwa-128.png",
+        badge: "/icons/pwa-128.png",
         tag: `event-${notification.f_event_id}-${notification.notification_time}`,
         requireInteraction: true,
         vibrate: [200, 100, 200],
@@ -506,12 +488,10 @@ async function showNotification(notification) {
     };
 
     await self.registration.showNotification(title, options);
-    console.log(`[SW] 通知表示: ${title} - ${notification.notification_label}`);
 }
 
 // === 通知クリック時の処理 ===
 self.addEventListener("notificationclick", (event) => {
-    console.log("[SW] 通知がクリックされました:", event.notification.data);
 
     event.notification.close();
 
@@ -550,7 +530,7 @@ messaging.onBackgroundMessage((payload) => {
         // 앱이 닫혀있을 때만 Service Worker에서 알림 표시
         let notificationTitle = 'RecTime 알림';
         let notificationBody = '새로운 알림이 있습니다';
-        
+
         if (payload.notification) {
             // 표준 FCM notification 필드 사용
             notificationTitle = payload.notification.title || notificationTitle;
@@ -600,19 +580,16 @@ self.addEventListener("notificationclose", (event) => {
 // 注意: Periodic Background Syncは一部のブラウザでのみサポート
 self.addEventListener("periodicsync", async (event) => {
     if (event.tag === "check-notifications") {
-        console.log("[SW] Periodic Sync: 通知チェック");
         event.waitUntil(checkAndSendNotifications());
     }
 });
 
 // === Push通知（将来的な拡張用） ===
 self.addEventListener("push", (event) => {
-    console.log("[SW] Push通知受信:", event);
     // 将来的にバックエンドからのプッシュ通知をサポートする場合
 });
 
 self.addEventListener("install", (event) => {
-    console.log("[SW] install", APP_VERSION);
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_FILES);
@@ -622,7 +599,6 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-    console.log("[SW] activate", APP_VERSION);
     event.waitUntil(
         caches
             .keys()
@@ -631,7 +607,6 @@ self.addEventListener("activate", (event) => {
                     cacheNames.map((cacheName) => {
                         // 古いキャッシュを削除
                         if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
-                            console.log("[SW] 古いキャッシュを削除:", cacheName);
                             return caches.delete(cacheName);
                         }
                     })
@@ -644,7 +619,6 @@ self.addEventListener("activate", (event) => {
                 // 通知チェックループを開始（既存の通知がある場合）
                 const notifications = await getNotificationsFromIndexedDB();
                 if (notifications.length > 0) {
-                    console.log(`[SW] ${notifications.length}件の通知スケジュールを復元`);
                     startNotificationCheckLoop();
                     startKeepAlive();
                 }
@@ -713,13 +687,11 @@ self.addEventListener("fetch", (event) => {
                         const responseClone = response.clone();
                         caches.open(DATA_CACHE_NAME).then((cache) => {
                             cache.put(request, responseClone);
-                            console.log("[SW] APIレスポンスをキャッシュに保存:", url.pathname);
                         });
                     }
                     return response;
                 })
                 .catch((error) => {
-                    console.log("[SW] ネットワークエラー、キャッシュから取得:", url.pathname);
                     // ネットワークエラー時はキャッシュから返す
                     return caches.match(request).then((cachedResponse) => {
                         if (cachedResponse) {

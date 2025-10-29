@@ -1,18 +1,16 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { useEffect, useState } from "react";
-// import type { Route } from "./+types/root";
-
-// 임시 타입 정의
-namespace Route {
-    export type LinksFunction = () => Array<{ rel: string; href: string; type?: string; sizes?: string; crossOrigin?: string }>;
-    export type ErrorBoundaryProps = { error: any };
-}
+import type { Route } from "./+types/root";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
 import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
-import { initializeFCM } from "./utils/firebaseConfig";
+import UpdateModal from "./components/ui/update-modal";
+import UpdateSuccessModal from "./components/ui/update-success-modal";
+import { useVersionCheck } from "./hooks/useVersionCheck";
+import { markVersionAsSeen } from "./utils/versionCheckBackend";
+import { reinstallPWA } from "./utils/clearCache";
 import "./utils/fcmTest"; // FCM 테스트 함수 등록
 
 import "./app.css";
@@ -31,11 +29,11 @@ export const links: Route.LinksFunction = () => [
     { rel: "manifest", href: "/manifest.webmanifest" },
     {
         rel: "icon",
-        href: "/icons/pwa-192.png?v=2",
+        href: "/icons/pwa-128.png?v=2",
         type: "image/png",
         sizes: "192x192",
     },
-    { rel: "apple-touch-icon", href: "/icons/pwa-192.png?v=2" },
+    { rel: "apple-touch-icon", href: "/icons/pwa-128.png?v=2" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -61,16 +59,125 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+    const [updateInfo, setUpdateInfo] = useState<{ version: string; message: string } | null>(null);
+    const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
+
+    // バージョンチェックフック
+    useVersionCheck({
+        autoCheck: !isMaintenanceMode,
+        checkOnMount: true, // 起動時チェック（初回のみ）
+        checkOnFocus: false, // フォーカス時チェック無効（初期読み込み時の重複を防ぐ）
+        checkOnVisibilityChange: true, // バックグラウンド復帰時チェック
+        enablePeriodicCheck: true, // 定期チェック
+        onUpdateDetected: (info) => {
+            setUpdateInfo(info);
+            setShowUpdateModal(true);
+        },
+    });
+
+    useEffect(() => {
+        // メンテナンスモードチェック
+        const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
+        if (maintenanceMode) {
+            setIsMaintenanceMode(true);
+        }
+
+        // アップデート完了チェック
+        const updateCompleted = localStorage.getItem("app:update_completed");
+        if (updateCompleted === "true") {
+            localStorage.removeItem("app:update_completed");
+            setShowUpdateSuccess(true);
+        }
+    }, []);
 
     useEffect(() => {
         // Service Worker 등록 (통합 버전)
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker
                 .register("/sw.js", { scope: "/" })
-                .then((reg) => console.log("[SW] registered:", reg.scope))
+                .then(async (reg) => {
+                    // Service Worker更新検知
+                    reg.addEventListener("updatefound", () => {
+                        const newWorker = reg.installing;
+
+                        if (newWorker) {
+                            newWorker.addEventListener("statechange", () => {
+                                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                                    // オプション: 自動リロードを促す通知を表示
+                                    if ("Notification" in window && Notification.permission === "granted") {
+                                        new Notification("RecTime更新", {
+                                            body: "新しいバージョンが利用可能です。ページをリロードしてください。",
+                                            tag: "sw-update",
+                                        });
+                                    }
+                                } else if (newWorker.state === "activated") {
+                                }
+                            });
+                        }
+                    });
+
+                    // Periodic Background Syncを登録（サポートされている場合）
+                    if ("periodicSync" in reg) {
+                        try {
+                            await (reg as any).periodicSync.register("check-notifications", {
+                                minInterval: 60 * 1000, // 1分（ブラウザが実際の間隔を決定）
+                            });
+                        } catch (error) {
+                            console.warn("[SW] Periodic Background Sync登録失敗:", error);
+                        }
+                    }
+                })
                 .catch((err) => console.error("[SW] register failed:", err));
+
+            // Service Workerからのメッセージを受信
+            navigator.serviceWorker.addEventListener("message", (event) => {
+                if (event.data && event.data.type === "SW_UPDATED") {
+                    console.log("[SW] 💬 Service Workerからメッセージ:", event.data.message);
+                }
+            });
+        }
+
+        // 🔴 永続ストレージを要求（データ削除を防ぐ - 優先度1）
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage
+                .persist()
+                .then((isPersisted) => {
+                    if (isPersisted) {
+                        console.log("[Storage] ✅ 永続ストレージが許可されました");
+                    } else {
+                        console.warn("[Storage] ⚠️  永続ストレージが許可されませんでした");
+                        console.warn("[Storage] アプリを定期的に使用しない場合、データが削除される可能性があります");
+                    }
+                })
+                .catch((error) => {
+                    console.error("[Storage] 永続ストレージ要求エラー:", error);
+                });
         }
     }, []);
+
+    // 更新処理
+    const handleUpdate = async () => {
+        if (updateInfo) {
+            markVersionAsSeen(updateInfo.version); // バージョン確認済みとしてマーク
+        }
+        await reinstallPWA(); // PWA再インストール（自動リロード）
+    };
+
+    // メンテナンス画面
+    if (isMaintenanceMode) {
+        const maintenanceMessage =
+            import.meta.env.VITE_MAINTENANCE_MESSAGE || "メンテナンス中です。しばらくお待ちください。";
+
+        return (
+            <div className="flex h-screen w-screen flex-col items-center justify-center bg-white px-6">
+                <div className="mb-4 text-6xl">🔧</div>
+                <h1 className="mb-2 text-2xl font-bold text-gray-800">メンテナンス中</h1>
+                <p className="text-center text-gray-600">{maintenanceMessage}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="wrapper flex h-screen w-screen flex-col bg-white">
@@ -81,6 +188,14 @@ export default function App() {
                 <Outlet />
                 <Footer />
             </main>
+
+            {/* 更新モーダル */}
+            {showUpdateModal && updateInfo && (
+                <UpdateModal onUpdate={handleUpdate} version={updateInfo.version} message={updateInfo.message} />
+            )}
+
+            {/* アップデート完了モーダル */}
+            {showUpdateSuccess && <UpdateSuccessModal onClose={() => setShowUpdateSuccess(false)} />}
         </div>
     );
 }

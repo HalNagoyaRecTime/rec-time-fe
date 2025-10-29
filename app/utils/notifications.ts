@@ -46,7 +46,6 @@ function getNotificationTimings(): NotificationTiming[] {
         }
     }
     
-    console.log('[通知] タイミング設定:', timings);
     return timings;
 }
 
@@ -73,7 +72,6 @@ function calculateNotificationTimes(event: EventRow): Array<{ time: string; labe
         }
     }
     
-    console.log(`[通知] ${event.f_event_name} の通知タイミング:`, notifications);
     return notifications;
 }
 
@@ -121,7 +119,6 @@ function resetNotificationHistoryIfNeeded(): void {
     if (lastResetDate !== today) {
         localStorage.setItem(NOTIFIED_EVENTS_KEY, JSON.stringify([]));
         localStorage.setItem("notification:last_reset_date", today);
-        console.log("[通知] 日付が変わったため、通知履歴をリセットしました");
     }
 }
 
@@ -158,10 +155,8 @@ function isTodayEventDate(): boolean {
     
     // 今日がイベント日の当日または以前（イベント日まで）の場合に有効
     if (today <= targetDate) {
-        console.log(`[通知] イベント日まで有効: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
         return true;
     } else {
-        console.log(`[通知] イベント日を過ぎています: 今日=${today.toLocaleDateString()}, イベント日=${targetDate.toLocaleDateString()}`);
         return false;
     }
 }
@@ -239,7 +234,6 @@ export function showEventNotification(event: EventRow, label: string = '集合�
     const tag = `event-${event.f_event_id}-${label}`;
 
     new Notification(title, { body, tag });
-    console.log(`[通知] 表示: ${title} (${label})`);
 }
 
 // === 設定オンオフ時の通知を表示 ===
@@ -250,7 +244,6 @@ export function showSettingNotification(message: string): void {
     }
 
     new Notification("RecTime 通知設定", { body: message });
-    console.log(`[通知] 設定変更: ${message}`);
 }
 
 // === 時刻チェック（定期実行用） ===
@@ -285,7 +278,6 @@ function checkAndNotifyEvent(event: EventRow): void {
 function scheduleNotification(event: EventRow): void {
     // 今日がイベント日でなければスキップ
     if (!isTodayEventDate()) {
-        console.log(`[予約] ${event.f_event_name} → イベント日ではないためスキップ`);
         return;
     }
 
@@ -356,7 +348,6 @@ function sendEventsToServiceWorker(events: EventRow[]): void {
         notifications: notificationData,
     });
     
-    console.log(`[通知] Service Workerに${notificationData.length}件の通知を送信しました`);
 }
 
 // === Service Workerの通知を停止 ===
@@ -369,7 +360,6 @@ function stopServiceWorkerNotifications(): void {
         type: "STOP_NOTIFICATIONS",
     });
     
-    console.log("[通知] Service Workerの通知を停止しました");
 }
 
 // === 全イベント通知スケジュール ===
@@ -431,7 +421,6 @@ function startNotificationCheck(events: EventRow[]): void {
         events.forEach(checkAndNotifyEvent);
     }, 60000); // 60秒 = 1分
 
-    console.log("[通知] 定期チェック開始（1分ごと）");
 }
 
 // === 定期チェック停止 ===
@@ -439,6 +428,5 @@ function stopNotificationCheck(): void {
     if (notificationCheckInterval !== null) {
         clearInterval(notificationCheckInterval);
         notificationCheckInterval = null;
-        console.log("[通知] 定期チェック停止");
     }
 }

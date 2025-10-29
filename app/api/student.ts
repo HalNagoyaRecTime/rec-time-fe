@@ -35,21 +35,31 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             cache: "no-store",
         });
 
+        let alarmEvents: any[] = [];
         if (!alarmRes.ok) {
-            console.error(`[API] アラーム情報取得失敗: ${alarmRes.status}`);
-            throw new Error(`アラーム情報の取得に失敗しました ${alarmRes.status}`);
+            if (alarmRes.status === 404) {
+                // ユーザーデータがない場合は空配列として処理を続行
+                console.log(`[API] アラーム情報が見つかりません（新規ユーザー）- 全イベントのみ表示します`);
+                alarmEvents = [];
+            } else {
+                // それ以外のエラーはthrow
+                console.error(`[API] アラーム情報取得失敗: ${alarmRes.status}`);
+                throw new Error(`アラーム情報の取得に失敗しました ${alarmRes.status}`);
+            }
+        } else {
+            alarmEvents = await alarmRes.json();
+            console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
+            if (alarmEvents.length > 0) {
+                console.log(`[API] 알람 이벤트 전체 필드 (첫 번째):`, alarmEvents[0]);
+                console.log(`[API] アラーム情報 상세:`, alarmEvents.map(e => ({
+                    id: e.f_event_id,
+                    name: e.f_event_name,
+                    time: e.f_time,
+                    time_type: typeof e.f_time,
+                    time_length: e.f_time ? String(e.f_time).length : 0
+                })));
+            }
         }
-
-        const alarmEvents: any[] = await alarmRes.json();
-        console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
-        console.log(`[API] 알람 이벤트 전체 필드 (첫 번째):`, alarmEvents[0]);
-        console.log(`[API] アラーム情報 상세:`, alarmEvents.map(e => ({
-            id: e.f_event_id,
-            name: e.f_event_name,
-            time: e.f_time,
-            time_type: typeof e.f_time,
-            time_length: e.f_time ? String(e.f_time).length : 0
-        })));
 
         // 学生情報を取得（生年月日認証用に保存されている場合）
         const { STORAGE_KEYS } = await import("~/constants/storage");
@@ -179,8 +189,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache: false };
     } else {
         // 未登録: イベント一覧のみ
-        // 未登録 사용자도 다운로드 로그 기록을 위해 student_num 파라미터 추가
-        const res = await fetch(`${API_BASE}/events?student_num=`, { cache: "no-store" });
+        const res = await fetch(`${API_BASE}/events`, { cache: "no-store" });
 
         if (!res.ok) {
             console.error(`[API] イベント情報取得失敗: ${res.status}`);
@@ -188,9 +197,6 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         }
 
         const isFromCache = res.headers.get("X-Cache-Source") === "service-worker";
-        if (isFromCache) {
-            console.log("[API] キャッシュからデータを取得しました");
-        }
 
         const data = await res.json();
         const eventsArray: EventRow[] = Array.isArray(data?.events) ? data.events : [];
