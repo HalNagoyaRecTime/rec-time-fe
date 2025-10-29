@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
-import NumberKeypad from "../../components/ui/number-keypad";
+import NumberKeypad from "~/components/page/settings/number-keypad";
 import type { Route } from "./+types/student-id";
 
 export const meta: Route.MetaFunction = () => {
-    return [
-        { title: "学籍番号入力 - recTime" },
-    ];
+    return [{ title: "学籍番号入力 - recTime" }];
 };
 
 export default function StudentId() {

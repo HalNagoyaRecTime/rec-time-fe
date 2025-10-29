@@ -4,8 +4,8 @@ import type { EventRow } from "~/api/student";
 import { generateTimeSlots } from "~/utils/timetable/timeSlotGenerator";
 import { calculateEventLayout } from "~/utils/timetable/eventLayoutCalculator";
 import { TIMETABLE_CONSTANTS } from "~/types/timetable";
-import TimeLabelsColumn from "./TimeLabelsColumn";
-import EventsGridArea from "./EventsGridArea";
+import TimeLabelsColumn from "~/components/page/timetable/parts/TimeLabelsColumn";
+import EventsGridArea from "~/components/page/timetable/parts/EventsGridArea";
 
 const { START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
 
