@@ -63,7 +63,7 @@ export const eventMapConfigs: Record<number, EventMapConfig> = {
 /**
  * デフォルトの地図画像URL（設定がないイベント用）
  */
-export const DEFAULT_MAP_IMAGE_URL = "https://placehold.co/600x400/1e3a8a/fbbf24?text=競技場マップ";
+export const DEFAULT_MAP_IMAGE_URL = "/images/map-2f.jpg";
 
 /**
  * イベントIDから地図設定を取得
