@@ -81,7 +81,7 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
 
                 {/* 地図画像 */}
                 <div
-                    className={isExpanded ? "cursor-pointer overflow-hidden rounded-lg" : "w-24 flex-shrink-0"}
+                    className={isExpanded ? "cursor-pointer overflow-hidden rounded-lg" : "w-22 flex-shrink-0"}
                     onClick={handleImageClick}
                 >
                     <img
@@ -100,14 +100,14 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
             {isExpanded && mapConfig.externalUrl && (
                 <button
                     onClick={handleExternalLinkClick}
-                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
+                    className="mt-3 w-full cursor-pointer rounded-md bg-blue-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900 active:bg-blue-800"
                 >
                     {mapConfig.linkLabel || "詳細を見る"}
                 </button>
             )}
 
             {/* 縮小ヒント（展開時のみ） */}
-            {isExpanded && <div className="text-center text-xs text-gray-500">タップで縮小 ↑</div>}
+            {isExpanded && <div className="mt-1 text-center text-xs text-gray-500">タップで縮小 ↑</div>}
 
             {/* 地図拡大表示モーダル */}
             <ZoomableImageModal

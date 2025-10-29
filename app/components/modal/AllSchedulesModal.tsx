@@ -1,7 +1,6 @@
 // === 全予定表示モーダルコンポーネント（白基調デザイン版） ===
 import React, { useState, useRef, useEffect } from "react";
 import type { EventRow } from "~/api/student";
-import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import EventDetailCard from "./EventDetailCard";
 import EventSection from "./EventSection";
 
@@ -51,18 +50,15 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
             // iOS Safari用
             document.documentElement.style.overflow = "hidden";
             document.documentElement.style.overscrollBehavior = "none";
-        } else {
-            document.body.style.overflow = "";
-            document.body.style.overscrollBehavior = "";
-            document.documentElement.style.overflow = "";
-            document.documentElement.style.overscrollBehavior = "";
+
+            // クリーンアップ関数
+            return () => {
+                document.body.style.overflow = "";
+                document.body.style.overscrollBehavior = "";
+                document.documentElement.style.overflow = "";
+                document.documentElement.style.overscrollBehavior = "";
+            };
         }
-        return () => {
-            document.body.style.overflow = "";
-            document.body.style.overscrollBehavior = "";
-            document.documentElement.style.overflow = "";
-            document.documentElement.style.overscrollBehavior = "";
-        };
     }, [isOpen]);
 
     // 参加予定のイベントをフィルタ
@@ -217,7 +213,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
 
     return (
         <div
-            className="fixed inset-0 z-99 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-99 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
             onClick={handleBackdropClick}
             style={{
                 opacity: isClosingState ? 0 : isVisible ? 1 : 0,
@@ -228,7 +224,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
         >
             <div
                 ref={modalRef}
-                className="flex h-[85vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:max-w-115"
+                className="flex h-[85vh] w-full flex-col rounded-t-2xl rounded-b-2xl bg-white shadow-2xl sm:max-w-200"
                 style={{
                     transform: isClosingState
                         ? "translateY(100vh)"
@@ -295,7 +291,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                 {/* スクロール可能エリア */}
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto px-4 pt-4 pb-6"
+                    className="flex-1 overflow-y-auto px-4 pt-4 pb-6 sm:px-20"
                     onTouchStart={handleScrollTouchStart}
                     onTouchMove={handleScrollTouchMove}
                     onTouchEnd={handleScrollTouchEnd}

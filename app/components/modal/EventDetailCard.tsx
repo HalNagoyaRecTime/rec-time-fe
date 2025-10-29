@@ -77,7 +77,7 @@ export default function EventDetailCard({ event }: EventDetailCardProps) {
                     {mapConfig.externalUrl && (
                         <button
                             onClick={handleExternalLinkClick}
-                            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
+                            className="w-full cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800"
                         >
                             {mapConfig.linkLabel || "詳細を見る"}
                         </button>
