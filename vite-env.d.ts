@@ -6,8 +6,11 @@ interface ImportMetaEnv {
   readonly VITE_HOST: string;
   readonly VITE_EVENT_DATE: string;
   readonly VITE_NOTIFICATION_TIMINGS: string;
+  readonly VITE_USE_LOCAL_SCHEDULE: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+

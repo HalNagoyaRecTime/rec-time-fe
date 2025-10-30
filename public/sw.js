@@ -1,6 +1,10 @@
 // public/sw.js
 // 통합 Service Worker: 캐싱 + 백그라운드 알림 + FCM
 
+// 로컬 스케줄(IndexedDB/주기 체크/keep-alive)을 비활성화하여
+// 서버발 FCM만 사용하려면 false로 둡니다.
+const USE_LOCAL_SCHEDULE = false;
+
 // ⚠️ このバージョン番号は app/constants/version.ts の APP_VERSION と同期してください
 const APP_VERSION = "25.1.0";
 const CACHE_NAME = `rec-time-cache-${APP_VERSION}`;
@@ -191,6 +195,10 @@ self.addEventListener("message", async (event) => {
 
     // イベント通知をスケジュール
     if (data.type === "SCHEDULE_NOTIFICATIONS") {
+        if (!USE_LOCAL_SCHEDULE) {
+            console.log('[SW] ローカルスケジュール無効: SCHEDULE_NOTIFICATIONS を無視');
+            return;
+        }
 
         // IndexedDBに保存
         await saveNotificationsToIndexedDB(data.notifications || []);
@@ -207,18 +215,22 @@ self.addEventListener("message", async (event) => {
     // 通知を停止
     if (data.type === "STOP_NOTIFICATIONS") {
 
-        // IndexedDBをクリア
-        try {
-            const db = await openDatabase();
-            const tx = db.transaction(STORE_NAME, "readwrite");
-            const store = tx.objectStore(STORE_NAME);
-            store.clear();
-        } catch (error) {
-            console.error("[SW] IndexedDBクリアエラー:", error);
+        if (USE_LOCAL_SCHEDULE) {
+            // IndexedDBをクリア
+            try {
+                const db = await openDatabase();
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                const store = tx.objectStore(STORE_NAME);
+                store.clear();
+            } catch (error) {
+                console.error("[SW] IndexedDBクリアエラー:", error);
+            }
         }
 
         checkLoopRunning = false;
-        stopKeepAlive();
+        if (USE_LOCAL_SCHEDULE) {
+            stopKeepAlive();
+        }
     }
 });
 
@@ -242,6 +254,7 @@ function getApiBaseUrl() {
 const API_BASE_URL = getApiBaseUrl();
 
 function startKeepAlive() {
+    if (!USE_LOCAL_SCHEDULE) return;
     if (keepAliveInterval) {
         return;
     }
@@ -404,6 +417,7 @@ function restartKeepAlive() {
 // === 継続的な通知チェックループ ===
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
 async function startNotificationCheckLoop() {
+    if (!USE_LOCAL_SCHEDULE) return;
     if (checkLoopRunning) {
         return;
     }
@@ -613,14 +627,16 @@ self.addEventListener("activate", (event) => {
                 );
             })
             .then(async () => {
-                // IndexedDBを初期化
-                await openDatabase();
+                if (USE_LOCAL_SCHEDULE) {
+                    // IndexedDBを初期化
+                    await openDatabase();
 
-                // 通知チェックループを開始（既存の通知がある場合）
-                const notifications = await getNotificationsFromIndexedDB();
-                if (notifications.length > 0) {
-                    startNotificationCheckLoop();
-                    startKeepAlive();
+                    // 通知チェックループを開始（既存の通知がある場合）
+                    const notifications = await getNotificationsFromIndexedDB();
+                    if (notifications.length > 0) {
+                        startNotificationCheckLoop();
+                        startKeepAlive();
+                    }
                 }
 
                 return self.clients.claim();

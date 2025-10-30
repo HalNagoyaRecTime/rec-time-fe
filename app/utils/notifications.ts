@@ -19,33 +19,27 @@ function parseHHMM(hhmm: string): Date | null {
 
 // === 通知タイミングの設定 ===
 type NotificationTiming = {
-    type: 'gather' | 'start' | 'minutes_before';
-    minutes?: number; // minutes_beforeの場合の分数
+    type: 'minutes_before';
+    minutes: number; // 分前の分数（必須）
 };
 
 /**
  * 環境変数から通知タイミング設定を取得
- * 例: "gather,30,15,start" → [集合時間, 30分前, 15分前, 開始時間]
+ * 例: "30,20,10" → [30分前, 20分前, 10分前]
  */
 function getNotificationTimings(): NotificationTiming[] {
-    const timingsStr = import.meta.env.VITE_NOTIFICATION_TIMINGS || 'gather,start';
+    const timingsStr = import.meta.env.VITE_NOTIFICATION_TIMINGS || '30,20,10';
     const parts = timingsStr.split(',').map(s => s.trim());
-    
+
     const timings: NotificationTiming[] = [];
-    
+
     for (const part of parts) {
-        if (part === 'gather') {
-            timings.push({ type: 'gather' });
-        } else if (part === 'start') {
-            timings.push({ type: 'start' });
-        } else {
-            const minutes = parseInt(part, 10);
-            if (!isNaN(minutes) && minutes > 0) {
-                timings.push({ type: 'minutes_before', minutes });
-            }
+        const minutes = parseInt(part, 10);
+        if (!isNaN(minutes) && minutes > 0) {
+            timings.push({ type: 'minutes_before', minutes });
         }
     }
-    
+
     return timings;
 }
 
@@ -56,22 +50,23 @@ function getNotificationTimings(): NotificationTiming[] {
 function calculateNotificationTimes(event: EventRow): Array<{ time: string; label: string }> {
     const timings = getNotificationTimings();
     const notifications: Array<{ time: string; label: string }> = [];
-    
-    for (const timing of timings) {
-        if (timing.type === 'gather' && event.f_gather_time) {
-            notifications.push({ time: event.f_gather_time, label: '集合時間' });
-        } else if (timing.type === 'start' && event.f_start_time) {
-            notifications.push({ time: event.f_start_time, label: '開始時間' });
-        } else if (timing.type === 'minutes_before' && event.f_start_time && timing.minutes) {
-            const startTime = parseHHMM(event.f_start_time);
-            if (startTime) {
-                const notifyTime = new Date(startTime.getTime() - timing.minutes * 60 * 1000);
-                const hhmm = `${String(notifyTime.getHours()).padStart(2, '0')}${String(notifyTime.getMinutes()).padStart(2, '0')}`;
-                notifications.push({ time: hhmm, label: `${timing.minutes}分前` });
-            }
-        }
+
+    // 集合時間が基準。存在しなければ通知は生成しない
+    if (!event.f_gather_time) {
+        return notifications;
     }
-    
+
+    const gatherDate = parseHHMM(event.f_gather_time);
+    if (!gatherDate) {
+        return notifications;
+    }
+
+    for (const timing of timings) {
+        const notifyTime = new Date(gatherDate.getTime() - timing.minutes * 60 * 1000);
+        const hhmm = `${String(notifyTime.getHours()).padStart(2, '0')}${String(notifyTime.getMinutes()).padStart(2, '0')}`;
+        notifications.push({ time: hhmm, label: `${timing.minutes}分前` });
+    }
+
     return notifications;
 }
 
@@ -364,6 +359,15 @@ function stopServiceWorkerNotifications(): void {
 
 // === 全イベント通知スケジュール ===
 export function scheduleAllNotifications(events: EventRow[]): void {
+    // 環境変数でローカルスケジュールを無効化できるようにする
+    if (import.meta.env.VITE_USE_LOCAL_SCHEDULE === 'false') {
+        console.log('[通知] ローカルスケジュール無効（サーバープッシュ優先）');
+        clearScheduledNotifications();
+        stopNotificationCheck();
+        stopServiceWorkerNotifications();
+        return;
+    }
+
     // 日付リセットチェック
     resetNotificationHistoryIfNeeded();
 
