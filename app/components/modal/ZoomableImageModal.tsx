@@ -30,6 +30,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     const swipeStartX = useRef<number | null>(null);
     const swipeStartY = useRef<number | null>(null);
     const lastTapTime = useRef<number>(0);
+    const singleTapTimeout = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const swipeDirection = useRef<"horizontal" | "vertical" | null>(null);
 
@@ -37,6 +38,13 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
     useEffect(() => {
         setCurrentIndex(initialIndex);
     }, [images, initialIndex]);
+
+    // モーダルが開いたときにメニューを必ず表示する
+    useEffect(() => {
+        if (isOpen) {
+            setShowUI(true);
+        }
+    }, [isOpen]);
 
     // 全ての画像を事前にプリロード
     useEffect(() => {
@@ -215,8 +223,14 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                 const now = Date.now();
                 const timeSinceLastTap = now - lastTapTime.current;
 
-                // ダブルタップ判定（300ms以内の連続タップ）
-                if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+                // ダブルタップ判定（200ms以内の連続タップ）
+                if (timeSinceLastTap < 200 && timeSinceLastTap > 0) {
+                    // 保留中のシングルタップ処理をキャンセル
+                    if (singleTapTimeout.current) {
+                        clearTimeout(singleTapTimeout.current);
+                        singleTapTimeout.current = null;
+                    }
+
                     // ダブルタップ処理：等倍時のみズームイン
                     if (scale === 1) {
                         // タップした位置を中心にズームイン（3倍）
@@ -232,17 +246,26 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                     // ズーム中のダブルタップは何もしない
                     lastTapTime.current = 0;
                 } else {
-                    // シングルタップ処理
-                    if (scale > 1) {
-                        // ズーム中の場合はズーム解除してUI表示
-                        setScale(1);
-                        setPosition({ x: 0, y: 0 });
-                        setShowUI(true); // UI表示
-                    } else {
-                        // 等倍の場合はUI表示切替
-                        setShowUI((prev) => !prev);
-                    }
+                    // シングルタップの可能性（ダブルタップ判定待ち）
                     lastTapTime.current = now;
+
+                    // 既存のシングルタップタイマーをキャンセル
+                    if (singleTapTimeout.current) {
+                        clearTimeout(singleTapTimeout.current);
+                    }
+
+                    // 200ms後にダブルタップが来なければシングルタップとして処理
+                    singleTapTimeout.current = setTimeout(() => {
+                        if (scale > 1) {
+                            // ズーム中の場合はズーム解除のみ（メニュー表示状態は変更しない）
+                            setScale(1);
+                            setPosition({ x: 0, y: 0 });
+                        } else {
+                            // 等倍の場合はUI表示切替
+                            setShowUI((prev) => !prev);
+                        }
+                        singleTapTimeout.current = null;
+                    }, 200);
                 }
             }
         }
@@ -283,33 +306,11 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
         // ボタンやインジケーターのクリックは無視
         if (target.tagName === "BUTTON" || target.closest("button")) return;
 
-        const now = Date.now();
-        const timeSinceLastClick = now - lastTapTime.current;
-
-        // ダブルクリック判定
-        if (timeSinceLastClick < 300 && timeSinceLastClick > 0) {
-            if (scale === 1 && containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
-                const clickX = e.clientX - rect.left - rect.width / 2;
-                const clickY = e.clientY - rect.top - rect.height / 2;
-
-                setScale(3);
-                setPosition({ x: -clickX, y: -clickY });
-            }
-            lastTapTime.current = 0;
-        } else {
-            // シングルクリック
-            if (scale > 1) {
-                // ズーム中の場合はズーム解除
-                setScale(1);
-                setPosition({ x: 0, y: 0 });
-                setShowUI(true);
-            } else {
-                // 等倍の場合は閉じる
-                onClose();
-            }
-            lastTapTime.current = now;
+        // 画像要素以外をクリックした場合はモーダルを閉じる
+        if (target.tagName !== "IMG") {
+            onClose();
         }
+        // 画像をクリックした場合は何もしない
     };
 
     if (!isOpen) return null;
@@ -333,6 +334,12 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                 style={{
                     opacity: isClosing ? 0 : swipeDownDistance > 0 ? Math.max(0, 1 - swipeDownDistance / 600) : 1,
                     transition: isClosing ? "opacity 0.3s ease-out" : "none",
+                }}
+                onClick={() => {
+                    // PC環境でのみ、背景クリックでモーダルを閉じる
+                    if (!("ontouchstart" in window)) {
+                        onClose();
+                    }
                 }}
             />
 
