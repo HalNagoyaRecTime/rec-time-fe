@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MdFileDownload } from "react-icons/md";
 import { FaXmark } from "react-icons/fa6";
+import { FaAngleRight, FaAngleLeft } from "react-icons/fa6";
 
 interface ImageData {
     src: string;
@@ -391,10 +392,10 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                         e.stopPropagation();
                         prevImage();
                     }}
-                    className="absolute top-1/2 left-4 z-[10001] -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
+                    className="absolute top-1/2 left-4 z-[10001] -translate-y-1/2 cursor-pointer transition-opacity duration-300"
                     style={{ opacity: showUI ? 1 : 0, pointerEvents: showUI ? "auto" : "none" }}
                 >
-                    ‹
+                    <FaAngleLeft className="text-4xl text-white hover:text-blue-500" />
                 </button>
             )}
 
@@ -405,10 +406,10 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                         e.stopPropagation();
                         nextImage();
                     }}
-                    className="absolute top-1/2 right-4 z-[10001] -translate-y-1/2 text-6xl text-white transition-opacity duration-300 hover:text-[#FFB400]"
+                    className="absolute top-1/2 right-4 z-[10001] -translate-y-1/2 cursor-pointer transition-opacity duration-300"
                     style={{ opacity: showUI ? 1 : 0, pointerEvents: showUI ? "auto" : "none" }}
                 >
-                    ›
+                    <FaAngleRight className="text-4xl text-white hover:text-blue-500" />
                 </button>
             )}
 
@@ -480,8 +481,8 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                                     setTimeout(() => setIsTransitioning(false), 300);
                                 }
                             }}
-                            className={`h-3 w-3 rounded-full transition-all ${
-                                index === currentIndex ? "bg-[#FFB400]" : "bg-gray-500"
+                            className={`h-3 w-3 cursor-pointer rounded-full transition-all ${
+                                index === currentIndex ? "bg-blue-700" : "bg-gray-500"
                             }`}
                             style={{ pointerEvents: showUI ? "auto" : "none" }}
                         />
