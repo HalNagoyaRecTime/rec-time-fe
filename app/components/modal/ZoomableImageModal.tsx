@@ -359,7 +359,9 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
 
                 {/* タイトル */}
                 <div className="flex h-10 min-w-0 flex-1 items-center justify-center">
-                    <p className="truncate text-lg text-white">{images[currentIndex].title}</p>
+                    <p className="truncate rounded-2xl bg-black px-4 py-1 text-lg text-white">
+                        {images[currentIndex].title}
+                    </p>
                 </div>
 
                 {/* ダウンロードボタン */}
@@ -406,7 +408,7 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
             {/* 画像表示エリア - 横スクロールコンテナ、スワイプで移動 */}
             <div
                 ref={containerRef}
-                className="relative z-10 h-full w-full overflow-hidden"
+                className="relative z-10 h-full w-full overflow-hidden py-[4rem]"
                 style={{
                     transform: isClosing
                         ? "translateY(100vh)"
