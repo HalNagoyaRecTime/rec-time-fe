@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import NumberKeypad from "~/components/page/settings/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
-import { getApiBaseUrl } from "~/utils/apiConfig";
+import { getApiBaseUrl } from "~/config/apiConfig";
 import type { Route } from "./+types/birthday";
 
 export const meta: Route.MetaFunction = () => {

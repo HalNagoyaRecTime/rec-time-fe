@@ -24,7 +24,7 @@ export type EventRow = {
 export type ApiPayload = { m_students: StudentRow; t_events: EventRow[] };
 
 // === API呼び出し（データベース対応） ===
-import { getApiBaseUrl } from "~/utils/apiConfig";
+import { getApiBaseUrl } from "~/config/apiConfig";
 
 export async function fetchByGakuseki(id: string | null): Promise<{ payload: ApiPayload; isFromCache: boolean }> {
     const API_BASE = getApiBaseUrl();
@@ -51,13 +51,16 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             console.log(`[API] アラーム情報取得成功: ${alarmEvents.length}件のイベント`);
             if (alarmEvents.length > 0) {
                 console.log(`[API] 알람 이벤트 전체 필드 (첫 번째):`, alarmEvents[0]);
-                console.log(`[API] アラーム情報 상세:`, alarmEvents.map(e => ({
-                    id: e.f_event_id,
-                    name: e.f_event_name,
-                    time: e.f_time,
-                    time_type: typeof e.f_time,
-                    time_length: e.f_time ? String(e.f_time).length : 0
-                })));
+                console.log(
+                    `[API] アラーム情報 상세:`,
+                    alarmEvents.map((e) => ({
+                        id: e.f_event_id,
+                        name: e.f_event_name,
+                        time: e.f_time,
+                        time_type: typeof e.f_time,
+                        time_length: e.f_time ? String(e.f_time).length : 0,
+                    }))
+                );
             }
         }
 
@@ -77,9 +80,9 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
 
         // 全イベント一覧を取得（フィルターなし - 全イベントを取得）
         const eventsRes = await fetch(`${API_BASE}/events`, {
-            cache: "no-store"
+            cache: "no-store",
         });
-        
+
         if (!eventsRes.ok) {
             console.error(`[API] イベント情報取得失敗: ${eventsRes.status}`);
             throw new Error(`イベント情報の取得に失敗しました ${eventsRes.status}`);
@@ -90,21 +93,24 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         console.log(`[API] 전체 이벤트: ${allEvents.length}件`);
         console.log(`[API] 백엔드 응답 전체:`, eventsData);
         console.log(`[API] 첫 번째 이벤트 전체 필드:`, allEvents[0]);
-        console.log(`[API] 전체 이벤트 상세:`, allEvents.map(e => ({ 
-            id: e.f_event_id, 
-            name: e.f_event_name, 
-            time: e.f_time,
-            time_type: typeof e.f_time,
-            time_length: e.f_time ? String(e.f_time).length : 0
-        })));
+        console.log(
+            `[API] 전체 이벤트 상세:`,
+            allEvents.map((e) => ({
+                id: e.f_event_id,
+                name: e.f_event_name,
+                time: e.f_time,
+                time_type: typeof e.f_time,
+                time_length: e.f_time ? String(e.f_time).length : 0,
+            }))
+        );
 
         // 全イベントとアラーム情報をマージ
         const eventsWithMapping: EventRow[] = allEvents.map((ev: any) => {
             const eventId = String(ev.f_event_id ?? "");
 
             // アラーム情報から該当イベントを検索
-            const alarmEvent = alarmEvents.find(e => String(e.f_event_id) === eventId);
-            
+            const alarmEvent = alarmEvents.find((e) => String(e.f_event_id) === eventId);
+
             // 디버깅: 매칭 확인
             if (alarmEvent) {
                 console.log(`[API] 매칭 성공 - 이벤트 ID: ${eventId}, 이름: ${ev.f_event_name}`);
@@ -115,7 +121,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             const normalizeTime = (time: any): string | null => {
                 if (!time) return null;
                 const timeStr = String(time).trim();
-                
+
                 // "12:00" 형식인 경우 "1200"으로 변환
                 if (timeStr.includes(":")) {
                     const [hours, minutes] = timeStr.split(":");
@@ -123,25 +129,29 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                     console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
                     return normalized;
                 }
-                
+
                 // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
                 if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
                     return timeStr + "00";
                 }
-                
+
                 // 이미 4자리면 그대로 사용
                 return timeStr;
             };
-            
+
             // 백엔드가 f_start_time을 반환할 수도 있고, f_time을 반환할 수도 있음
             const startTime = normalizeTime(ev.f_start_time ?? ev.f_time);
             const alarmStartTime = normalizeTime(alarmEvent?.f_start_time ?? alarmEvent?.f_time);
 
             if (alarmEvent) {
                 // アラーム情報がある場合（参加イベント）、そのデータを使用
-                console.log(`[アラーム] ${ev.f_event_name}: 集合時間 = ${alarmEvent.f_gather_time || 'なし'}, 場所 = ${alarmEvent.f_place || 'なし'}`);
+                console.log(
+                    `[アラーム] ${ev.f_event_name}: 集合時間 = ${alarmEvent.f_gather_time || "なし"}, 場所 = ${alarmEvent.f_place || "なし"}`
+                );
                 const finalStartTime = alarmStartTime ?? startTime;
-                console.log(`[API] 참가 이벤트 매핑 - 이름: ${ev.f_event_name}, 시작시간: ${finalStartTime}, f_is_my_entry: true`);
+                console.log(
+                    `[API] 참가 이벤트 매핑 - 이름: ${ev.f_event_name}, 시작시간: ${finalStartTime}, f_is_my_entry: true`
+                );
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? alarmEvent.f_event_name ?? null,
@@ -154,7 +164,9 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 };
             } else {
                 // 参加していないイベント
-                console.log(`[API] 미참가 이벤트 - 이름: ${ev.f_event_name}, 시작시간: ${startTime}, f_is_my_entry: false`);
+                console.log(
+                    `[API] 미참가 이벤트 - 이름: ${ev.f_event_name}, 시작시간: ${startTime}, f_is_my_entry: false`
+                );
                 return {
                     f_event_id: eventId,
                     f_event_name: ev.f_event_name ?? null,
@@ -168,23 +180,25 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             }
         });
 
-        const student: StudentRow = studentData ? {
-            f_student_id: String(studentData.f_student_id ?? ""),
-            f_student_num: String(studentData.f_student_num ?? ""),
-            f_class: studentData.f_class ?? null,
-            f_number: studentData.f_number ?? null,
-            f_name: studentData.f_name ?? null,
-            f_note: studentData.f_note ?? null,
-            f_birthday: studentData.f_birthday ?? null,
-        } : {
-            f_student_id: "",
-            f_student_num: id,
-            f_class: null,
-            f_number: null,
-            f_name: null,
-            f_note: null,
-            f_birthday: null,
-        };
+        const student: StudentRow = studentData
+            ? {
+                  f_student_id: String(studentData.f_student_id ?? ""),
+                  f_student_num: String(studentData.f_student_num ?? ""),
+                  f_class: studentData.f_class ?? null,
+                  f_number: studentData.f_number ?? null,
+                  f_name: studentData.f_name ?? null,
+                  f_note: studentData.f_note ?? null,
+                  f_birthday: studentData.f_birthday ?? null,
+              }
+            : {
+                  f_student_id: "",
+                  f_student_num: id,
+                  f_class: null,
+                  f_number: null,
+                  f_name: null,
+                  f_note: null,
+                  f_birthday: null,
+              };
 
         return { payload: { m_students: student, t_events: eventsWithMapping }, isFromCache: false };
     } else {
@@ -214,7 +228,7 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
         const normalizeTime = (time: any): string | null => {
             if (!time) return null;
             const timeStr = String(time).trim();
-            
+
             // "12:00" 형식인 경우 "1200"으로 변환
             if (timeStr.includes(":")) {
                 const [hours, minutes] = timeStr.split(":");
@@ -222,12 +236,12 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
                 console.log(`[normalizeTime] 콜론 제거: "${timeStr}" -> "${normalized}"`);
                 return normalized;
             }
-            
+
             // 2자리 숫자면 4자리로 변환 (예: "12" -> "1200")
             if (timeStr.length === 2 && /^\d{2}$/.test(timeStr)) {
                 return timeStr + "00";
             }
-            
+
             // 이미 4자리면 그대로 사용
             return timeStr;
         };

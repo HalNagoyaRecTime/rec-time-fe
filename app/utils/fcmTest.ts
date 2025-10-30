@@ -1,7 +1,7 @@
 // FCM 테스트 유틸리티
 // FCMテストユーティリティ
 
-import { getFCMToken } from "./firebaseConfig";
+import { getFCMToken } from "../config/firebaseConfig";
 
 /**
  * FCM 토큰 테스트
@@ -9,12 +9,12 @@ import { getFCMToken } from "./firebaseConfig";
  */
 export async function testFCMToken(): Promise<void> {
     console.log("[FCM Test] 토큰 테스트 시작");
-    
+
     try {
         const token = await getFCMToken();
         if (token) {
             console.log("[FCM Test] ✅ 토큰 발급 성공:", token);
-            
+
             // 토큰을 클립보드에 복사
             if (navigator.clipboard) {
                 await navigator.clipboard.writeText(token);
@@ -31,13 +31,13 @@ export async function testFCMToken(): Promise<void> {
 /**
  * FCM 알림 테스트 (백엔드 API 호출)
  * FCM通知テスト（バックエンドAPI呼び出し）
- * 
+ *
  * 역할: 백엔드에서 FCM 푸시 알림을 보내서 기존 Service Worker 알림과
  * 동일한 형태로 표시되는지 테스트
  */
 export async function testFCMPush(): Promise<void> {
     console.log("[FCM Test] 푸시 알림 테스트 시작");
-    
+
     try {
         const response = await fetch("/api/push", {
             method: "POST",
@@ -68,11 +68,11 @@ export async function testFCMPush(): Promise<void> {
 // 임시 테스트용: 프로덕션에서도 테스트 가능하도록 전역 등록
 // ⚠️ 실제 배포 후에는 이 부분을 제거해야 합니다 (보안상 이유)
 if (typeof window !== "undefined") {
-  (window as any).testFCMToken = testFCMToken;
-  (window as any).testFCMPush = testFCMPush;
+    (window as any).testFCMToken = testFCMToken;
+    (window as any).testFCMPush = testFCMPush;
 
-  console.log("[FCM Test] 테스트 함수가 등록되었습니다:");
-  console.log("- testFCMToken(): FCM 토큰 발급 테스트");
-  console.log("- testFCMPush(): FCM 푸시 알림 테스트 (기존 알림과 동일한 형태)");
-  console.log("⚠️ 이 함수들은 테스트용입니다. 실제 배포 시 제거 예정");
+    console.log("[FCM Test] 테스트 함수가 등록되었습니다:");
+    console.log("- testFCMToken(): FCM 토큰 발급 테스트");
+    console.log("- testFCMPush(): FCM 푸시 알림 테스트 (기존 알림과 동일한 형태)");
+    console.log("⚠️ 이 함수들은 테스트용입니다. 실제 배포 시 제거 예정");
 }

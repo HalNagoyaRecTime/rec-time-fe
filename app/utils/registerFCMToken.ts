@@ -3,7 +3,7 @@
  * FCMトークン登録ユーティリティ
  */
 
-import { getApiBaseUrl } from "~/utils/apiConfig";
+import { getApiBaseUrl } from "~/config/apiConfig";
 
 export interface FCMTokenData {
     token: string;
@@ -26,7 +26,7 @@ export async function registerFCMToken(token: string, studentNum: string): Promi
     try {
         const API_BASE = getApiBaseUrl();
         const apiUrl = `${API_BASE}/fcm/register`;
-        
+
         const tokenData: FCMTokenData = {
             token,
             studentNum,
@@ -38,10 +38,10 @@ export async function registerFCMToken(token: string, studentNum: string): Promi
             },
         };
 
-        console.log("📤 FCM 토큰 등록 시작 / FCMトークン登録開始:", { 
-            studentNum, 
+        console.log("📤 FCM 토큰 등록 시작 / FCMトークン登録開始:", {
+            studentNum,
             tokenPreview: token.substring(0, 20) + "...",
-            apiUrl 
+            apiUrl,
         });
 
         const response = await fetch(apiUrl, {
@@ -62,7 +62,6 @@ export async function registerFCMToken(token: string, studentNum: string): Promi
         const result = await response.json();
         console.log("✅ FCM 토큰 등록 성공 / FCMトークン登録成功:", result);
         return true;
-
     } catch (error) {
         console.error("❌ FCM 토큰 등록 중 에러 / FCMトークン登録中エラー:", error);
         return false;
@@ -78,7 +77,7 @@ export async function checkFCMTokenStatus(studentNum: string): Promise<boolean> 
     try {
         const API_BASE = getApiBaseUrl();
         const apiUrl = `${API_BASE}/fcm/status/${studentNum}`;
-        
+
         const response = await fetch(apiUrl, {
             method: "GET",
             cache: "no-store",
@@ -92,7 +91,6 @@ export async function checkFCMTokenStatus(studentNum: string): Promise<boolean> 
         const result = await response.json();
         console.log("📊 FCM 상태 확인 / FCM状態確認:", result);
         return result.registered || false;
-
     } catch (error) {
         console.error("❌ FCM 상태 확인 중 에러 / FCM状態確認中エラー:", error);
         return false;
@@ -108,7 +106,7 @@ export async function unregisterFCMToken(studentNum: string): Promise<boolean> {
     try {
         const API_BASE = getApiBaseUrl();
         const apiUrl = `${API_BASE}/fcm/unregister/${studentNum}`;
-        
+
         console.log("🗑️ FCM 토큰 삭제 시작 / FCMトークン削除開始:", { studentNum, apiUrl });
 
         const response = await fetch(apiUrl, {
@@ -122,7 +120,6 @@ export async function unregisterFCMToken(studentNum: string): Promise<boolean> {
 
         console.log("✅ FCM 토큰 삭제 성공 / FCMトークン削除成功");
         return true;
-
     } catch (error) {
         console.error("❌ FCM 토큰 삭제 중 에러 / FCMトークン削除中エラー:", error);
         return false;
@@ -138,7 +135,7 @@ export async function testFCMPush(studentNum: string): Promise<boolean> {
     try {
         const API_BASE = getApiBaseUrl();
         const apiUrl = `${API_BASE}/fcm/test-push/${studentNum}`;
-        
+
         console.log("🧪 FCM 테스트 전송 시작 / FCMテスト送信開始:", { studentNum, apiUrl });
 
         const response = await fetch(apiUrl, {
@@ -161,7 +158,6 @@ export async function testFCMPush(studentNum: string): Promise<boolean> {
         const result = await response.json();
         console.log("✅ FCM 테스트 전송 성공 / FCMテスト送信成功:", result);
         return true;
-
     } catch (error) {
         console.error("❌ FCM 테스트 전송 중 에러 / FCMテスト送信中エラー:", error);
         return false;

@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { getFCMToken, setupFCMListener, refreshFCMToken } from "~/utils/firebaseConfig";
+import { getFCMToken, setupFCMListener, refreshFCMToken } from "~/config/firebaseConfig";
 import { registerFCMToken, checkFCMTokenStatus, testFCMPush, unregisterFCMToken } from "~/utils/registerFCMToken";
 
 export interface FCMStatus {
@@ -18,14 +18,14 @@ export interface FCMStatus {
 export interface UseFCMReturn {
     // 상태 / 状態
     status: FCMStatus;
-    
+
     // 메서드 / メソッド
     registerToken: (studentNum: string) => Promise<boolean>;
     unregisterToken: (studentNum: string) => Promise<boolean>;
     testPush: (studentNum: string) => Promise<boolean>;
     refreshToken: () => Promise<string | null>;
     checkStatus: (studentNum: string) => Promise<boolean>;
-    
+
     // 유틸리티 / ユーティリティ
     clearError: () => void;
 }
@@ -42,8 +42,8 @@ export function useFCM(): UseFCMReturn {
     // FCM 지원 여부 확인 / FCMサポート可否確認
     useEffect(() => {
         const isSupported = "Notification" in window && "serviceWorker" in navigator;
-        setStatus(prev => ({ ...prev, isSupported }));
-        
+        setStatus((prev) => ({ ...prev, isSupported }));
+
         if (isSupported) {
             console.log("✅ FCM 지원 브라우저 / FCMサポートブラウザ");
         } else {
@@ -57,9 +57,9 @@ export function useFCM(): UseFCMReturn {
 
         setupFCMListener((payload) => {
             console.log("🔔 FCM 메시지 수신 / FCMメッセージ受信:", payload);
-            
+
             // 메시지 수신 시 상태 업데이트 / メッセージ受信時状態更新
-            setStatus(prev => ({
+            setStatus((prev) => ({
                 ...prev,
                 isRegistered: true, // 메시지를 받았다는 것은 등록되어 있다는 의미 / メッセージを受信したということは登録されているという意味
             }));
@@ -67,65 +67,67 @@ export function useFCM(): UseFCMReturn {
     }, [status.isSupported]);
 
     // FCM 토큰 등록 / FCMトークン登録
-    const registerToken = useCallback(async (studentNum: string): Promise<boolean> => {
-        if (!status.isSupported) {
-            setStatus(prev => ({ ...prev, error: "FCM을 지원하지 않는 브라우저입니다" }));
-            return false;
-        }
-
-        setStatus(prev => ({ ...prev, isRegistering: true, error: null }));
-
-        try {
-            // FCM 토큰 발급 / FCMトークン発行
-            const token = await getFCMToken();
-            if (!token) {
-                setStatus(prev => ({ 
-                    ...prev, 
-                    isRegistering: false, 
-                    error: "FCM 토큰을 발급받을 수 없습니다" 
-                }));
+    const registerToken = useCallback(
+        async (studentNum: string): Promise<boolean> => {
+            if (!status.isSupported) {
+                setStatus((prev) => ({ ...prev, error: "FCM을 지원하지 않는 브라우저입니다" }));
                 return false;
             }
 
-            // 백엔드에 토큰 등록 / バックエンドにトークン登録
-            const success = await registerFCMToken(token, studentNum);
-            if (!success) {
-                setStatus(prev => ({ 
-                    ...prev, 
-                    isRegistering: false, 
-                    error: "FCM 토큰 등록에 실패했습니다" 
+            setStatus((prev) => ({ ...prev, isRegistering: true, error: null }));
+
+            try {
+                // FCM 토큰 발급 / FCMトークン発行
+                const token = await getFCMToken();
+                if (!token) {
+                    setStatus((prev) => ({
+                        ...prev,
+                        isRegistering: false,
+                        error: "FCM 토큰을 발급받을 수 없습니다",
+                    }));
+                    return false;
+                }
+
+                // 백엔드에 토큰 등록 / バックエンドにトークン登録
+                const success = await registerFCMToken(token, studentNum);
+                if (!success) {
+                    setStatus((prev) => ({
+                        ...prev,
+                        isRegistering: false,
+                        error: "FCM 토큰 등록에 실패했습니다",
+                    }));
+                    return false;
+                }
+
+                setStatus((prev) => ({
+                    ...prev,
+                    isRegistered: true,
+                    isRegistering: false,
+                    token,
+                    error: null,
+                }));
+
+                console.log("✅ FCM 토큰 등록 완료 / FCMトークン登録完了:", studentNum);
+                return true;
+            } catch (error) {
+                console.error("❌ FCM 토큰 등록 중 에러 / FCMトークン登録中エラー:", error);
+                setStatus((prev) => ({
+                    ...prev,
+                    isRegistering: false,
+                    error: error instanceof Error ? error.message : "알 수 없는 에러가 발생했습니다",
                 }));
                 return false;
             }
-
-            setStatus(prev => ({
-                ...prev,
-                isRegistered: true,
-                isRegistering: false,
-                token,
-                error: null,
-            }));
-
-            console.log("✅ FCM 토큰 등록 완료 / FCMトークン登録完了:", studentNum);
-            return true;
-
-        } catch (error) {
-            console.error("❌ FCM 토큰 등록 중 에러 / FCMトークン登録中エラー:", error);
-            setStatus(prev => ({
-                ...prev,
-                isRegistering: false,
-                error: error instanceof Error ? error.message : "알 수 없는 에러가 발생했습니다",
-            }));
-            return false;
-        }
-    }, [status.isSupported]);
+        },
+        [status.isSupported]
+    );
 
     // FCM 토큰 등록 해제 / FCMトークン登録解除
     const unregisterToken = useCallback(async (studentNum: string): Promise<boolean> => {
         try {
             const success = await unregisterFCMToken(studentNum);
             if (success) {
-                setStatus(prev => ({
+                setStatus((prev) => ({
                     ...prev,
                     isRegistered: false,
                     token: null,
@@ -154,7 +156,7 @@ export function useFCM(): UseFCMReturn {
         try {
             const newToken = await refreshFCMToken();
             if (newToken) {
-                setStatus(prev => ({ ...prev, token: newToken }));
+                setStatus((prev) => ({ ...prev, token: newToken }));
             }
             return newToken;
         } catch (error) {
@@ -175,7 +177,7 @@ export function useFCM(): UseFCMReturn {
 
     // 에러 클리어 / エラークリア
     const clearError = useCallback(() => {
-        setStatus(prev => ({ ...prev, error: null }));
+        setStatus((prev) => ({ ...prev, error: null }));
     }, []);
 
     return {

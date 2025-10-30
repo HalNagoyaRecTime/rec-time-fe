@@ -125,40 +125,70 @@ function resetNotificationHistoryIfNeeded(): void {
 // === 環境変数から指定日付を取得 ===
 function getEventDate(): Date | null {
     const dateStr = import.meta.env.VITE_EVENT_DATE;
+    console.log(`[getEventDate] dateStr: ${dateStr}`);
+
     if (!dateStr || dateStr.trim() === "" || dateStr.trim().toLowerCase() === "all") {
         return null; // 未設定または "all" の場合は毎日
     }
-    
+
     const parsed = new Date(dateStr.trim());
+    console.log(`[getEventDate] parsed: ${parsed.toDateString()}, valid: ${!isNaN(parsed.getTime())}`);
+
     if (isNaN(parsed.getTime())) {
         console.warn(`[通知] 無効な日付フォーマット: ${dateStr}`);
         return null;
     }
-    
+
     return parsed;
 }
 
 // === 今日がイベント日までの期間内かチェック ===
 function isTodayEventDate(): boolean {
     const eventDate = getEventDate();
-    
+
     if (!eventDate) {
         // 未設定または "all" の場合は常に有効
         return true;
     }
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 時刻をリセット
-    
+
     const targetDate = new Date(eventDate);
     targetDate.setHours(0, 0, 0, 0); // 時刻をリセット
-    
+
     // 今日がイベント日の当日または以前（イベント日まで）の場合に有効
     if (today <= targetDate) {
         return true;
     } else {
         return false;
     }
+}
+
+// === 今日がイベント日の翌日かチェック ===
+export function isTodayAfterEventDate(): boolean {
+    const eventDate = getEventDate();
+
+    if (!eventDate) {
+        // 未設定または "all" の場合は常に無効
+        console.log("[isTodayAfterEventDate] eventDate is not set");
+        return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 時刻をリセット
+
+    const targetDate = new Date(eventDate);
+    targetDate.setHours(0, 0, 0, 0); // 時刻をリセット
+
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1); // イベント日の翌日
+
+    const result = today.getTime() === nextDay.getTime();
+    console.log(`[isTodayAfterEventDate] today: ${today.toDateString()}, eventDate: ${targetDate.toDateString()}, nextDay: ${nextDay.toDateString()}, result: ${result}`);
+
+    // 今日が翌日と一致する場合にtrue
+    return result;
 }
 
 // === 알림 권한 요청 ===

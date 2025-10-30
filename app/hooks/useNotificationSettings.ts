@@ -10,9 +10,9 @@ import {
     scheduleAllNotifications,
     showSettingNotification,
 } from "~/utils/notifications";
-import { initializeFCM } from "~/utils/firebaseConfig";
+import { initializeFCM } from "~/config/firebaseConfig";
 import { registerFCMToken } from "~/utils/registerFCMToken";
-import { getFCMToken } from "~/utils/firebaseConfig";
+import { getFCMToken } from "~/config/firebaseConfig";
 import type { EventRow } from "~/api/student";
 
 export function useNotificationSettings() {
@@ -44,7 +44,7 @@ export function useNotificationSettings() {
                 const fcmInitialized = await initializeFCM();
                 if (fcmInitialized) {
                     console.log("[useNotificationSettings] FCM 초기화 성공 - 오프라인 알림 활성화");
-                    
+
                     // FCM 토큰 발급 및 백엔드 등록
                     const studentId = localStorage.getItem(STORAGE_KEYS.STUDENT_ID);
                     if (studentId) {
@@ -96,14 +96,14 @@ export function useNotificationSettings() {
     const disableNotification = () => {
         saveNotificationSetting(false);
         setIsEnabled(false);
-        
+
         // Service Workerに通知停止を送信
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
                 type: "STOP_NOTIFICATIONS",
             });
         }
-        
+
         // 通知オフ時のフィードバック（権限がある場合のみ）
         if (Notification.permission === "granted") {
             showSettingNotification("通知をオフにしました");

@@ -4,6 +4,7 @@ import type { EventRow } from "~/api/student";
 import { formatTime } from "~/utils/timetable/nextEventCalculator";
 import ZoomableImageModal from "./ZoomableImageModal";
 import { getEventMapConfig } from "~/config/eventMapConfig";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 interface EventListItemProps {
     event: EventRow;
@@ -100,9 +101,10 @@ export default function EventListItem({ event, isPast = false }: EventListItemPr
             {isExpanded && mapConfig.externalUrl && (
                 <button
                     onClick={handleExternalLinkClick}
-                    className="mt-3 w-full cursor-pointer rounded-md bg-blue-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900 active:bg-blue-800"
+                    className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900 active:bg-blue-800"
                 >
-                    {mapConfig.linkLabel || "詳細を見る"}
+                    {mapConfig.linkLabel || "競技詳細を確認する"}
+                    <FaArrowUpRightFromSquare className="text-xs" />
                 </button>
             )}
 

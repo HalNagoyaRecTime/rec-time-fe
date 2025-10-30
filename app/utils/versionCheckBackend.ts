@@ -1,6 +1,6 @@
 // app/utils/versionCheckBackend.ts
 
-import { getApiBaseUrl } from "~/utils/apiConfig";
+import { getApiBaseUrl } from "~/config/apiConfig";
 
 const LAST_SEEN_VERSION_KEY = "app:last_seen_version";
 const LAST_CHECK_TIME_KEY = "app:last_check_time";
@@ -29,8 +29,8 @@ function shouldCheckVersion(): boolean {
     const elapsedMinutes = Math.floor(elapsed / 1000 / 60);
     const remainingMinutes = Math.ceil(remaining / 1000 / 60);
 
-    console.log(`[VersionCheck] 前回チェック: ${new Date(lastCheckTimestamp).toLocaleTimeString('ja-JP')}`);
-    console.log(`[VersionCheck] 現在時刻: ${new Date(now).toLocaleTimeString('ja-JP')}`);
+    console.log(`[VersionCheck] 前回チェック: ${new Date(lastCheckTimestamp).toLocaleTimeString("ja-JP")}`);
+    console.log(`[VersionCheck] 現在時刻: ${new Date(now).toLocaleTimeString("ja-JP")}`);
     console.log(`[VersionCheck] 経過時間: ${elapsedMinutes}分 / 制限: 5分`);
 
     if (remaining > 0) {
@@ -48,9 +48,7 @@ function shouldCheckVersion(): boolean {
  *
  * @param options.skipThrottle - trueの場合、5分制限を無視して即座にチェック（ユーザーアクション時）
  */
-export async function checkVersionFromBackend(options?: {
-    skipThrottle?: boolean;
-}): Promise<{
+export async function checkVersionFromBackend(options?: { skipThrottle?: boolean }): Promise<{
     hasUpdate: boolean;
     latestVersion: string;
     skipped?: boolean;
@@ -59,7 +57,7 @@ export async function checkVersionFromBackend(options?: {
 
     // 既に実行中の場合はスキップ（React Strict Mode対応）
     if (isChecking) {
-        console.log('[VersionCheck] 既にチェック実行中 - スキップ');
+        console.log("[VersionCheck] 既にチェック実行中 - スキップ");
         return { hasUpdate: false, latestVersion: "実行中", skipped: true };
     }
 
@@ -70,7 +68,7 @@ export async function checkVersionFromBackend(options?: {
 
     // skipThrottle=true の場合、5分制限を無視してチェック実行
     if (skipThrottle) {
-        console.log('[VersionCheck] 🚀 スロットル回避モード - 即座にチェック実行');
+        console.log("[VersionCheck] 🚀 スロットル回避モード - 即座にチェック実行");
     }
 
     isChecking = true;
@@ -91,7 +89,7 @@ export async function checkVersionFromBackend(options?: {
         // チェック時刻を保存（タイムスタンプ: ミリ秒）
         const now = Date.now();
         localStorage.setItem(LAST_CHECK_TIME_KEY, now.toString());
-        console.log(`[VersionCheck] チェック時刻保存: ${new Date(now).toLocaleString('ja-JP')}`);
+        console.log(`[VersionCheck] チェック時刻保存: ${new Date(now).toLocaleString("ja-JP")}`);
 
         // LocalStorageから最後に確認したバージョンを取得
         const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);

@@ -83,7 +83,25 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
         const totalMinutes = startHour * 60 + startMinute + duration;
         const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
 
-        return currentTime >= startTime && currentTime <= endTime;
+        return currentTime >= startTime && currentTime < endTime;
+    };
+
+    // 呼び出し中（集合時刻が過ぎたがイベント終了に達していない）を判定する関数
+    const isCallingOut = (event: EventRow): boolean => {
+        if (!event.f_gather_time || !event.f_start_time || !event.f_duration) return false;
+
+        const gatherTime = parseInt(event.f_gather_time, 10);
+        const startTime = parseInt(event.f_start_time, 10);
+        const duration = parseInt(event.f_duration, 10);
+
+        // 終了時刻を計算（HHmm形式）
+        const startHour = Math.floor(startTime / 100);
+        const startMinute = startTime % 100;
+        const totalMinutes = startHour * 60 + startMinute + duration;
+        const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
+
+        // 集合時刻が過ぎて、イベント終了時刻に達していない場合
+        return currentTime >= gatherTime && currentTime < endTime;
     };
 
     // すべてのイベントを時刻順にソート
@@ -213,7 +231,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
 
     return (
         <div
-            className="fixed inset-0 z-99 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center"
+            className="fixed inset-0 z-99 flex items-end justify-center bg-black/70 backdrop-blur-sm"
             onClick={handleBackdropClick}
             style={{
                 opacity: isClosingState ? 0 : isVisible ? 1 : 0,
@@ -224,7 +242,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
         >
             <div
                 ref={modalRef}
-                className="flex h-[85vh] w-full flex-col rounded-t-2xl rounded-b-2xl bg-white shadow-2xl sm:max-w-200"
+                className="flex h-[90vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:h-[95vh] sm:max-w-200"
                 style={{
                     transform: isClosingState
                         ? "translateY(100vh)"
@@ -280,7 +298,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                 {/* スクロール可能エリア */}
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto px-4 pt-4 pb-6 sm:px-20"
+                    className="flex-1 overflow-y-auto px-4 pt-6 pb-6 sm:px-20"
                     onTouchStart={handleScrollTouchStart}
                     onTouchMove={handleScrollTouchMove}
                     onTouchEnd={handleScrollTouchEnd}
@@ -297,11 +315,26 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
                                     {highlightedEvents.map((event, index) => {
                                         // ステータスを決定
                                         const isOngoing = ongoingEvents.some((e) => e.f_event_id === event.f_event_id);
+                                        const isCalling = isCallingOut(event);
                                         const isNext =
-                                            !isOngoing && index === 0 && ongoingEvents.length === 0;
-                                        const status = isOngoing ? "ongoing" : isNext ? "next" : null;
+                                            !isOngoing && !isCalling && index === 0 && ongoingEvents.length === 0;
+                                        const status = isOngoing
+                                            ? "ongoing"
+                                            : isCalling
+                                              ? "calling"
+                                              : isNext
+                                                ? "next"
+                                                : null;
 
-                                        return <EventDetailCard key={event.f_event_id} event={event} status={status} />;
+                                        return (
+                                            <EventDetailCard
+                                                key={event.f_event_id}
+                                                event={event}
+                                                status={status}
+                                                isOngoing={isOngoing}
+                                                isCalling={isCalling}
+                                            />
+                                        );
                                     })}
                                 </div>
                             )}
