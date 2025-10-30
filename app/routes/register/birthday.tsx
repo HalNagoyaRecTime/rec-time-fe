@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import NumberKeypad from "../../components/ui/number-keypad";
+import NumberKeypad from "~/components/page/settings/number-keypad";
 import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 import { getApiBaseUrl } from "~/utils/apiConfig";
 import type { Route } from "./+types/birthday";
 
 export const meta: Route.MetaFunction = () => {
-    return [
-        { title: "生年月日入力 - recTime" },
-    ];
+    return [{ title: "生年月日入力 - recTime" }];
 };
 
 function DateInputField({

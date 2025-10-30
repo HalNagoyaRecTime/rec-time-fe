@@ -1,9 +1,9 @@
 import RecTimeFlame from "~/components/ui/recTimeFlame";
 import PullToRefresh from "~/components/ui/PullToRefresh";
-import TimeSlotGridWithEvents from "~/components/timetable/TimeSlotGridWithEvents";
-import StudentInfoBar from "~/components/timetable/StudentInfoBar";
-import NextEventCard from "~/components/timetable/NextEventCard";
-import NotificationWarning from "~/components/ui/NotificationWarning";
+import TimeSlotGridWithEvents from "~/components/page/timetable/TimeSlotGridWithEvents";
+import StudentInfoBar from "~/components/page/timetable/StudentInfoBar";
+import NextEventCard from "~/components/page/timetable/NextEventCard";
+import NotificationWarningModal from "~/components/modal/NotificationWarningModal";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
@@ -26,6 +26,7 @@ export default function Timetable() {
     const [message, setMessage] = useState<Message>({ type: null, content: "" });
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [showNotificationWarning, setShowNotificationWarning] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const hasFetchedRef = useRef(false);
 
     // === 現在時刻 ===
@@ -163,7 +164,7 @@ export default function Timetable() {
 
     return (
         <RecTimeFlame>
-            <PullToRefresh onRefresh={handleRefresh}>
+            <PullToRefresh onRefresh={handleRefresh} isDisabled={isModalOpen}>
                 <div className="flex h-full flex-col">
                     <StudentInfoBar
                         studentId={studentId}
@@ -173,7 +174,12 @@ export default function Timetable() {
                     />
 
                     {/* 次の予定カード */}
-                    <NextEventCard event={nextEvent} isLoggedIn={!!studentId} />
+                    <NextEventCard
+                        event={nextEvent}
+                        isLoggedIn={!!studentId}
+                        allEvents={events}
+                        onModalStateChange={setIsModalOpen}
+                    />
 
                     <TimeSlotGridWithEvents
                         displayEvents={events}
@@ -191,7 +197,7 @@ export default function Timetable() {
             </PullToRefresh>
 
             {/* 通知に関する注意喚起モーダル */}
-            <NotificationWarning
+            <NotificationWarningModal
                 isVisible={showNotificationWarning}
                 onDismiss={() => setShowNotificationWarning(false)}
             />

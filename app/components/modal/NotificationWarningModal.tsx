@@ -8,7 +8,7 @@ interface NotificationWarningProps {
     onDismiss: () => void;
 }
 
-export default function NotificationWarning({ isVisible, onDismiss }: NotificationWarningProps) {
+export default function NotificationWarningModal({ isVisible, onDismiss }: NotificationWarningProps) {
     if (!isVisible) return null;
 
     return (
@@ -24,8 +24,8 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
                         <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                         <p>
                             <strong>重要：</strong>
-                            FCM対応により、アプリを完全に閉じても通知を受け取れます。
-                            従来のService Worker方式も併用されます。
+                            FCM対応により、アプリを完全に閉じても通知を受け取れます。 従来のService
+                            Worker方式も併用されます。
                         </p>
                     </div>
 
@@ -49,7 +49,8 @@ export default function NotificationWarning({ isVisible, onDismiss }: Notificati
 
                 <button
                     onClick={onDismiss}
-                    className="w-full cursor-pointer rounded-lg bg-[#000D91] py-3 font-semibold text-white transition-colors hover:bg-[#000D91]/90">
+                    className="w-full cursor-pointer rounded-lg bg-[#000D91] py-3 font-semibold text-white transition-colors hover:bg-[#000D91]/90"
+                >
                     理解しました
                 </button>
             </div>

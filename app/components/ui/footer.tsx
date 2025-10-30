@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAppVersion } from "~/hooks/useAppVersion";
 import { reinstallPWA } from "~/utils/clearCache";
-import UpdateModal from "~/components/ui/update-modal";
+import UpdateModal from "~/components/modal/update-modal";
 
 export default function footer() {
     const currentYear = new Date().getFullYear();

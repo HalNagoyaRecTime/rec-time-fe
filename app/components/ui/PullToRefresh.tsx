@@ -4,9 +4,10 @@ import { IoArrowDown } from "react-icons/io5";
 interface PullToRefreshProps {
     onRefresh: () => Promise<void>;
     children: React.ReactNode;
+    isDisabled?: boolean;
 }
 
-export default function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
+export default function PullToRefresh({ onRefresh, children, isDisabled = false }: PullToRefreshProps) {
     // 描画用のstate（最小限）
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -49,6 +50,8 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         const scrollContainer = getScrollContainer();
 
         const handleTouchStart = (e: TouchEvent) => {
+            // 無効化されている場合は何もしない
+            if (isDisabled) return;
             // リフレッシュ中は何もしない
             if (isRefreshingRef.current) return;
 
@@ -68,6 +71,8 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         };
 
         const handleTouchMove = (e: TouchEvent) => {
+            // 無効化されている場合は何もしない
+            if (isDisabled) return;
             // リフレッシュ中は何もしない
             if (isRefreshingRef.current) return;
 
@@ -130,6 +135,13 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         };
 
         const handleTouchEnd = () => {
+            // 無効化されている場合は何もしない
+            if (isDisabled) {
+                touchStateRef.current = "none";
+                pullDistanceRef.current = 0;
+                setPullDistance(0);
+                return;
+            }
             // プル動作中でない場合は何もしない
             if (touchStateRef.current !== "pulling") {
                 touchStateRef.current = "none";
@@ -176,7 +188,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
             container.removeEventListener("touchend", handleTouchEnd);
             container.removeEventListener("touchcancel", handleTouchEnd);
         };
-    }, []); // 依存配列を空にして1度だけ登録
+    }, [isDisabled, onRefresh]); // isDisabledとonRefreshを依存配列に追加
 
     const contentStyle = {
         marginTop: `${pullDistance}px`,
