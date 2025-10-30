@@ -87,6 +87,16 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
 
     // 参加予定のイベントがない場合
     if (!event) {
+        // 出場登録があるイベントが存在するかチェック
+        const hasRegisteredEvents = allEvents.some(e => e.f_is_my_entry === true);
+
+        // 出場登録がない場合のメッセージ
+        const noRegistrationMessage = "出場登録がされていません";
+        const noRegistrationSubMessage = "出場データが利用可能になるまでお待ちください";
+
+        // イベント終了時のメッセージ
+        const noTodayEventMessage = "本日参加予定のイベントはありません";
+
         return (
             <>
                 <div className="mt-4 mb-9" style={{ perspective: "1000px" }}>
@@ -108,8 +118,11 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
                             }}
                         >
                             <h3 className="font-title text-lg font-black text-white">
-                                本日参加予定のイベントはありません
+                                {hasRegisteredEvents ? noTodayEventMessage : noRegistrationMessage}
                             </h3>
+                            {!hasRegisteredEvents && (
+                                <p className="text-sm text-white/80">{noRegistrationSubMessage}</p>
+                            )}
                             <div className="mt-2 text-xs text-white opacity-70">タップで全予定表示 →</div>
                         </div>
 

@@ -75,8 +75,8 @@ export async function fetchByGakuseki(id: string | null): Promise<{ payload: Api
             }
         }
 
-        // 全イベント一覧を取得
-        const eventsRes = await fetch(`${API_BASE}/events?student_num=${id}`, {
+        // 全イベント一覧を取得（フィルターなし - 全イベントを取得）
+        const eventsRes = await fetch(`${API_BASE}/events`, {
             cache: "no-store"
         });
         
