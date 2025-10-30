@@ -83,10 +83,7 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
 
             // Set a 2-second timeout to recover from stuck animation state
             recoveryTimeoutRef.current = setTimeout(() => {
-                console.warn(
-                    "[NextEventCard] Animation recovery triggered - State was stuck in",
-                    animationState
-                );
+                console.warn("[NextEventCard] Animation recovery triggered - State was stuck in", animationState);
                 setIsAnimating(false);
                 setAnimationState("idle");
                 setShowModal(false);
@@ -240,12 +237,11 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
                             {!hasRegisteredEvents && (
                                 <p className="text-sm text-white/80">{noRegistrationSubMessage}</p>
                             )}
-                            <div className="mt-2 text-xs text-white opacity-70">タップで全予定表示 →</div>
                         </div>
 
                         {/* 裏面 */}
                         <div
-                            className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-md bg-[#910000]/80 px-3 py-16 text-black shadow-2xl"
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-md bg-[#000D91] px-3 py-16 text-black shadow-2xl"
                             style={{
                                 backfaceVisibility: "hidden",
                                 WebkitBackfaceVisibility: "hidden",
@@ -254,22 +250,9 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
                         ></div>
                     </div>
                 </div>
-
-                {/* 全予定表示モーダル */}
-                <AllSchedulesModal
-                    isOpen={showModal}
-                    events={allEvents}
-                    onClose={handleCloseModal}
-                    onClosing={handleModalClosing}
-                    isClosing={false}
-                    cardRotation={rotationDeg}
-                />
             </>
         );
     }
-
-    // 集合時間が過ぎたかどうか
-    const gatherTimePassed = isGatherTimePassed(event.f_gather_time);
 
     // 開催中かどうか
     const ongoing = isEventOngoing(event);
@@ -340,11 +323,16 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
                                     {event.f_gather_time && (
                                         <p className="flex min-w-0 gap-2">
                                             <span className="flex-shrink-0">{formatTime(event.f_gather_time)}</span>
-                                            {!calling && !ongoing && minutesUntilGather <= 120 && minutesUntilGather > 0 && (
-                                                <span className={`min-w-0 truncate ${minutesUntilGather <= 30 ? "text-red-600" : ""}`}>
-                                                    {getTimeUntilEvent(event.f_gather_time)}
-                                                </span>
-                                            )}
+                                            {!calling &&
+                                                !ongoing &&
+                                                minutesUntilGather <= 120 &&
+                                                minutesUntilGather > 0 && (
+                                                    <span
+                                                        className={`min-w-0 truncate ${minutesUntilGather <= 30 ? "text-red-600" : ""}`}
+                                                    >
+                                                        {getTimeUntilEvent(event.f_gather_time)}
+                                                    </span>
+                                                )}
                                             {calling && (
                                                 <span className="min-w-0 truncate text-orange-500">呼び出し中</span>
                                             )}
@@ -355,8 +343,12 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
                                     <p className="flex min-w-0 gap-2">
                                         <span className="flex-shrink-0">{formatTime(event.f_start_time)}</span>
                                         {minutesUntilStart <= 120 && minutesUntilStart >= -5 && (
-                                            <span className={`min-w-0 truncate ${minutesUntilStart <= 30 ? "text-red-600" : ""}`}>
-                                                {minutesUntilStart >= -5 && minutesUntilStart <= 0 ? "まもなく" : getTimeUntilEvent(event.f_start_time, event.f_gather_time)}
+                                            <span
+                                                className={`min-w-0 truncate ${minutesUntilStart <= 30 ? "text-red-600" : ""}`}
+                                            >
+                                                {minutesUntilStart >= -5 && minutesUntilStart <= 0
+                                                    ? "まもなく"
+                                                    : getTimeUntilEvent(event.f_start_time, event.f_gather_time)}
                                             </span>
                                         )}
                                     </p>
