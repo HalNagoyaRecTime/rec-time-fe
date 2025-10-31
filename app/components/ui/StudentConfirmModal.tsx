@@ -22,10 +22,20 @@ export function StudentConfirmModal({ studentData, onConfirm }: StudentConfirmMo
                             <p>クラス</p>
                         </div>
                         <div className="flex w-full min-w-0 flex-1 flex-col text-sm font-medium text-[#000D91]">
-                            
+                            <p className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                {studentData.f_student_num || "---"}
+                            </p>
+                            <p className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                {studentData.f_name || "---"}
+                            </p>
+                            <p className="overflow-hidden text-ellipsis whitespace-nowrap">
+                                {studentData.f_class || "---"}
+                            </p>
                         </div>
                     </div>
                 </div>
+
+                
             </div>
         </div>
     )
