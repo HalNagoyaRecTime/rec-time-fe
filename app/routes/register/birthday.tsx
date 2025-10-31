@@ -5,6 +5,7 @@ import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 import { getApiBaseUrl } from "~/utils/apiConfig";
 import type { Route } from "./+types/birthday";
+import { StudentConfirmModal } from "~/components/ui/StudentConfirmModal";
 
 export const meta: Route.MetaFunction = () => {
     return [{ title: "生年月日入力 - recTime" }];
@@ -49,7 +50,7 @@ function DateInputField({
 
 export default function Birthday() {
     const navigate = useNavigate();
-    const { registerStudent } = useStudentData();
+    const { studentData, registerStudent } = useStudentData();
     const [year, setYear] = useState("");
     const [month, setMonth] = useState("");
     const [day, setDay] = useState("");
@@ -58,6 +59,8 @@ export default function Birthday() {
         "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // 学籍番号の確認
     useEffect(() => {
@@ -211,14 +214,14 @@ export default function Birthday() {
             const data = await res.json();
 
             // 成功: useStudentDataフックで一括保存
-            const studentData = {
+            const studentDataForSave = {
                 f_student_id: data.f_student_id || "",
                 f_student_num: studentId,
                 f_class: data.f_class || null,
                 f_number: data.f_number || null,
                 f_name: data.f_name || null,
             };
-            registerStudent(studentId, birthday, studentData);
+            registerStudent(studentId, birthday, studentDataForSave);
 
             // sessionStorageをクリア（学籍番号と生年月日の入力データ）
             sessionStorage.removeItem("temp-student-id");
@@ -227,7 +230,8 @@ export default function Birthday() {
             sessionStorage.removeItem("temp-birthday-day");
 
             // タイムテーブル画面へ遷移（登録完了パラメータ付き）
-            navigate("/timetable?registered=true");
+            // navigate("/timetable?registered=true");
+            setShowConfirmModal(true);
         } catch (err) {
             console.error(err);
             setStatus("network-error");
