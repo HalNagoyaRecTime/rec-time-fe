@@ -240,6 +240,11 @@ export default function Birthday() {
         }
     };
 
+    const handleModalConfirm = () => {
+        setShowConfirmModal(false);
+        navigate("/timetable?registered=true");
+    }
+
     const isComplete = year.length === 4 && month.length === 2 && day.length === 2;
 
     // Ctrl+Enterで登録ボタンを押す
