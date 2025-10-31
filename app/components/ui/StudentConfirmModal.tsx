@@ -13,6 +13,19 @@ export function StudentConfirmModal({ studentData, onConfirm }: StudentConfirmMo
                 <h3 className="mb-4 text-center text-lg font-semibold text-black">
                     登録内容の確認
                 </h3>
+
+                <div className="flex w-full flex-col rounded-md border border-gray-300 px-4 py-3 text-black">
+                    <div className="flex">
+                        <div className="w-fit shrink-0 flex-col pr-4 text-sm text-gray-600">
+                            <p>学籍番号</p>
+                            <p>氏名</p>
+                            <p>クラス</p>
+                        </div>
+                        <div className="flex w-full min-w-0 flex-1 flex-col text-sm font-medium text-[#000D91]">
+                            
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     )
