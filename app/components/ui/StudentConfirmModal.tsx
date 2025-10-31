@@ -35,7 +35,19 @@ export function StudentConfirmModal({ studentData, onConfirm }: StudentConfirmMo
                     </div>
                 </div>
 
-                
+                <p className="mb-6 mt-4 text-center text-sm text-black">
+                    この内容で登録しました。
+                </p>
+        
+                {/* 確認ボタン */}
+                <div className="flex">
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 cursor-pointer rounded-lg bg-[#000D91] px-4 py-2 text-white transition-colors hover:bg-[#000D91]/80"
+                    >
+                    OK
+                    </button>
+                </div>
             </div>
         </div>
     )
