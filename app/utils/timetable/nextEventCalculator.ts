@@ -1,5 +1,6 @@
 // === 次の予定計算ユーティリティ ===
 import type { EventRow } from "~/api/student";
+import { getCurrentTime } from "~/utils/currentTimeManager";
 
 /**
  * HHmm形式の時刻を "HH:MM" 形式にフォーマット
@@ -19,7 +20,7 @@ export function formatTime(hhmm: string | null): string {
  * @returns 次のイベント、または null
  */
 export function getNextParticipatingEvent(events: EventRow[]): EventRow | null {
-    const now = new Date();
+    const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
 
     // 参加予定のイベントのみフィルタ
@@ -74,7 +75,7 @@ export function getNextParticipatingEvent(events: EventRow[]): EventRow | null {
 export function getTimeUntilEvent(startTime: string | null, gatherTime?: string | null): string {
     if (!startTime) return "";
 
-    const now = new Date();
+    const now = getCurrentTime();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     const startHour = parseInt(startTime.substring(0, 2), 10);
@@ -121,7 +122,7 @@ export function getTimeUntilEvent(startTime: string | null, gatherTime?: string 
 export function isGatherTimePassed(gatherTime: string | null): boolean {
     if (!gatherTime) return false;
 
-    const now = new Date();
+    const now = getCurrentTime();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     const gatherHour = parseInt(gatherTime.substring(0, 2), 10);
@@ -140,7 +141,7 @@ export function isGatherTimePassed(gatherTime: string | null): boolean {
 export function isEventOngoing(event: { f_start_time?: string | null; f_duration?: string | null }): boolean {
     if (!event.f_start_time || !event.f_duration) return false;
 
-    const now = new Date();
+    const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
     const startTime = parseInt(event.f_start_time, 10);
     const duration = parseInt(event.f_duration, 10);
@@ -162,7 +163,7 @@ export function isEventOngoing(event: { f_start_time?: string | null; f_duration
 export function isCallingOut(event: { f_gather_time?: string | null; f_start_time?: string | null; f_duration?: string | null }): boolean {
     if (!event.f_gather_time || !event.f_start_time || !event.f_duration) return false;
 
-    const now = new Date();
+    const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
     const gatherTime = parseInt(event.f_gather_time, 10);
     const startTime = parseInt(event.f_start_time, 10);
@@ -186,7 +187,7 @@ export function isCallingOut(event: { f_gather_time?: string | null; f_start_tim
 export function areAllEventsFinished(events: EventRow[]): boolean {
     if (events.length === 0) return false;
 
-    const now = new Date();
+    const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
 
     // 参加予定のイベントのみフィルタ

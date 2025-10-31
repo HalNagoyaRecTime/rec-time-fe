@@ -6,6 +6,7 @@ import {
     isEventOngoing,
     isCallingOut,
 } from "~/utils/timetable/nextEventCalculator";
+import { getCurrentTime } from "~/utils/currentTimeManager";
 import AllSchedulesModal from "~/components/modal/AllSchedulesModal";
 import { FlipCard } from "~/components/ui/FlipCard";
 
@@ -162,7 +163,7 @@ export default function ScheduleEventCard({
     // 集合時刻までの残り時間を計算（分単位）
     const getMinutesUntilGatherTime = (): number => {
         if (!event.f_gather_time) return Infinity;
-        const now = new Date();
+        const now = getCurrentTime();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         const gatherHour = parseInt(event.f_gather_time.substring(0, 2), 10);
         const gatherMinute = parseInt(event.f_gather_time.substring(2, 4), 10);
@@ -174,7 +175,7 @@ export default function ScheduleEventCard({
     // 開始時刻までの残り時間を計算（分単位）
     const getMinutesUntilStartTime = (): number => {
         if (!event.f_start_time) return Infinity;
-        const now = new Date();
+        const now = getCurrentTime();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
         const startHour = parseInt(event.f_start_time.substring(0, 2), 10);
         const startMinute = parseInt(event.f_start_time.substring(2, 4), 10);

@@ -1,6 +1,7 @@
 // === 全予定表示モーダルコンポーネント（白基調デザイン版） ===
 import React, { useState, useRef, useEffect } from "react";
 import type { EventRow } from "~/api/student";
+import { getCurrentTime } from "~/utils/currentTimeManager";
 import EventDetailCard from "./EventDetailCard";
 import EventSection from "./EventSection";
 
@@ -65,7 +66,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
     const myEvents = events.filter((event) => event.f_is_my_entry === true);
 
     // 現在時刻（HHmm形式に変換）
-    const now = new Date();
+    const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
 
     console.log("[AllSchedulesModal] 現在時刻:", currentTime, `(${now.getHours()}:${now.getMinutes()})`);
