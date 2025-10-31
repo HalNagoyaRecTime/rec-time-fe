@@ -346,6 +346,12 @@ export default function Birthday() {
                     </button>
                 </div>
             </div>
+            {showConfirmModal && studentData && (
+                <StudentConfirmModal
+                    studentData={studentData}
+                    onConfirm={handleModalConfirm}
+                />
+            )}
         </RecTimeFlame>
     );
 }
