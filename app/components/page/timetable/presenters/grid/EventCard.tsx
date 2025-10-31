@@ -2,8 +2,11 @@
 import React from "react";
 import type { EventRow } from "~/api/student";
 import type { EventLayout } from "~/types/timetable";
+import { TIMETABLE_CONFIG } from "~/config/timetableConfig";
 import { formatTime, formatTimeRange } from "~/utils/timetable/timeFormatter";
 import { getOptimalWidth, getOptimalLeft } from "~/utils/timetable/eventPositioning";
+
+const { SLOT_HEIGHT_PX, COMPACT_THRESHOLD_PX, VERY_COMPACT_THRESHOLD_PX } = TIMETABLE_CONFIG;
 
 interface EventCardProps {
     event: EventRow;
@@ -22,8 +25,8 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
     const durationMinutes = parseInt(event.f_duration || "0", 10);
 
     // 高さに応じたレイアウト判定
-    const isCompact = layout.height < 40; // 40px未満は縮小表示
-    const isVeryCompact = layout.height < 24; // 24px未満は最小表示
+    const isCompact = layout.height < COMPACT_THRESHOLD_PX;
+    const isVeryCompact = layout.height < VERY_COMPACT_THRESHOLD_PX;
 
     // tooltip用の継続時間フォーマット
     const formatActualDuration = (minutes: number): string => {
@@ -49,7 +52,7 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
             }`}
             style={{
                 top: `${layout.top}px`,
-                height: `${Math.max(layout.height, 12)}px`,
+                height: `${Math.max(layout.height, Math.ceil(SLOT_HEIGHT_PX * 1.5))}px`,
                 left: left,
                 width: width,
                 zIndex: 10,
@@ -79,13 +82,6 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
                         {formatTimeRange(event.f_start_time, event.f_duration)}
                     </div>
                 )}
-
-                {/*/!* 参加予定バッジ - 高さに余裕がある場合のみ表示 *!/*/}
-                {/*{isParticipant && !isCompact && (*/}
-                {/*    <div className="font-bold" style={{ fontSize: "8px" }}>*/}
-                {/*        ✓ 参加予定*/}
-                {/*    </div>*/}
-                {/*)}*/}
             </div>
         </div>
     );

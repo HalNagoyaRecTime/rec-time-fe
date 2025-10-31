@@ -1,7 +1,7 @@
 // === イベント位置・幅計算関数 ===
-import { TIMETABLE_CONSTANTS } from "~/types/timetable";
+import { TIMETABLE_CONFIG } from "~/config/timetableConfig";
 
-const { MAX_VISIBLE_EVENTS, MIN_EVENT_WIDTH_PX } = TIMETABLE_CONSTANTS;
+const { MAX_VISIBLE_EVENTS, MIN_EVENT_WIDTH_PX } = TIMETABLE_CONFIG;
 
 /**
  * イベントの最適な幅を計算

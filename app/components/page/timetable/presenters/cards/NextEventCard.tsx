@@ -3,11 +3,11 @@ import React from "react";
 import type { EventRow } from "~/api/student";
 import { areAllEventsFinished } from "~/utils/timetable/nextEventCalculator";
 import { isTodayAfterEventDate, isTodayEventDate } from "~/utils/notifications";
-import LoginPromptCard from "~/components/page/timetable/card/LoginPromptCard";
-import ThanksCard from "~/components/page/timetable/card/ThanksCard";
-import NextDayCard from "~/components/page/timetable/card/NextDayCard";
-import NoEventCard from "~/components/page/timetable/card/NoEventCard";
-import ScheduleEventCard from "~/components/page/timetable/card/ScheduleEventCard";
+import LoginPromptCard from "./LoginPromptCard";
+import ThanksCard from "./ThanksCard";
+import NextDayCard from "./NextDayCard";
+import NoEventCard from "../event/NoEventCard";
+import ScheduleEventCard from "../../containers/ScheduleEventCard";
 
 interface NextEventCardProps {
     event: EventRow | null;

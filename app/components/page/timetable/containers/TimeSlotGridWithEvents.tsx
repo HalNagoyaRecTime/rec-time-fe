@@ -3,11 +3,11 @@ import React from "react";
 import type { EventRow } from "~/api/student";
 import { generateTimeSlots } from "~/utils/timetable/timeSlotGenerator";
 import { calculateEventLayout } from "~/utils/timetable/eventLayoutCalculator";
-import { TIMETABLE_CONSTANTS } from "~/types/timetable";
-import TimeLabelsColumn from "~/components/page/timetable/parts/TimeLabelsColumn";
-import EventsGridArea from "~/components/page/timetable/parts/EventsGridArea";
+import { TIMETABLE_CONFIG } from "~/config/timetableConfig";
+import TimeLabelsColumn from "../presenters/timeline/TimeLabelsColumn";
+import EventGridContainer from "./EventGridContainer";
 
-const { START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES } = TIMETABLE_CONSTANTS;
+const { START_HOUR, DISPLAY_END_HOUR, SLOTS_PER_HOUR } = TIMETABLE_CONFIG;
 
 interface TimeSlotGridWithEventsProps {
     displayEvents: EventRow[];
@@ -20,8 +20,9 @@ interface TimeSlotGridWithEventsProps {
  * タイムテーブル全体のコンテナコンポーネント
  */
 export default function TimeSlotGridWithEvents({ displayEvents, studentId, currentTime }: TimeSlotGridWithEventsProps) {
-    // タイムスロット生成
-    const timeSlots = generateTimeSlots(START_HOUR, DISPLAY_END_HOUR, SLOT_INTERVAL_MINUTES);
+    // タイムスロット生成（SLOTS_PER_HOUR で分割間隔を計算）
+    const slotIntervalMinutes = 60 / SLOTS_PER_HOUR;
+    const timeSlots = generateTimeSlots(START_HOUR, DISPLAY_END_HOUR, slotIntervalMinutes);
 
     // イベントレイアウト計算
     const eventLayout = calculateEventLayout(displayEvents);
@@ -34,7 +35,7 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, curre
                 <TimeLabelsColumn timeSlots={timeSlots} currentTime={currentTime} />
 
                 {/* 右側：イベント表示エリア */}
-                <EventsGridArea
+                <EventGridContainer
                     timeSlots={timeSlots}
                     displayEvents={displayEvents}
                     eventLayout={eventLayout}

@@ -36,7 +36,7 @@ export default function CurrentTimeLine({ currentTime, hourHeight, startHour, en
 
     return (
         <div className="absolute right-0 left-0 z-50" style={{ top: `${topPosition}px` }}>
-            {/* 現在時刻を示す横棒（オレンジ色） */}
+            {/* 現在時刻を示す棒（右側） */}
             <div className="h-[2px] w-full bg-[#111646]"></div>
         </div>
     );

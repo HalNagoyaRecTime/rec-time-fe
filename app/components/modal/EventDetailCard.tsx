@@ -17,12 +17,7 @@ interface EventDetailCardProps {
  * イベントの詳細を大きく表示するカード
  * - 次の予定や、タップして開いた詳細表示に使用
  */
-export default function EventDetailCard({
-    event,
-    status = null,
-    isOngoing = false,
-    isCalling = false,
-}: EventDetailCardProps) {
+export default function EventDetailCard({ event, isOngoing = false, isCalling = false }: EventDetailCardProps) {
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     // イベントIDから地図設定を取得

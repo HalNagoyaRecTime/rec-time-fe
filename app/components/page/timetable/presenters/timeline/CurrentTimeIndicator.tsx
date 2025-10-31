@@ -9,7 +9,7 @@ interface CurrentTimeIndicatorProps {
 
 /**
  * 現在時刻インジケーター
- * img.pngのデザインに基づいて実装
+ * 左側の時間ラベル列に表示
  */
 export default function CurrentTimeIndicator({
     currentTime,
@@ -52,7 +52,7 @@ export default function CurrentTimeIndicator({
 
     return (
         <div className="absolute left-0 z-60 w-full" style={{ top: `${topPosition}px` }}>
-            {/* 現在時刻バッジ（黄色背景） */}
+            {/* 現在時刻表示部分（左側） */}
             <div className="flex h-[18px] w-full items-center justify-end rounded-r-full bg-[#111646] pr-1">
                 <p className="text-sm font-medium text-white/90">{currentTimeStr}</p>
             </div>

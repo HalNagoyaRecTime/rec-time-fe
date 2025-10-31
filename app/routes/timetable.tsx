@@ -1,8 +1,8 @@
 import RecTimeFlame from "~/components/ui/recTimeFlame";
 import PullToRefresh from "~/components/ui/PullToRefresh";
-import TimeSlotGridWithEvents from "~/components/page/timetable/TimeSlotGridWithEvents";
+import TimeSlotGridWithEvents from "~/components/page/timetable/containers/TimeSlotGridWithEvents";
 import StudentInfoBar from "~/components/page/timetable/StudentInfoBar";
-import NextEventCard from "~/components/page/timetable/card/NextEventCard";
+import NextEventCard from "~/components/page/timetable/presenters/cards/NextEventCard";
 import NotificationWarningModal from "~/components/modal/NotificationWarningModal";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";

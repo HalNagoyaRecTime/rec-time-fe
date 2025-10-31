@@ -1,19 +1,20 @@
 // === イベント重なり検出・レイアウト計算 ===
 import type { EventRow } from "~/api/student";
 import type { EventLayout, EventTimeRange } from "~/types/timetable";
-import { TIMETABLE_CONSTANTS } from "~/types/timetable";
+import { TIMETABLE_CONFIG } from "~/config/timetableConfig";
 
-const { START_HOUR, SLOT_HEIGHT_PX, EVENT_HEIGHT_MARGIN_PX } = TIMETABLE_CONSTANTS;
+const { START_HOUR, SLOT_HEIGHT_PX, SLOTS_PER_HOUR } = TIMETABLE_CONFIG;
 
 /**
- * イベントの長さを5分単位で計算（最小10分）
+ * イベントの長さをスロット単位で計算（最小1スロット）
  */
 function getEventDurationUnits(event: EventRow): number {
     if (!event.f_start_time || !event.f_duration) return 0;
     const durationMinutes = parseInt(event.f_duration, 10);
-    // 10分未満は10分に切り上げ
-    const adjustedDuration = Math.max(durationMinutes, 10);
-    return Math.ceil(adjustedDuration / 5);
+    const slotIntervalMinutes = 60 / SLOTS_PER_HOUR;
+    // 1スロット未満は1スロットに切り上げ
+    const adjustedDuration = Math.max(durationMinutes, slotIntervalMinutes);
+    return Math.ceil(adjustedDuration / slotIntervalMinutes);
 }
 
 /**
@@ -23,6 +24,7 @@ function getEventDurationUnits(event: EventRow): number {
  */
 export function calculateEventLayout(events: EventRow[]): Map<string, EventLayout> {
     const eventPositions = new Map<string, EventLayout>();
+    const slotIntervalMinutes = 60 / SLOTS_PER_HOUR;
     
     console.log(`[eventLayoutCalculator] 레이아웃 계산 시작 - 전체 이벤트: ${events.length}개`);
     console.log(`[eventLayoutCalculator] 이벤트 목록:`, events.map(e => ({
@@ -57,8 +59,8 @@ export function calculateEventLayout(events: EventRow[]): Map<string, EventLayou
         const startHours = Math.floor(startTime / 100);
         const startMinutes = startTime % 100;
         const startTotalMinutes = startHours * 60 + startMinutes;
-        const baseMinutes = START_HOUR * 60; // 9:00基準
-        const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / 5); // 5分単位に変更
+        const baseMinutes = START_HOUR * 60; // 開始時刻基準
+        const eventStartUnits = Math.floor((startTotalMinutes - baseMinutes) / slotIntervalMinutes);
 
         // 終了時刻を計算
         const durationMinutes = parseInt(event.f_duration || "0", 10);
@@ -86,7 +88,7 @@ export function calculateEventLayout(events: EventRow[]): Map<string, EventLayou
         // ポジション情報を保存
         eventPositions.set(event.f_event_id, {
             top: eventStartUnits * SLOT_HEIGHT_PX,
-            height: getEventDurationUnits(event) * SLOT_HEIGHT_PX - EVENT_HEIGHT_MARGIN_PX,
+            height: getEventDurationUnits(event) * SLOT_HEIGHT_PX,
             column: columnIndex,
             totalColumns: 0,
             actualColumns: 1, // 後で計算
@@ -118,11 +120,11 @@ export function calculateEventLayout(events: EventRow[]): Map<string, EventLayou
         // actualColumns = このイベント期間中に同時に存在する最大カラム数を計算
         let maxSimultaneousColumns = 1;
 
-        // イベント期間を5分刻みでスキャンして、各時点での同時存在イベント数を数える
+        // イベント期間をスロット間隔でスキャンして、各時点での同時存在イベント数を数える
         const startMinutes = Math.floor(timeRange.start / 100) * 60 + (timeRange.start % 100);
         const endMinutes = Math.floor(timeRange.end / 100) * 60 + (timeRange.end % 100);
 
-        for (let minute = startMinutes; minute < endMinutes; minute += 5) {
+        for (let minute = startMinutes; minute < endMinutes; minute += slotIntervalMinutes) {
             const currentTime = Math.floor(minute / 60) * 100 + (minute % 60);
             let simultaneousCount = 0;
 
