@@ -155,6 +155,30 @@ export function isEventOngoing(event: { f_start_time?: string | null; f_duration
 }
 
 /**
+ * 呼び出し中（集合時刻が過ぎたがイベント終了に達していない）かどうかを判定
+ * @param event - イベント
+ * @returns 呼び出し中の場合true
+ */
+export function isCallingOut(event: { f_gather_time?: string | null; f_start_time?: string | null; f_duration?: string | null }): boolean {
+    if (!event.f_gather_time || !event.f_start_time || !event.f_duration) return false;
+
+    const now = new Date();
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+    const gatherTime = parseInt(event.f_gather_time, 10);
+    const startTime = parseInt(event.f_start_time, 10);
+    const duration = parseInt(event.f_duration, 10);
+
+    // 終了時刻を計算（HHmm形式）
+    const startHour = Math.floor(startTime / 100);
+    const startMinute = startTime % 100;
+    const totalMinutes = startHour * 60 + startMinute + duration;
+    const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
+
+    // 集合時刻が過ぎて、イベント終了時刻に達していない場合
+    return currentTime >= gatherTime && currentTime < endTime;
+}
+
+/**
  * すべてのイベントが終了したかどうかを判定
  * @param events - 参加予定のイベントリスト
  * @returns すべてのイベントが終了している場合true

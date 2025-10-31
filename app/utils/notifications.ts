@@ -142,8 +142,8 @@ function getEventDate(): Date | null {
     return parsed;
 }
 
-// === 今日がイベント日までの期間内かチェック ===
-function isTodayEventDate(): boolean {
+// === 今日がイベント日かチェック ===
+function isTodayEventDateHelper(): boolean {
     const eventDate = getEventDate();
 
     if (!eventDate) {
@@ -188,6 +188,29 @@ export function isTodayAfterEventDate(): boolean {
     console.log(`[isTodayAfterEventDate] today: ${today.toDateString()}, eventDate: ${targetDate.toDateString()}, nextDay: ${nextDay.toDateString()}, result: ${result}`);
 
     // 今日が翌日と一致する場合にtrue
+    return result;
+}
+
+// === 当日判定（厳密に当日のみ） ===
+export function isTodayEventDate(): boolean {
+    const eventDate = getEventDate();
+
+    if (!eventDate) {
+        // 未設定または "all" の場合は常に無効
+        console.log("[isTodayEventDate] eventDate is not set");
+        return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 時刻をリセット
+
+    const targetDate = new Date(eventDate);
+    targetDate.setHours(0, 0, 0, 0); // 時刻をリセット
+
+    const result = today.getTime() === targetDate.getTime();
+    console.log(`[isTodayEventDate] today: ${today.toDateString()}, eventDate: ${targetDate.toDateString()}, result: ${result}`);
+
+    // 今日がイベント日と一致する場合にtrue
     return result;
 }
 
