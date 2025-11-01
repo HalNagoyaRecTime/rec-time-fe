@@ -46,3 +46,14 @@ export function formatTimeRange(startTime: string | null, duration: string | nul
 
     return `${start}~${end}`;
 }
+
+/**
+ * HHmm形式の時刻を分に変換
+ * @param hhmm - "0930" 形式の文字列
+ * @returns 総分数
+ */
+export function convertTimeToMinutes(hhmm: string): number {
+    const hour = parseInt(hhmm.substring(0, 2), 10);
+    const minute = parseInt(hhmm.substring(2, 4), 10);
+    return hour * 60 + minute;
+}
