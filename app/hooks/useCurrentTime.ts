@@ -1,30 +1,46 @@
 import { useState, useEffect } from "react";
+import { getCurrentTime } from "~/utils/currentTimeManager";
 
 /**
  * 現在時刻を取得・管理するカスタムフック
- * デバッグ用の時刻オフセット機能付き
+ * currentTimeManager から時刻を取得し、コンポーネント再レンダリングをトリガーする
+ * デバッグ用の時刻操作機能に対応（time-changedイベントで即座に反映）
  */
 export function useCurrentTime(debugOffset: number = 0) {
     const [currentTime, setCurrentTime] = useState<Date>(() => {
-        const now = new Date();
-        return new Date(now.getTime() + debugOffset);
+        const time = getCurrentTime();
+        return new Date(time.getTime() + debugOffset);
     });
 
     useEffect(() => {
         // 初回とdebugOffset変更時に即座に更新
-        const now = new Date();
-        const adjustedTime = new Date(now.getTime() + debugOffset);
+        const time = getCurrentTime();
+        const adjustedTime = new Date(time.getTime() + debugOffset);
         setCurrentTime(adjustedTime);
 
-        // 1分ごとに現在時刻を更新
-        const timer = setInterval(() => {
-            const now = new Date();
-            // デバッグオフセットを加算（ミリ秒単位）
-            const adjustedTime = new Date(now.getTime() + debugOffset);
-            setCurrentTime(adjustedTime);
-        }, 60000);
+        // デバッグ時：setTime() で発火される time-changed イベントをリッスン
+        const handleTimeChanged = (event: Event) => {
+            if (event instanceof CustomEvent) {
+                const time = event.detail?.time || getCurrentTime();
+                const adjustedTime = new Date(time.getTime() + debugOffset);
+                setCurrentTime(adjustedTime);
+                console.log("[useCurrentTime] イベントから時刻更新:", adjustedTime);
+            }
+        };
 
-        return () => clearInterval(timer);
+        window.addEventListener('time-changed', handleTimeChanged);
+
+        // 通常動作時：1分ごとに更新（パフォーマンスを優先）
+        const timer = setInterval(() => {
+            const time = getCurrentTime();
+            const adjustedTime = new Date(time.getTime() + debugOffset);
+            setCurrentTime(adjustedTime);
+        }, 60000); // 60秒ごと
+
+        return () => {
+            clearInterval(timer);
+            window.removeEventListener('time-changed', handleTimeChanged);
+        };
     }, [debugOffset]);
 
     return currentTime;

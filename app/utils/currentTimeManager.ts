@@ -16,6 +16,7 @@ export function getCurrentTime(): Date {
 
 /**
  * 時刻を指定して固定（自動更新停止）
+ * UIに即座に反映させるためカスタムイベントを発火
  */
 export function setTime(time: Date) {
     _currentTime = time;
@@ -24,10 +25,16 @@ export function setTime(time: Date) {
         _autoUpdateInterval = null;
     }
     console.log("[currentTimeManager] 時刻を固定:", time);
+
+    // UIに即座に反映させるためカスタムイベントを発火
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('time-changed', { detail: { time } }));
+    }
 }
 
 /**
  * リセット（実時刻に戻して自動更新を再開）
+ * UIに即座に反映させるためカスタムイベントを発火
  */
 export function resetTime() {
     _currentTime = new Date();
@@ -37,6 +44,11 @@ export function resetTime() {
         }, 60000);
     }
     console.log("[currentTimeManager] リセット:", _currentTime);
+
+    // UIに即座に反映させるためカスタムイベントを発火
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('time-changed', { detail: { time: _currentTime } }));
+    }
 }
 
 // アプリ起動時に初期化
