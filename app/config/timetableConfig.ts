@@ -5,7 +5,7 @@
 
 export const TIMETABLE_CONFIG = {
     // タイムスロット設定
-    START_HOUR: 9, // 始まる時間
+    START_HOUR: 3, // 始まる時間
     STOP_HOUR: 18, // 終わる時間+時刻バー停止位置
     DISPLAY_END_HOUR: 18.5, // 表示として存在する時間（グリッド表示用）
     SLOTS_PER_HOUR: 6, // 1時間を6分割 → 1スロット = 10分
