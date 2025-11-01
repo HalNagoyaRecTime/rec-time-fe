@@ -1,6 +1,6 @@
 // app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Route } from "./+types/root";
 import Header from "./components/ui/header";
 import HamburgerMenu from "./components/ui/hamburger-menu";
@@ -8,9 +8,10 @@ import HamburgerMenuBtn from "./components/ui/hamburger-menu-btn";
 import Footer from "./components/ui/footer";
 import UpdateModal from "./components/modal/update-modal";
 import UpdateSuccessModal from "./components/modal/update-success-modal";
-import { useVersionCheck } from "./hooks/useVersionCheck";
+import { useAppStateSync } from "./hooks/useAppStateSync";
 import { markVersionAsSeen } from "./utils/versionCheckBackend";
 import { reinstallPWA } from "./utils/clearCache";
+import DataUpdateModal from "./components/modal/DataUpdateModal";
 import "./utils/fcmTest"; // FCM 테스트 함수 등록
 
 import "./app.css";
@@ -63,19 +64,45 @@ export default function App() {
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
     const [updateInfo, setUpdateInfo] = useState<{ version: string; message: string } | null>(null);
     const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
+    const [showDataUpdateModal, setShowDataUpdateModal] = useState(false);
 
-    // バージョンチェックフック
-    useVersionCheck({
+    // 🆕 コールバック関数をuseCallbackでメモ化（無限ループを防ぐ）
+    const handleVersionUpdated = useCallback((info: { version: string; message: string }) => {
+        setUpdateInfo(info);
+        setShowUpdateModal(true);
+    }, []);
+
+    // 🆕 アプリ状態同期フック（バージョン + データ更新の統合チェック）
+    // skipInitialMount: false - root.txaでの初期化を削除し、useAppStateSyncのみで統一
+    const { sync: syncAppState } = useAppStateSync({
         autoCheck: !isMaintenanceMode,
-        checkOnMount: true, // 起動時チェック（初回のみ）
-        checkOnFocus: false, // フォーカス時チェック無効（初期読み込み時の重複を防ぐ）
-        checkOnVisibilityChange: true, // バックグラウンド復帰時チェック
-        enablePeriodicCheck: true, // 定期チェック
-        onUpdateDetected: (info) => {
-            setUpdateInfo(info);
-            setShowUpdateModal(true);
-        },
+        checkOnMount: true,
+        skipInitialMount: false,
+        checkOnVisibilityChange: true,
+        checkOnFocus: true,
+        enablePeriodicCheck: true,
+        checkOnNetworkRecovery: true,
+        enableManualTrigger: true,
+        onVersionUpdated: handleVersionUpdated,
     });
+
+    // 🆕 グローバルに手動同期関数を公開
+    useEffect(() => {
+        (window as any).__appSync = syncAppState;
+    }, [syncAppState]);
+
+    // 🆕 データ更新モーダルイベントリスナー
+    useEffect(() => {
+        const handleDataUpdateModal = () => {
+            setShowDataUpdateModal(true);
+        };
+
+        window.addEventListener("data-updated-modal", handleDataUpdateModal);
+
+        return () => {
+            window.removeEventListener("data-updated-modal", handleDataUpdateModal);
+        };
+    }, []);
 
     useEffect(() => {
         // メンテナンスモードチェック
@@ -196,6 +223,12 @@ export default function App() {
 
             {/* アップデート完了モーダル */}
             {showUpdateSuccess && <UpdateSuccessModal onClose={() => setShowUpdateSuccess(false)} />}
+
+            {/* 🆕 データ更新モーダル */}
+            <DataUpdateModal
+                isOpen={showDataUpdateModal}
+                onClose={() => setShowDataUpdateModal(false)}
+            />
         </div>
     );
 }

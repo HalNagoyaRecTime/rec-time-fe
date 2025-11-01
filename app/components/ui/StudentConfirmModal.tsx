@@ -1,7 +1,7 @@
 import React from "react";
-import type { StudentData } from "~/hooks/useStudentData"
+import type { StudentData } from "~/hooks/useStudentData";
 
-interface StudentConfirmModalProps{
+interface StudentConfirmModalProps {
     studentData: StudentData;
     onConfirm: () => void;
 }
@@ -9,10 +9,8 @@ interface StudentConfirmModalProps{
 export function StudentConfirmModal({ studentData, onConfirm }: StudentConfirmModalProps) {
     return (
         <div className="fixed inset-0 z-100 flex h-screen w-full items-center justify-center bg-black/50">
-            <div className="w-80 rounded-lg border-1 borderblack bg-white p-6 shadow-lg">
-                <h3 className="mb-4 text-center text-lg font-semibold text-black">
-                    登録内容の確認
-                </h3>
+            <div className="borderblack w-80 rounded-lg border-1 bg-white p-6 shadow-lg">
+                <h3 className="mb-4 text-center text-lg font-semibold text-black">登録内容の確認</h3>
 
                 <div className="flex w-full flex-col rounded-md border border-gray-300 px-4 py-3 text-black">
                     <div className="flex">
@@ -35,20 +33,18 @@ export function StudentConfirmModal({ studentData, onConfirm }: StudentConfirmMo
                     </div>
                 </div>
 
-                <p className="mb-6 mt-4 text-center text-sm text-black">
-                    この内容で登録しました。
-                </p>
-        
+                <p className="mt-4 mb-6 text-center text-sm text-black">この内容で登録しますか？</p>
+
                 {/* 確認ボタン */}
                 <div className="flex">
                     <button
                         onClick={onConfirm}
                         className="flex-1 cursor-pointer rounded-lg bg-[#000D91] px-4 py-2 text-white transition-colors hover:bg-[#000D91]/80"
                     >
-                    OK
+                        OK
                     </button>
                 </div>
             </div>
         </div>
-    )
+    );
 }

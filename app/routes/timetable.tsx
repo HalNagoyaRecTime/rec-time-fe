@@ -5,14 +5,13 @@ import StudentInfoBar from "~/components/page/timetable/StudentInfoBar";
 import NextEventCard from "~/components/page/timetable/presenters/cards/NextEventCard";
 import NotificationWarningModal from "~/components/modal/NotificationWarningModal";
 import EventDetailModal from "~/components/modal/EventDetailModal";
-import React, { useState, useEffect, useRef } from "react";
-import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";
+import React, { useState, useEffect } from "react";
+import { getLastUpdatedDisplay, getStudentId } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
 import type { EventRow } from "~/api/student";
 import { getNextParticipatingEvent } from "~/utils/timetable/nextEventCalculator";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 import { scheduleAllNotifications, getNotificationSetting } from "~/utils/notifications";
-import { forceCheckVersion } from "~/utils/versionCheckBackend";
 import type { Message } from "~/types/timetable";
 import type { Route } from "./+types/timetable";
 
@@ -30,37 +29,27 @@ export default function Timetable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventRow | null>(null);
     const [isEventDetailModalOpen, setIsEventDetailModalOpen] = useState(false);
-    const hasFetchedRef = useRef(false);
 
     // === 現在時刻 ===
     const currentTime = useCurrentTime();
 
-    // === データ更新ハンドラー（スワイプでも再利用可能） ===
+    // === データ更新ハンドラー（スワイプ・ボタン操作） ===
+    // useAppStateSync が既にイベント取得を含むので、手動トリガーのみ実装
     const handleDataUpdate = async () => {
+        console.log('[Timetable] ユーザーによる手動更新');
         setIsLoading(true);
         setMessage({ type: null, content: "" });
-        const result = await downloadAndSaveEvents();
 
-        if (result.success) {
-            setEvents(result.events);
-            setMessage({ type: null, content: "" });
-
-            // データ更新時にバージョンチェック（強制・5分制限無視）
-            const { hasUpdate, latestVersion, message } = await forceCheckVersion();
-            if (hasUpdate) {
-                console.log(`[Timetable] 🆕 新バージョン検出: ${latestVersion}`);
-                // 更新モーダルはroot.tsxで表示されるので、ここでは通知イベント発火
-                window.dispatchEvent(
-                    new CustomEvent("version-update-detected", {
-                        detail: { version: latestVersion, message },
-                    })
-                );
-            }
-        } else {
-            console.error("[Timetable] データ更新失敗");
-            setMessage({ type: "error", content: "データ更新失敗" });
+        try {
+            // 統合同期関数を呼び出す（useAppStateSyncが チェック + イベント取得を実行）
+            await (window as any).__appSync?.();
+            // イベント取得結果は data-updated カスタムイベント経由で timetable に通知される
+        } catch (error) {
+            console.error("[Timetable] 同期エラー:", error);
+            setMessage({ type: "error", content: "更新エラー" });
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     // === 最終更新時間を取得 ===
@@ -76,6 +65,12 @@ export default function Timetable() {
         // カスタムイベントリスナー：データ更新時に呼ばれる
         const handleDataUpdated = () => {
             updateLastUpdated();
+
+            // イベントデータを再読み込み
+            const id = getStudentId();
+            const updatedEvents = loadEventsFromStorage(id);
+            setEvents(updatedEvents);
+            console.log("[Timetable] data-updated イベント受信 - イベント再読み込み: " + updatedEvents.length + "件");
         };
 
         window.addEventListener("data-updated", handleDataUpdated);
@@ -85,7 +80,8 @@ export default function Timetable() {
         };
     }, []);
 
-    // === 初期化：学籍番号とイベントデータを取得 ===
+    // === 初期化：学籍番号とイベントデータを読み込む ===
+    // (注：アプリ初期化時のデータ取得はroot.tsxで実行済み)
     useEffect(() => {
         const id = getStudentId();
         setStudentId(id);
@@ -101,32 +97,11 @@ export default function Timetable() {
             // メッセージは遷移するまで表示し続ける（setTimeoutを削除）
         }
 
-        // LocalStorageからイベントデータを読み込む
+        // LocalStorageからイベントデータを読み込む（root.tsxで既に取得・保存済み）
         const storedEvents = loadEventsFromStorage(id);
         setEvents(storedEvents);
 
-        // LocalStorageが空の場合、初回のみAPIからデータを取得
-        if (storedEvents.length === 0 && !hasFetchedRef.current) {
-            hasFetchedRef.current = true;
-            void handleDataUpdate();
-        }
-
-        // ページ表示時にバージョンチェック（ユーザーアクション = 5分制限回避）
-        void (async () => {
-            console.log("[Timetable] ページ表示時のバージョンチェック");
-            const { hasUpdate, latestVersion, message } = await forceCheckVersion();
-            if (hasUpdate) {
-                // 更新モーダルはroot.tsxで表示される
-                window.dispatchEvent(
-                    new CustomEvent("version-update-detected", {
-                        detail: {
-                            version: latestVersion,
-                            message,
-                        },
-                    })
-                );
-            }
-        })();
+        console.log("[Timetable] 初期化完了: LocalStorageから" + storedEvents.length + "件のイベントを読み込み");
     }, []);
 
     // === イベントデータが更新されたら通知をスケジュール ===
@@ -148,12 +123,17 @@ export default function Timetable() {
         }
     }, [events]);
 
+    // ポーリングはroot.tsxのuseAppStateSyncで対応済み（定期チェック5分）
+
     // === 次の予定を取得 ===
     const nextEvent = getNextParticipatingEvent(events);
 
     // === Pull to Refresh ハンドラー ===
     const handleRefresh = async () => {
+        // Pull to Refresh時は常にサーバーから取得（ユーザー操作による明示的な更新）
         await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // フル取得してから件数を記録
         await handleDataUpdate();
     };
 

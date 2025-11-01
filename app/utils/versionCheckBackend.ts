@@ -3,72 +3,23 @@
 import { getApiBaseUrl } from "~/config/apiConfig";
 
 const LAST_SEEN_VERSION_KEY = "app:last_seen_version";
-const LAST_CHECK_TIME_KEY = "app:last_check_time";
-const CHECK_INTERVAL = 5 * 60 * 1000; // 5分
 
 // APIリクエスト実行中フラグ（同時実行防止）
 let isChecking = false;
 
 /**
- * 最後のチェックから5分経過したか確認
- * iOS PWAのバックグラウンド停止に対応するため、タイマーではなく時刻差分で判定
- */
-function shouldCheckVersion(): boolean {
-    const lastCheckTime = localStorage.getItem(LAST_CHECK_TIME_KEY);
-
-    // 初回起動時
-    if (!lastCheckTime) {
-        return true;
-    }
-
-    const now = Date.now();
-    const lastCheckTimestamp = parseInt(lastCheckTime, 10);
-    const elapsed = now - lastCheckTimestamp;
-    const remaining = CHECK_INTERVAL - elapsed;
-
-    const elapsedMinutes = Math.floor(elapsed / 1000 / 60);
-    const remainingMinutes = Math.ceil(remaining / 1000 / 60);
-
-    console.log(`[VersionCheck] 前回チェック: ${new Date(lastCheckTimestamp).toLocaleTimeString("ja-JP")}`);
-    console.log(`[VersionCheck] 現在時刻: ${new Date(now).toLocaleTimeString("ja-JP")}`);
-    console.log(`[VersionCheck] 経過時間: ${elapsedMinutes}分 / 制限: 5分`);
-
-    if (remaining > 0) {
-        console.log(`[VersionCheck] 次回チェックまであと ${remainingMinutes}分 - スキップ`);
-        return false;
-    }
-
-    console.log(`[VersionCheck] 5分以上経過 - APIリクエスト実行`);
-    return true;
-}
-
-/**
  * バックエンドからバージョン情報を取得
  * GET /api/version - バージョン番号のみ取得（更新確認用）
- *
- * @param options.skipThrottle - trueの場合、5分制限を無視して即座にチェック（ユーザーアクション時）
  */
-export async function checkVersionFromBackend(options?: { skipThrottle?: boolean }): Promise<{
+export async function checkVersionFromBackend(): Promise<{
     hasUpdate: boolean;
     latestVersion: string;
     skipped?: boolean;
 }> {
-    const { skipThrottle = false } = options || {};
-
     // 既に実行中の場合はスキップ（React Strict Mode対応）
     if (isChecking) {
         console.log("[VersionCheck] 既にチェック実行中 - スキップ");
         return { hasUpdate: false, latestVersion: "実行中", skipped: true };
-    }
-
-    // 5分経過していなければスキップ（ただし skipThrottle=true の場合は無視）
-    if (!skipThrottle && !shouldCheckVersion()) {
-        return { hasUpdate: false, latestVersion: "チェックスキップ", skipped: true };
-    }
-
-    // skipThrottle=true の場合、5分制限を無視してチェック実行
-    if (skipThrottle) {
-        console.log("[VersionCheck] 🚀 スロットル回避モード - 即座にチェック実行");
     }
 
     isChecking = true;
@@ -85,11 +36,6 @@ export async function checkVersionFromBackend(options?: { skipThrottle?: boolean
 
         const data = await response.json();
         const latestVersion = data.version;
-
-        // チェック時刻を保存（タイムスタンプ: ミリ秒）
-        const now = Date.now();
-        localStorage.setItem(LAST_CHECK_TIME_KEY, now.toString());
-        console.log(`[VersionCheck] チェック時刻保存: ${new Date(now).toLocaleString("ja-JP")}`);
 
         // LocalStorageから最後に確認したバージョンを取得
         const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
@@ -122,51 +68,6 @@ export async function checkVersionFromBackend(options?: { skipThrottle?: boolean
 export function markVersionAsSeen(version: string): void {
     localStorage.setItem(LAST_SEEN_VERSION_KEY, version);
     console.log(`[VersionCheck] バージョン ${version} を確認済みとしてマーク`);
-}
-
-/**
- * 強制的にバージョンチェック（5分制限を無視）
- */
-export async function forceCheckVersion(): Promise<{
-    hasUpdate: boolean;
-    latestVersion: string;
-    message: string;
-}> {
-    // 最終チェック時刻をリセット
-    localStorage.removeItem(LAST_CHECK_TIME_KEY);
-
-    const result = await checkVersionFromBackend();
-
-    // 新バージョンがある場合、詳細情報を取得
-    let message = "最新版です";
-    if (result.hasUpdate) {
-        const detail = await getVersionDetail(result.latestVersion);
-        message = detail?.message || "新しいバージョンが利用可能です";
-    }
-
-    return {
-        hasUpdate: result.hasUpdate,
-        latestVersion: result.latestVersion,
-        message,
-    };
-}
-
-/**
- * 現在のバージョンを取得（表示用）
- */
-export async function getCurrentVersion(): Promise<string> {
-    try {
-        const API_BASE_URL = getApiBaseUrl();
-        const response = await fetch(`${API_BASE_URL}/version`, {
-            cache: "no-cache",
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        return data.version;
-    } catch (error) {
-        console.error("[VersionCheck] バージョン取得エラー:", error);
-        return "不明";
-    }
 }
 
 /**

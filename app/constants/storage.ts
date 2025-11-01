@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
     // イベント情報 イベント情報
     EVENTS: (id: string) => `events:list:${id}`,
     LAST_UPDATED: "student:payload:lastUpdated",
+    LAST_DATA_UPDATE_COUNT: "student:lastDataUpdateCount",  // 🆕 最後に確認したデータ更新ログの件数
 
     // 通知設定 通知設定
     NOTIFICATION_ENABLED: "notification:enabled",
