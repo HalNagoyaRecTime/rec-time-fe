@@ -5,6 +5,7 @@ import RecTimeFlame from "../../components/ui/recTimeFlame";
 import { useStudentData } from "~/hooks/useStudentData";
 import { getApiBaseUrl } from "~/config/apiConfig";
 import type { Route } from "./+types/birthday";
+import { StudentConfirmModal } from "~/components/ui/StudentConfirmModal";
 
 export const meta: Route.MetaFunction = () => {
     return [{ title: "生年月日入力 - recTime" }];
@@ -58,6 +59,8 @@ export default function Birthday() {
         "idle" | "invalid-date" | "not-found" | "auth-failed" | "network-error" | "no-student-id"
     >("idle");
     const [isLoading, setIsLoading] = useState(false);
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // 学籍番号の確認
     useEffect(() => {
@@ -227,7 +230,8 @@ export default function Birthday() {
             sessionStorage.removeItem("temp-birthday-day");
 
             // タイムテーブル画面へ遷移（登録完了パラメータ付き）
-            navigate("/timetable?registered=true");
+            // navigate("/timetable?registered=true");
+            setShowConfirmModal(true);
         } catch (err) {
             console.error(err);
             setStatus("network-error");
@@ -235,6 +239,11 @@ export default function Birthday() {
             setIsLoading(false);
         }
     };
+
+    const handleModalConfirm = () => {
+        setShowConfirmModal(false);
+        navigate("/timetable?registered=true");
+    }
 
     const isComplete = year.length === 4 && month.length === 2 && day.length === 2;
 
@@ -337,6 +346,12 @@ export default function Birthday() {
                     </button>
                 </div>
             </div>
+            {showConfirmModal && studentData && (
+                <StudentConfirmModal
+                    studentData={studentData}
+                    onConfirm={handleModalConfirm}
+                />
+            )}
         </RecTimeFlame>
     );
 }
