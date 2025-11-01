@@ -40,7 +40,7 @@ export default function AllSchedulesModal({ isOpen, events, onClose, onClosing }
         handleScrollTouchEnd,
         createHandlerbarTouchHandlers,
         resetTranslateY,
-    } = useModalGestureControl(scrollRef, isOpen);
+    } = useModalGestureControl(scrollRef);
 
     // モーダル閉じる処理 hook を使用
     const { isClosingState, handleClose, handleBackdropClick } = useModalCloseHandler(onClose, onClosing);
