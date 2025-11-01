@@ -1,10 +1,10 @@
 // === イベントリストアイテムコンポーネント（アコーディオン式） ===
-import React, { useState } from "react";
+import React from "react";
 import type { EventRow } from "~/api/student";
-import { formatTime } from "~/utils/timetable/nextEventCalculator";
-import ZoomableImageModal from "./ZoomableImageModal";
-import { getEventMapConfig } from "~/config/eventMapConfig";
-import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { useAccordion } from "~/hooks/useAccordion";
+import EventDetailCard from "./EventDetailCard";
+import EventInfoDisplay from "../EventInfoDisplay";
+import EventImageDisplay from "../EventImageDisplay";
 
 interface EventListItemProps {
     event: EventRow;
@@ -14,110 +14,56 @@ interface EventListItemProps {
 /**
  * イベントを小さく表示するリストアイテム
  * - タップするとアコーディオン式に展開・縮小
+ * - 展開時は EventDetailCard を使用
  */
 export default function EventListItem({ event, isPast = false }: EventListItemProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const { isExpanded, toggle } = useAccordion(false);
 
-    // イベントIDから地図設定を取得
-    const mapConfig = getEventMapConfig(event.f_event_id);
+    // 展開時は詳細カード表示
+    if (isExpanded) {
+        return (
+            <div
+                className={`w-full cursor-pointer rounded-md bg-gray-600/4 p-3 transition-opacity ${
+                    isPast ? "opacity-60" : ""
+                }`}
+                onClick={toggle}
+            >
+                <EventDetailCard event={event} status={null} />
+                <div className="mt-1 text-center text-xs text-gray-500">タップで縮小 ↑</div>
+            </div>
+        );
+    }
 
-    const handleToggle = () => {
-        setIsExpanded(!isExpanded);
-    };
-
-    const handleImageClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // アコーディオンのトグルを防ぐ
-        setIsImageModalOpen(true);
-    };
-
-    // 外部リンクを開く
-    const handleExternalLinkClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // アコーディオンのトグルを防ぐ
-        if (mapConfig.externalUrl) {
-            window.open(mapConfig.externalUrl, "_blank", "noopener,noreferrer");
-        }
-    };
-
+    // 縮小時は基本情報のみ表示
     return (
         <div
-            className={`w-full cursor-pointer rounded-md bg-gray-600/4 p-3 transition-opacity ${isPast ? "opacity-60" : ""}`}
-            onClick={handleToggle}
+            className={`w-full cursor-pointer rounded-md bg-gray-600/4 p-3 transition-opacity ${
+                isPast ? "opacity-60" : ""
+            }`}
+            onClick={toggle}
         >
-            <div className={isExpanded ? "flex flex-col gap-3" : "flex"}>
+            <div className="flex gap-3">
                 {/* イベント情報エリア */}
-                <div className={isExpanded ? "w-full" : "flex w-full min-w-0 flex-1 flex-col gap-2"}>
+                <div className="flex w-full min-w-0 flex-1 flex-col gap-2">
                     {/* タイトル */}
                     <div className="relative flex items-center">
-                        <div
-                            className={`absolute rounded-full bg-blue-950 ${isExpanded ? "h-6 w-1" : "h-4 w-[2px]"}`}
-                        ></div>
-                        <h4
-                            className={`overflow-hidden pl-2 font-bold text-ellipsis whitespace-nowrap text-gray-900 ${
-                                isExpanded ? "pb-1 text-2xl" : "pb-[2px] text-sm"
-                            }`}
-                        >
+                        <div className="absolute h-4 w-[2px] rounded-full bg-blue-950"></div>
+                        <h4 className="overflow-hidden pb-[2px] pl-2 text-sm font-bold text-ellipsis whitespace-nowrap text-gray-900">
                             {event.f_event_name || "イベント"}
                         </h4>
                     </div>
 
-                    {/* 集合場所・時間 */}
-                    <div className={`pl-2 text-gray-700 ${isExpanded ? "text-sm" : "text-sm"}`}>
-                        {event.f_place && (
-                            <p className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                <span className="font-medium">集合場所：</span>
-                                {event.f_place}
-                            </p>
-                        )}
-                        <p className="overflow-hidden text-ellipsis whitespace-nowrap">
-                            <span className="font-medium">集合時間：</span>
-                            {formatTime(event.f_gather_time)}
-                            <span className="ml-2">
-                                <span className="font-medium">開始時刻：</span>
-                                {formatTime(event.f_start_time)}
-                            </span>
-                        </p>
+                    {/* 集合場所・時間（コンパクト） */}
+                    <div className="pl-2">
+                        <EventInfoDisplay event={event} showGatherTime={true} showPlace={true} timeFormat="compact" />
                     </div>
                 </div>
 
-                {/* 地図画像 */}
-                <div
-                    className={isExpanded ? "cursor-pointer overflow-hidden rounded-lg" : "w-22 flex-shrink-0"}
-                    onClick={handleImageClick}
-                >
-                    <img
-                        src={mapConfig.imageUrl}
-                        alt={isExpanded ? "競技場マップ" : "地図"}
-                        className={
-                            isExpanded
-                                ? "h-auto w-full object-cover transition-opacity hover:opacity-80"
-                                : "h-20 w-full rounded object-cover transition-opacity hover:opacity-80"
-                        }
-                    />
+                {/* サムネイル画像 */}
+                <div className="flex-shrink-0">
+                    <EventImageDisplay event={event} mode="thumbnail" />
                 </div>
             </div>
-
-            {/* 外部リンクボタン（展開時かつURLが設定されている場合のみ表示） */}
-            {isExpanded && mapConfig.externalUrl && (
-                <button
-                    onClick={handleExternalLinkClick}
-                    className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900 active:bg-blue-800"
-                >
-                    {mapConfig.linkLabel || "競技詳細を確認する"}
-                    <FaArrowUpRightFromSquare className="text-xs" />
-                </button>
-            )}
-
-            {/* 縮小ヒント（展開時のみ） */}
-            {isExpanded && <div className="mt-1 text-center text-xs text-gray-500">タップで縮小 ↑</div>}
-
-            {/* 地図拡大表示モーダル */}
-            <ZoomableImageModal
-                images={[{ src: mapConfig.imageUrl, title: event.f_event_name || "競技場マップ" }]}
-                initialIndex={0}
-                isOpen={isImageModalOpen}
-                onClose={() => setIsImageModalOpen(false)}
-            />
         </div>
     );
 }

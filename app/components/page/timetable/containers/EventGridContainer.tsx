@@ -12,6 +12,7 @@ interface EventGridContainerProps {
     eventLayout: Map<string, EventLayout>;
     studentId: string | null;
     currentTime?: Date;
+    onEventClick?: (event: EventRow) => void;
 }
 
 /**
@@ -30,6 +31,7 @@ export default function EventGridContainer({
     eventLayout,
     studentId,
     currentTime,
+    onEventClick,
 }: EventGridContainerProps) {
     // 参加者チェック
     const isParticipant = (event: EventRow): boolean => {
@@ -89,6 +91,7 @@ export default function EventGridContainer({
             displayEvents={formattedEvents}
             overflowCount={overflowCount}
             currentTime={currentTime}
+            onEventClick={onEventClick}
         />
     );
 }

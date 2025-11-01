@@ -4,6 +4,7 @@ import TimeSlotGridWithEvents from "~/components/page/timetable/containers/TimeS
 import StudentInfoBar from "~/components/page/timetable/StudentInfoBar";
 import NextEventCard from "~/components/page/timetable/presenters/cards/NextEventCard";
 import NotificationWarningModal from "~/components/modal/NotificationWarningModal";
+import EventDetailModal from "~/components/modal/EventDetailModal";
 import React, { useState, useEffect, useRef } from "react";
 import { downloadAndSaveEvents, getStudentId, getLastUpdatedDisplay } from "~/utils/dataFetcher";
 import { loadEventsFromStorage } from "~/utils/loadEventsFromStorage";
@@ -27,6 +28,8 @@ export default function Timetable() {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [showNotificationWarning, setShowNotificationWarning] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventRow | null>(null);
+    const [isEventDetailModalOpen, setIsEventDetailModalOpen] = useState(false);
     const hasFetchedRef = useRef(false);
 
     // === 現在時刻 ===
@@ -154,6 +157,20 @@ export default function Timetable() {
         await handleDataUpdate();
     };
 
+    // === イベント詳細モーダルを開く ===
+    const handleOpenEventDetail = (event: EventRow) => {
+        setSelectedEventForDetail(event);
+        setIsEventDetailModalOpen(true);
+        setIsModalOpen(true);
+    };
+
+    // === イベント詳細モーダルを閉じる ===
+    const handleCloseEventDetail = () => {
+        setIsEventDetailModalOpen(false);
+        setIsModalOpen(false);
+        setSelectedEventForDetail(null);
+    };
+
     // === 時刻フォーマット（HH:MM） ===
     const formatTimeOnly = (dateString: string | null): string | null => {
         if (!dateString) return null;
@@ -186,6 +203,7 @@ export default function Timetable() {
                         studentId={studentId}
                         loading={isLoading}
                         currentTime={currentTime}
+                        onEventClick={handleOpenEventDetail}
                     />
 
                     {/* 最終更新時間 */}
@@ -200,6 +218,14 @@ export default function Timetable() {
             <NotificationWarningModal
                 isVisible={showNotificationWarning}
                 onDismiss={() => setShowNotificationWarning(false)}
+            />
+
+            {/* イベント詳細モーダル */}
+            <EventDetailModal
+                isOpen={isEventDetailModalOpen}
+                event={selectedEventForDetail}
+                onClose={handleCloseEventDetail}
+                onClosing={() => setIsModalOpen(false)}
             />
         </RecTimeFlame>
     );

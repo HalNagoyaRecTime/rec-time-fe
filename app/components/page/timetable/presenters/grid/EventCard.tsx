@@ -12,12 +12,13 @@ interface EventCardProps {
     event: EventRow;
     layout: EventLayout;
     isParticipant: boolean;
+    onClick?: () => void;
 }
 
 /**
  * イベント1件を表示するカード
  */
-export default function EventCard({ event, layout, isParticipant }: EventCardProps) {
+export default function EventCard({ event, layout, isParticipant, onClick }: EventCardProps) {
     const width = getOptimalWidth(layout.actualColumns);
     const left = getOptimalLeft(layout.positionIndex, layout.actualColumns);
 
@@ -58,6 +59,7 @@ export default function EventCard({ event, layout, isParticipant }: EventCardPro
                 zIndex: 10,
             }}
             title={`${event.f_event_name || "イベント"} - ${formatTime(event.f_start_time)} (${formatActualDuration(durationMinutes)}) ${isParticipant ? "(参加予定)" : ""}`}
+            onClick={onClick}
         >
             {/* 高さに余裕がある場合のみ縦線を表示 */}
             <div className={`mr-2 h-full w-1 rounded-full ${isParticipant ? "bg-white" : "bg-blue-950"}`}></div>

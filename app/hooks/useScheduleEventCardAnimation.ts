@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 // アニメーションステートマシン：idle → opening → open → closing → idle
 type AnimationState = "idle" | "opening" | "open" | "closing";
@@ -37,7 +37,22 @@ export function useScheduleEventCardAnimation(
         };
     }, []);
 
+    // アニメーション完了後のクリーンアップ処理を共通化
+    const cleanupAnimation = useCallback(() => {
+        setIsAnimating(false);
+        setRotationDeg((prev) => prev % 360);
+        if (animationTimeoutRef.current) {
+            clearTimeout(animationTimeoutRef.current);
+            animationTimeoutRef.current = null;
+        }
+        if (recoveryTimeoutRef.current) {
+            clearTimeout(recoveryTimeoutRef.current);
+            recoveryTimeoutRef.current = null;
+        }
+    }, []);
+
     // リカバリ機構：アニメーションが長時間スタックしている場合、UIの壊れた状態を防ぐためにリセット
+    // ただしnomalなアニメーション完了時には適切にタイマーをクリアする
     useEffect(() => {
         if (animationState !== "idle") {
             // 既存のリカバリタイムアウトをクリア
@@ -45,19 +60,19 @@ export function useScheduleEventCardAnimation(
                 clearTimeout(recoveryTimeoutRef.current);
             }
 
-            // スタックしたアニメーション状態から復帰するために2秒のタイムアウトを設定
+            // スタックしたアニメーション状態から復帰するために10秒のタイムアウトを設定
+            // （通常のアニメーションは600ms + 200ms = 800ms以内に完了）
             recoveryTimeoutRef.current = setTimeout(() => {
                 console.warn(
                     "[useScheduleEventCardAnimation] Animation recovery triggered - State was stuck in",
                     animationState
                 );
-                setIsAnimating(false);
+                cleanupAnimation();
                 setAnimationState("idle");
                 setShowModal(false);
-                setRotationDeg((prev) => prev % 360);
-            }, 2000);
+            }, 10000); // 10秒に延長
         }
-    }, [animationState]);
+    }, [animationState, cleanupAnimation]);
 
     // ステートマシンとバリデーションを使用した堅牢なモーダルオープン
     const handleOpenModal = () => {
@@ -68,6 +83,12 @@ export function useScheduleEventCardAnimation(
                 animationState
             );
             return;
+        }
+
+        // リカバリタイマーをクリア（開始時に古いタイマーを除去）
+        if (recoveryTimeoutRef.current) {
+            clearTimeout(recoveryTimeoutRef.current);
+            recoveryTimeoutRef.current = null;
         }
 
         console.log("[useScheduleEventCardAnimation] Opening modal - Starting animation");
@@ -91,14 +112,7 @@ export function useScheduleEventCardAnimation(
         // 600msでアニメーション完了とリセット
         setTimeout(() => {
             console.log("[useScheduleEventCardAnimation] Opening animation complete");
-            setIsAnimating(false);
-            // 360で余りを取ってリセットして、非常に大きい回転値を防止
-            setRotationDeg((prev) => prev % 360);
-            // タイムアウトRefをクリア
-            if (animationTimeoutRef.current) {
-                clearTimeout(animationTimeoutRef.current);
-                animationTimeoutRef.current = null;
-            }
+            cleanupAnimation();
         }, 600);
     };
 
@@ -113,6 +127,12 @@ export function useScheduleEventCardAnimation(
             return;
         }
 
+        // リカバリタイマーをクリア（開始時に古いタイマーを除去）
+        if (recoveryTimeoutRef.current) {
+            clearTimeout(recoveryTimeoutRef.current);
+            recoveryTimeoutRef.current = null;
+        }
+
         console.log("[useScheduleEventCardAnimation] Closing modal - Starting reverse animation");
         setIsAnimating(true);
         setAnimationState("closing");
@@ -123,20 +143,26 @@ export function useScheduleEventCardAnimation(
         // 600msでアニメーション完了
         setTimeout(() => {
             console.log("[useScheduleEventCardAnimation] Closing animation complete");
-            setIsAnimating(false);
-            // 360で余りを取ってリセット
-            setRotationDeg((prev) => prev % 360);
-            // タイムアウトRefをクリア
-            if (animationTimeoutRef.current) {
-                clearTimeout(animationTimeoutRef.current);
-                animationTimeoutRef.current = null;
-            }
+            cleanupAnimation();
         }, 600);
     };
 
     // アニメーション完了後の最終的なモーダルクローズ
     const handleCloseModal = () => {
         console.log("[useScheduleEventCardAnimation] Modal fully closed");
+
+        // リカバリタイマーをクリア
+        if (recoveryTimeoutRef.current) {
+            clearTimeout(recoveryTimeoutRef.current);
+            recoveryTimeoutRef.current = null;
+        }
+
+        // アニメーションタイマーをクリア
+        if (animationTimeoutRef.current) {
+            clearTimeout(animationTimeoutRef.current);
+            animationTimeoutRef.current = null;
+        }
+
         setShowModal(false);
         setAnimationState("idle");
         onModalStateChange?.(false);

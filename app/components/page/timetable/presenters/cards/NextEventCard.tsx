@@ -1,13 +1,15 @@
 // === 次の予定カードコンポーネント（ルーティング層） ===
 import React from "react";
 import type { EventRow } from "~/api/student";
-import { areAllEventsFinished } from "~/utils/timetable/nextEventCalculator";
+import { areAllEventsFinished } from "~/utils/timetable/eventStatusChecker";
 import { isTodayAfterEventDate, isTodayEventDate } from "~/utils/notifications";
+import { useScheduleEventCardAnimation } from "~/hooks/useScheduleEventCardAnimation";
+import { FlipCard } from "~/components/ui/FlipCard";
 import LoginPromptCard from "./LoginPromptCard";
 import ThanksCard from "./ThanksCard";
 import NextDayCard from "./NextDayCard";
-import NoEventCard from "../event/NoEventCard";
 import ScheduleEventCard from "../../containers/ScheduleEventCard";
+import AllSchedulesModal from "~/components/modal/AllSchedulesModal";
 
 interface NextEventCardProps {
     event: EventRow | null;
@@ -49,7 +51,40 @@ export default function NextEventCard({ event, isLoggedIn, allEvents = [], onMod
             return <ThanksCard />;
         }
 
-        return <NoEventCard hasRegisteredEvents={hasRegisteredEvents} />;
+        // NoEventCard の場合も useScheduleEventCardAnimation を使用
+        // これにより ScheduleEventCard と同じアニメーション動作を実現
+        const { showModal, rotationDeg, isAnimating, handleOpenModal, handleModalClosing, handleCloseModal } =
+            useScheduleEventCardAnimation(onModalStateChange);
+
+        // 参加予定イベントがない場合のモーダル開き制御
+        const handleCardClick = hasRegisteredEvents ? handleOpenModal : () => {};
+
+        return (
+            <>
+                <FlipCard rotationDeg={rotationDeg} isAnimating={isAnimating} onClick={handleCardClick}>
+                    {/* 表面 */}
+                    <FlipCard.Front className="flex flex-col items-center gap-3 rounded-md bg-[#000D91]/80 px-3 py-16 text-black shadow-2xl hover:bg-[#000D91]/90 active:scale-[0.98]">
+                        <h3 className="font-title text-lg font-black text-white [@media(max-height:680px)]:text-base">
+                            {hasRegisteredEvents ? "本日の参加予定イベントはありません" : "出場登録がされていません"}
+                        </h3>
+                        {!hasRegisteredEvents && <p className="text-sm text-white/80">出場データが入力されるまでお待ちください</p>}
+                    </FlipCard.Front>
+
+                    {/* 裏面 */}
+                    <FlipCard.Back className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-md bg-[#000D91] px-3 py-16 text-black shadow-2xl" />
+                </FlipCard>
+
+                {/* 全予定表示モーダル */}
+                {hasRegisteredEvents && (
+                    <AllSchedulesModal
+                        isOpen={showModal}
+                        events={allEvents}
+                        onClose={handleCloseModal}
+                        onClosing={handleModalClosing}
+                    />
+                )}
+            </>
+        );
     }
 
     // 次の予定イベントがある場合

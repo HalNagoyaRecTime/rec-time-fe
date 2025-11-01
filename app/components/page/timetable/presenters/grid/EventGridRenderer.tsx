@@ -18,6 +18,7 @@ interface EventGridRendererProps {
     }>;
     overflowCount: number;
     currentTime?: Date;
+    onEventClick?: (event: EventRow) => void;
 }
 
 /**
@@ -32,7 +33,7 @@ interface EventGridRendererProps {
  *
  * ロジックなし：すべてpropsから受け取る
  */
-export default function EventGridRenderer({ timeSlots, displayEvents, currentTime }: EventGridRendererProps) {
+export default function EventGridRenderer({ timeSlots, displayEvents, currentTime, onEventClick }: EventGridRendererProps) {
     const hourHeight = SLOTS_PER_HOUR * SLOT_HEIGHT_PX;
 
     return (
@@ -92,7 +93,13 @@ export default function EventGridRenderer({ timeSlots, displayEvents, currentTim
                     }
 
                     return (
-                        <EventCard key={event.f_event_id} event={event} layout={layout} isParticipant={isParticipant} />
+                        <EventCard
+                            key={event.f_event_id}
+                            event={event}
+                            layout={layout}
+                            isParticipant={isParticipant}
+                            onClick={() => onEventClick?.(event)}
+                        />
                     );
                 })}
             </div>

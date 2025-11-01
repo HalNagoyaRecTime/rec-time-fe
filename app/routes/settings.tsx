@@ -65,7 +65,7 @@ export default function Settings() {
                         <div className="relative mb-1 flex w-full items-center justify-center">
                             <h2
                                 className="cursor-pointer text-3xl font-medium text-white select-none"
-                                onPointerDown={(e) => {
+                                onPointerDown={() => {
                                     if (!studentData?.f_student_num) return;
                                     const timeoutId = setTimeout(() => {
                                         const text = studentData.f_student_num.toString();

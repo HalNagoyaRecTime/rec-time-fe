@@ -14,13 +14,7 @@ export function isEventOngoing(event: { f_start_time?: string | null; f_duration
     const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
     const startTime = parseInt(event.f_start_time, 10);
-    const duration = parseInt(event.f_duration, 10);
-
-    // 終了時刻を計算（HHmm形式）
-    const startHour = Math.floor(startTime / 100);
-    const startMinute = startTime % 100;
-    const totalMinutes = startHour * 60 + startMinute + duration;
-    const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
+    const endTime = calculateEventEndTime(event as EventRow);
 
     return currentTime >= startTime && currentTime <= endTime;
 }
@@ -36,17 +30,11 @@ export function isCallingOut(event: { f_gather_time?: string | null; f_start_tim
     const now = getCurrentTime();
     const currentTime = now.getHours() * 100 + now.getMinutes();
     const gatherTime = parseInt(event.f_gather_time, 10);
-    const startTime = parseInt(event.f_start_time, 10);
-    const duration = parseInt(event.f_duration, 10);
-
-    // 終了時刻を計算（HHmm形式）
-    const startHour = Math.floor(startTime / 100);
-    const startMinute = startTime % 100;
-    const totalMinutes = startHour * 60 + startMinute + duration;
-    const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
+    const endTime = calculateEventEndTime(event as EventRow);
 
     // 集合時刻が過ぎて、イベント終了時刻に達していない場合
-    return currentTime >= gatherTime && currentTime < endTime;
+    // 終了時刻の時点でも呼び出し中状態を継続
+    return currentTime >= gatherTime && currentTime <= endTime;
 }
 
 /**

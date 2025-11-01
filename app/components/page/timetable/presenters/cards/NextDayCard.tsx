@@ -15,7 +15,7 @@ export default function NextDayCard({}: NextDayCardProps) {
         <FlipCard rotationDeg={rotationDeg} isAnimating={isAnimating} onClick={handleCardFlip}>
             {/* 表面 - シンプル */}
             <FlipCard.Front className="flex flex-col items-center justify-center gap-2 rounded-md bg-[#000D91] px-6 pt-14 text-center drop-shadow-2xl hover:bg-[#000D91]/90 active:scale-[0.98]">
-                <p className="font-title text-lg font-black text-white">本日の参加予定イベントはありません</p>
+                <p className="font-title font-black text-white">本日の参加予定イベントはありません</p>
                 <p className="mt-6 mb-4 ml-auto text-xs text-white/70">タップで何かある →</p>
             </FlipCard.Front>
 

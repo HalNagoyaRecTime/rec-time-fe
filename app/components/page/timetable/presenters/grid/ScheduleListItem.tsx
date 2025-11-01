@@ -1,7 +1,8 @@
 // === 予定リストアイテムコンポーネント ===
 import React from "react";
 import type { EventRow } from "~/api/student";
-import { formatTime, getTimeUntilEvent, isGatherTimePassed } from "~/utils/timetable/nextEventCalculator";
+import { formatTime, getTimeUntilEvent } from "~/utils/timetable/nextEventCalculator";
+import { isGatherTimePassed } from "~/utils/timetable/eventStatusChecker";
 import { useCurrentTime } from "~/hooks/useCurrentTime";
 
 interface ScheduleListItemProps {

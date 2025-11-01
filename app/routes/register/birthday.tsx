@@ -218,7 +218,7 @@ export default function Birthday() {
                 f_number: data.f_number || null,
                 f_name: data.f_name || null,
             };
-            registerStudent(studentId, birthday, studentData);
+            await registerStudent(studentId, birthday, studentData);
 
             // sessionStorageをクリア（学籍番号と生年月日の入力データ）
             sessionStorage.removeItem("temp-student-id");

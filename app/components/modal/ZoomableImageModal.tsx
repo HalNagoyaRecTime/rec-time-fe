@@ -10,13 +10,13 @@ interface ImageData {
 }
 
 interface ZoomableImageModalProps {
-    images: ImageData[];
-    initialIndex: number;
+    images?: ImageData[];
+    initialIndex?: number;
     isOpen: boolean;
     onClose: () => void;
 }
 
-export default function ZoomableImageModal({ images, initialIndex, isOpen, onClose }: ZoomableImageModalProps) {
+export default function ZoomableImageModal({ images = [], initialIndex = 0, isOpen, onClose }: ZoomableImageModalProps) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
     const [scale, setScale] = useState(1);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -340,6 +340,8 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
 
     // PCのマウスクリック対応
     const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+
         // タッチイベントと重複しないように、タッチデバイスでは無効化
         if ("ontouchstart" in window) return;
 
@@ -376,7 +378,8 @@ export default function ZoomableImageModal({ images, initialIndex, isOpen, onClo
                     opacity: isClosing ? 0 : swipeDownDistance > 0 ? Math.max(0, 1 - swipeDownDistance / 600) : 1,
                     transition: isClosing ? "opacity 0.3s ease-out" : "none",
                 }}
-                onClick={() => {
+                onClick={(e) => {
+                    e.stopPropagation();
                     // PC環境でのみ、背景クリックでモーダルを閉じる
                     if (!("ontouchstart" in window)) {
                         onClose();

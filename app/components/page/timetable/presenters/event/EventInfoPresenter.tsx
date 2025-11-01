@@ -1,6 +1,7 @@
 import React from "react";
 import type { EventRow } from "~/api/student";
-import { formatTime, getTimeUntilEvent, isEventOngoing, isCallingOut } from "~/utils/timetable/nextEventCalculator";
+import { formatTime, getTimeUntilEvent } from "~/utils/timetable/nextEventCalculator";
+import { isEventOngoing, isCallingOut } from "~/utils/timetable/eventStatusChecker";
 
 interface EventInfoPresenterProps {
     event: EventRow;

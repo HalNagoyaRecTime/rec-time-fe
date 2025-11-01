@@ -14,12 +14,13 @@ interface TimeSlotGridWithEventsProps {
     studentId: string | null;
     loading: boolean;
     currentTime?: Date; // 現在時刻（オプション）
+    onEventClick?: (event: EventRow) => void;
 }
 
 /**
  * タイムテーブル全体のコンテナコンポーネント
  */
-export default function TimeSlotGridWithEvents({ displayEvents, studentId, currentTime }: TimeSlotGridWithEventsProps) {
+export default function TimeSlotGridWithEvents({ displayEvents, studentId, currentTime, onEventClick }: TimeSlotGridWithEventsProps) {
     // タイムスロット生成（SLOTS_PER_HOUR で分割間隔を計算）
     const slotIntervalMinutes = 60 / SLOTS_PER_HOUR;
     const timeSlots = generateTimeSlots(START_HOUR, DISPLAY_END_HOUR, slotIntervalMinutes);
@@ -41,6 +42,7 @@ export default function TimeSlotGridWithEvents({ displayEvents, studentId, curre
                     eventLayout={eventLayout}
                     studentId={studentId}
                     currentTime={currentTime}
+                    onEventClick={onEventClick}
                 />
             </div>
         </div>

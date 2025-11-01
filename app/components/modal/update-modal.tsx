@@ -1,5 +1,5 @@
 // 更新モーダルコンポーネント
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 interface UpdateModalProps {
     onUpdate: () => Promise<void>;
