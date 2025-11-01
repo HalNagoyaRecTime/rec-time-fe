@@ -61,6 +61,13 @@ export default function Birthday() {
     const [isLoading, setIsLoading] = useState(false);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingStudentData, setPendingStudentData] = useState<{
+        f_student_id: string;
+        f_student_num: string;
+        f_class?: string | null;
+        f_number?: string | null;
+        f_name?: string | null;
+    } | null>(null);
 
     // 学籍番号の確認
     useEffect(() => {
@@ -229,8 +236,8 @@ export default function Birthday() {
             sessionStorage.removeItem("temp-birthday-month");
             sessionStorage.removeItem("temp-birthday-day");
 
-            // タイムテーブル画面へ遷移（登録完了パラメータ付き）
-            // navigate("/timetable?registered=true");
+            // 確認モーダル表示用にデータを保存して、モーダルを表示
+            setPendingStudentData(studentData);
             setShowConfirmModal(true);
         } catch (err) {
             console.error(err);
@@ -346,9 +353,9 @@ export default function Birthday() {
                     </button>
                 </div>
             </div>
-            {showConfirmModal && studentData && (
+            {showConfirmModal && pendingStudentData && (
                 <StudentConfirmModal
-                    studentData={studentData}
+                    studentData={pendingStudentData}
                     onConfirm={handleModalConfirm}
                 />
             )}
