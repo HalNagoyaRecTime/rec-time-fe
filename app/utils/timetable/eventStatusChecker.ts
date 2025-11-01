@@ -106,7 +106,6 @@ function calculateEventEndTime(event: EventRow): number {
     const startHour = Math.floor(startTime / 100);
     const startMinute = startTime % 100;
     const totalMinutes = startHour * 60 + startMinute + duration;
-    const endTime = Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
 
-    return endTime;
+    return Math.floor(totalMinutes / 60) * 100 + (totalMinutes % 60);
 }
