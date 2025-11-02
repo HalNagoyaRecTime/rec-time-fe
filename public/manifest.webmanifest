@@ -1,7 +1,7 @@
 {
   "name": "RecTime PWA",
   "short_name": "RecTime",
-  "description": "学籍番号でイベントデータを取得するPWAアプリ",
+  "description": "レクリエーション呼び出しアプリ",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -73,8 +73,6 @@ const DB_VERSION = 1;
 const STORE_NAME = "scheduledNotifications";
 
 let checkLoopRunning = false;
-let keepAliveInterval = null;
-const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5分ごと
 
 // === IndexedDB初期化 ===
 function openDatabase() {
@@ -199,9 +197,6 @@ self.addEventListener("message", async (event) => {
         if (!checkLoopRunning) {
             startNotificationCheckLoop();
         }
-
-        // オフライン対応のKeep-Alive開始
-        startKeepAlive();
     }
 
     // 通知を停止
@@ -218,188 +213,8 @@ self.addEventListener("message", async (event) => {
         }
 
         checkLoopRunning = false;
-        stopKeepAlive();
     }
 });
-
-// === Keep-Alive機能（iOS PWA向け強化版） ===
-let keepAliveFailCount = 0;
-let currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-
-// API Base URLを取得
-function getApiBaseUrl() {
-    // 本番環境のデフォルトURL（Cloudflare Workers）
-    const defaultUrl = "https://rec-time-be.ellan122316.workers.dev";
-
-    // locationのhostnameで環境を判定
-    if (self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1") {
-        return "http://localhost:8787";
-    }
-
-    return defaultUrl;
-}
-
-const API_BASE_URL = getApiBaseUrl();
-
-function startKeepAlive() {
-    if (keepAliveInterval) {
-        return;
-    }
-
-    // イベントまでの時間で間隔を調整
-    adjustKeepAliveInterval();
-
-
-    // 即座に1回実行
-    performKeepAlive();
-
-    // 定期的に実行
-    keepAliveInterval = setInterval(() => {
-        performKeepAlive();
-    }, currentKeepAliveInterval);
-}
-
-function stopKeepAlive() {
-    if (keepAliveInterval) {
-        clearInterval(keepAliveInterval);
-        keepAliveInterval = null;
-        keepAliveFailCount = 0;
-        currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-    }
-}
-
-// イベントまでの時間で間隔を調整（iOS PWA向けに短縮）
-async function adjustKeepAliveInterval() {
-    try {
-        const notifications = await getNotificationsFromIndexedDB();
-
-        if (notifications.length === 0) {
-            currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-            return;
-        }
-
-        const now = new Date();
-        const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}`;
-
-        // 最も近い通知時刻を見つける
-        let minDiff = Infinity;
-
-        for (const notification of notifications) {
-            const notifTime = notification.notification_time;
-            if (!notifTime || notification.notified) continue;
-
-            // 時刻差を分単位で計算
-            const notifHour = parseInt(notifTime.substring(0, 2), 10);
-            const notifMin = parseInt(notifTime.substring(2, 4), 10);
-            const currentHour = parseInt(currentTimeStr.substring(0, 2), 10);
-            const currentMin = parseInt(currentTimeStr.substring(2, 4), 10);
-
-            const notifTotalMin = notifHour * 60 + notifMin;
-            const currentTotalMin = currentHour * 60 + currentMin;
-            const diff = notifTotalMin - currentTotalMin;
-
-            if (diff > 0 && diff < minDiff) {
-                minDiff = diff;
-            }
-        }
-
-        // iOS PWA対応: イベント30分前から15秒ごとにチェック（実験的）
-        if (minDiff <= 30) {
-            currentKeepAliveInterval = 15 * 1000; // 15秒
-        } else if (minDiff <= 60) {
-            currentKeepAliveInterval = 60 * 1000; // 1分
-        } else {
-            currentKeepAliveInterval = KEEP_ALIVE_INTERVAL; // 5分
-        }
-    } catch (error) {
-        console.error("[SW] Keep-Alive間隔調整エラー:", error);
-        currentKeepAliveInterval = KEEP_ALIVE_INTERVAL;
-    }
-}
-
-async function performKeepAlive() {
-    try {
-
-        // バックエンドの軽量なヘルスチェックエンドポイントにリクエスト
-        // タイムアウトを短く設定（回線不安定対応）
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒タイムアウト
-
-        const response = await fetch(`${API_BASE_URL}/api/health`, {
-            method: "GET",
-            cache: "no-cache",
-            signal: controller.signal,
-            headers: {
-                "X-SW-Keep-Alive": "true", // Service Workerからのリクエストと識別
-            },
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-            const data = await response.json();
-
-            // 成功したら失敗カウントをリセット
-            keepAliveFailCount = 0;
-
-            // 通知チェックも実行
-            await checkAndSendNotifications();
-
-            // 間隔を再調整
-            await adjustKeepAliveInterval();
-
-            // 間隔が変わった場合は再起動
-            if (keepAliveInterval) {
-                clearInterval(keepAliveInterval);
-                keepAliveInterval = setInterval(() => {
-                    performKeepAlive();
-                }, currentKeepAliveInterval);
-            }
-        } else {
-            console.warn("[SW] Keep-Alive失敗: HTTPステータス", response.status);
-            handleKeepAliveFailure();
-        }
-    } catch (error) {
-        // ネットワークエラー時の処理
-        if (error.name === "AbortError") {
-            console.warn("[SW] Keep-Aliveタイムアウト（5秒）");
-        } else {
-            console.warn("[SW] Keep-Aliveエラー:", error.message);
-        }
-
-        handleKeepAliveFailure();
-    }
-}
-
-// Keep-Alive失敗時の処理（オフライン時も動作を継続）
-async function handleKeepAliveFailure() {
-    keepAliveFailCount++;
-    console.warn(`[SW] Keep-Alive連続失敗回数: ${keepAliveFailCount}`);
-
-    // ネットワークが不安定でも通知チェックは継続
-    try {
-        await checkAndSendNotifications();
-    } catch (error) {
-        console.error("[SW] オフライン通知チェックエラー:", error);
-    }
-
-    // 連続失敗時も5分間隔を維持（バッテリー/回線節約）
-    // オフライン時は通知チェックのみ継続
-    if (keepAliveFailCount >= 3) {
-        console.warn("[SW] Keep-Alive連続失敗（オフライン可能性）→ 通知チェックは継続");
-        // 間隔変更なし（5分維持）
-    }
-}
-
-// Keep-Aliveを再起動（間隔変更時）
-function restartKeepAlive() {
-    if (keepAliveInterval) {
-        clearInterval(keepAliveInterval);
-        keepAliveInterval = setInterval(() => {
-            performKeepAlive();
-        }, currentKeepAliveInterval);
-    }
-}
 
 // === 継続的な通知チェックループ ===
 // setIntervalの代わりに再帰的なsetTimeoutを使用（より確実）
@@ -620,7 +435,6 @@ self.addEventListener("activate", (event) => {
                 const notifications = await getNotificationsFromIndexedDB();
                 if (notifications.length > 0) {
                     startNotificationCheckLoop();
-                    startKeepAlive();
                 }
 
                 return self.clients.claim();
