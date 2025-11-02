@@ -62,10 +62,10 @@ function calculateNotificationTimes(event: EventRow): Array<{ time: string; labe
             notifications.push({ time: event.f_gather_time, label: '集合時間' });
         } else if (timing.type === 'start' && event.f_start_time) {
             notifications.push({ time: event.f_start_time, label: '開始時間' });
-        } else if (timing.type === 'minutes_before' && event.f_start_time && timing.minutes) {
-            const startTime = parseHHMM(event.f_start_time);
-            if (startTime) {
-                const notifyTime = new Date(startTime.getTime() - timing.minutes * 60 * 1000);
+        } else if (timing.type === 'minutes_before' && event.f_gather_time && timing.minutes) {
+            const gatherTime = parseHHMM(event.f_gather_time);
+            if (gatherTime) {
+                const notifyTime = new Date(gatherTime.getTime() - timing.minutes * 60 * 1000);
                 const hhmm = `${String(notifyTime.getHours()).padStart(2, '0')}${String(notifyTime.getMinutes()).padStart(2, '0')}`;
                 notifications.push({ time: hhmm, label: `${timing.minutes}分前` });
             }
