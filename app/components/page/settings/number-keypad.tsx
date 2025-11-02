@@ -44,29 +44,38 @@ export function NumberKeypad({ onNumberClick, onClear, onBackspace }: NumberKeyp
     const buttonClass =
         "w-16 h-16 border-1 border-gray-400 bg-[#000D91]/80 shadow-2xl text-white rounded transition-colors shadow-sm cursor-pointer hover:opacity-90 hover:border-transparent active:opasety active:border-transparent flex items-center justify-center";
     return (
-        <div className="grid max-w-xs grid-cols-3 gap-4 rounded-lg [@media(max-height:680px)]:gap-3">
+        <div className="grid max-w-xs grid-cols-3 rounded-lg">
             {/* 数字ボタン 1-9 */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button key={num} className={buttonClass} onClick={() => onNumberClick(num.toString())}>
-                    <span className="text-2xl font-medium">{num}</span>
+                <button
+                    key={num}
+                    className="p-2 [@media(max-height:680px)]:p-1"
+                    onClick={() => onNumberClick(num.toString())}
+                >
+                    <div className={buttonClass}>
+                        <span className="text-2xl font-medium">{num}</span>
+                    </div>
                 </button>
             ))}
 
             {/* 下段：クリア、0、バックスペース */}
-            <button className={buttonClass} onClick={onClear}>
-                <span className="text-2xl font-extrabold">C</span>
+            <button className="p-2 [@media(max-height:680px)]:p-1" onClick={onClear}>
+                <div className={buttonClass}>
+                    <span className="text-2xl font-extrabold">C</span>
+                </div>
             </button>
 
-            <button className={buttonClass} onClick={() => onNumberClick("0")}>
-                <span className="text-2xl font-medium">0</span>
+            <button className="p-2 [@media(max-height:680px)]:p-1" onClick={() => onNumberClick("0")}>
+                <div className={buttonClass}>
+                    <span className="text-2xl font-medium">0</span>
+                </div>
             </button>
 
             {onBackspace ? (
-                <button className={buttonClass} onClick={onBackspace}>
-                    {/*Todo:BackspaceIconがない。*/}
-                    {/*⌫*/}
-                    {/*<img src="/images/backspace.png" alt="backspace" className="w-4 h-4"/>*/}
-                    <IoBackspaceSharp className="h-9 w-9" />
+                <button className="p-2 [@media(max-height:680px)]:p-1" onClick={onBackspace}>
+                    <div className={buttonClass}>
+                        <IoBackspaceSharp className="h-9 w-9" />
+                    </div>
                 </button>
             ) : (
                 <div className="h-16 w-16"></div>
