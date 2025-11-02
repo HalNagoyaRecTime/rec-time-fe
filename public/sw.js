@@ -252,7 +252,7 @@ async function checkAndSendNotifications() {
 
     try {
         const notifications = await getNotificationsFromIndexedDB();
-        (`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
+        console.log(`[SW] 通知チェック実行: ${currentTimeStr}, スケジュール件数: ${notifications.length}`);
 
         for (const notification of notifications) {
             if (!notification.notified) {
